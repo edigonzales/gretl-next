@@ -1,0 +1,66 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+base {
+    archivesName = 'gretl-geotools'
+}
+
+sourceSets {
+    worker {
+        java.srcDir 'src/worker/java'
+        resources.srcDir 'src/worker/resources'
+    }
+}
+
+configurations {
+    workerImplementation {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    workerRuntimeOnly {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+}
+
+dependencies {
+    testImplementation gradleTestKit()
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+
+    workerImplementation "org.geotools:gt-main:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-geotiff:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-coverage:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-arcgrid:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-shapefile:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-process-raster:${geotoolsVersion}"
+    workerImplementation "org.geotools:gt-geopkg:${geotoolsVersion}"
+    workerRuntimeOnly "org.geotools:gt-epsg-hsql:${geotoolsVersion}"
+}
+
+tasks.register('workerRuntimeJar', Jar) {
+    archiveClassifier = 'worker-runtime'
+    from sourceSets.worker.output
+}
+
+tasks.named('processResources') {
+    dependsOn tasks.named('workerRuntimeJar')
+    from(tasks.named('workerRuntimeJar')) {
+        into 'gretl-geotools-worker-classpath'
+    }
+    from(configurations.workerRuntimeClasspath) {
+        into 'gretl-geotools-worker-classpath/lib'
+    }
+}
+
+gradlePlugin {
+    plugins {
+        gretlGeotools {
+            id = 'ch.so.agi.gretl.geotools'
+            implementationClass = 'ch.so.agi.gretl.geotools.GretlGeotoolsPlugin'
+            displayName = 'GRETL GeoTools'
+            description = 'GeoTools Gradle tasks for GRETL pipelines using classloader-isolated workers.'
+        }
+    }
+}

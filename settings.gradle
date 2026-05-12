@@ -1,0 +1,22 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenLocal()
+        maven { url "https://jars.sogeo.services/mirror" }
+        maven { url "https://repo.osgeo.org/repository/release/" }
+        maven { url "https://maven.geo-solutions.it" }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'gretl-modular'
+
+include 'gretl-core'
+include 'gretl-geotools'

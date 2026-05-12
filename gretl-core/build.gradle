@@ -1,0 +1,33 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+base {
+    archivesName = 'gretl-core'
+}
+
+dependencies {
+    implementation "commons-io:commons-io:${commonsIoVersion}"
+    implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
+    implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
+
+    runtimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
+    runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
+    runtimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
+
+    testImplementation gradleTestKit()
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
+}
+
+gradlePlugin {
+    plugins {
+        gretlCore {
+            id = 'ch.so.agi.gretl'
+            implementationClass = 'ch.so.agi.gretl.gradle.GretlPlugin'
+            displayName = 'GRETL Core'
+            description = 'Core Gradle tasks for GRETL pipelines.'
+        }
+    }
+}
