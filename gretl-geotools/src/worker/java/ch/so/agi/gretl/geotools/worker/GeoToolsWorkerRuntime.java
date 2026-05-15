@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public final class GeoToolsWorkerRuntime {
 
@@ -32,21 +33,28 @@ public final class GeoToolsWorkerRuntime {
     private GeoToolsWorkerRuntime() {
     }
 
-    public static void execute(String operation, Map<String, String> parameters, List<Double> values) throws Exception {
-        refreshImageIoProviders();
-        if (READ_SHAPEFILE.equals(operation)) {
-            readShapefile(parameters);
-            return;
+    public static void execute(String operation, Map<String, String> parameters, List<Double> values,
+            BiConsumer<String, String> logSink) throws Exception {
+        LogEnvironment.setLogSink(logSink);
+        try {
+            refreshImageIoProviders();
+            LogEnvironment.getLogger(GeoToolsWorkerRuntime.class).info("Dispatch operation: " + operation);
+            if (READ_SHAPEFILE.equals(operation)) {
+                readShapefile(parameters);
+                return;
+            }
+            if (VECTORIZE.equals(operation)) {
+                vectorize(parameters, values);
+                return;
+            }
+            if (RASTER_RECLASSIFY.equals(operation)) {
+                rasterReclassify(parameters, values);
+                return;
+            }
+            throw new IllegalArgumentException("Unknown GeoTools worker operation: " + operation);
+        } finally {
+            LogEnvironment.clearLogSink();
         }
-        if (VECTORIZE.equals(operation)) {
-            vectorize(parameters, values);
-            return;
-        }
-        if (RASTER_RECLASSIFY.equals(operation)) {
-            rasterReclassify(parameters, values);
-            return;
-        }
-        throw new IllegalArgumentException("Unknown GeoTools worker operation: " + operation);
     }
 
     private static void readShapefile(Map<String, String> parameters) throws Exception {

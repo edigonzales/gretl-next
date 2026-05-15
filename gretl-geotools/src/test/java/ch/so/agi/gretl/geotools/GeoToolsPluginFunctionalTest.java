@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GeoToolsPluginFunctionalTest {
@@ -49,6 +50,7 @@ class GeoToolsPluginFunctionalTest {
         BuildResult result = run("readShapefile");
 
         assertTrue(result.getOutput().contains("Feature count:"));
+        assertFalse(result.getOutput().contains("GRETL_WORKER|"));
     }
 
     @Test
@@ -70,9 +72,11 @@ class GeoToolsPluginFunctionalTest {
                 }
                 """);
 
-        run("vectorize", "--info");
+        BuildResult result = run("vectorize", "--info");
 
         assertTrue(Files.exists(projectDir.resolve("build/vectorized/output.gpkg")));
+        assertTrue(result.getOutput().contains("GeoToolsWorkerRuntime: Dispatch operation: vectorize"));
+        assertFalse(result.getOutput().contains("GRETL_WORKER|"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 plugins {
     id 'java-gradle-plugin'
+    id 'maven-publish'
 }
 
 base {
@@ -25,6 +26,7 @@ configurations {
 }
 
 dependencies {
+    testImplementation sourceSets.worker.output
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"

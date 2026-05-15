@@ -91,6 +91,93 @@ If native libraries, GDAL bindings, JNI/JNA, memory leaks or registry conflicts
 become the dominant problem, the next step is to keep the same task API and
 switch the worker submission to `processIsolation`.
 
+## Logging Boundary
+
+Logging is treated as an explicit boundary between Gradle plugin code and
+worker runtime code.
+
+Core tasks run directly in Gradle task code. Their `GretlLogger` implementation
+is installed by the core plugin and maps to Gradle's `Logger` methods. The
+standalone fallback is only used when core classes are executed outside the
+Gradle plugin. This avoids accidental behavior changes just because Gradle
+classes happen to be visible on a classpath.
+
+GeoTools worker code cannot depend on Gradle logging APIs because the worker
+runtime is meant to remain movable between `classLoaderIsolation`,
+`processIsolation`, and possible standalone diagnostics. The worker runtime
+therefore emits four levels:
+
+- `LIFECYCLE`
+- `INFO`
+- `DEBUG`
+- `ERROR`
+
+During the current `classLoaderIsolation` execution, `GeoToolsWorkerAction`
+passes a `BiConsumer<String, String>` into `GeoToolsWorkerRuntime`. Worker
+`LogEnvironment` installs that sink for the current thread, emits worker log
+messages through it, and clears it in `finally`. On the plugin side,
+`WorkerLogBridge` maps the levels as follows:
+
+- `LIFECYCLE` to `logger.lifecycle`
+- `INFO` to `logger.info`
+- `DEBUG` to `logger.debug`
+- `ERROR` to `logger.error`
+
+If no sink is installed, the worker runtime falls back to a line protocol:
+
+```text
+GRETL_WORKER|<LEVEL>|<message>
+```
+
+`ERROR` is written to stderr; every other level is written to stdout. The plugin
+already contains a parser for this protocol. That parser is not needed for the
+current in-process worker bridge, but it gives the later `processIsolation`
+implementation a stable contract for remapping worker stdout/stderr back into
+Gradle logging without changing the public task APIs.
+
+In Docker, Gradle is run with `--console=plain`, so Gradle lifecycle/error output
+is suitable for container logs and CI log collectors. Additional diagnostic
+messages are visible with Gradle's usual `--info` or `--debug` flags.
+
+## Docker Runtime Image
+
+Docker packaging is deliberately kept at the root build level instead of adding
+a third Gradle subproject. `stageRuntimeImage` builds the two plugin
+publications into a file-based Maven repository and stages a Docker context
+under `build/runtime-image/docker`.
+
+The staged image contains:
+
+- Java 17 runtime
+- Gradle 7.6.4
+- `/home/gradle/init.gradle`
+- local Maven plugin repository under `/home/gradle/maven-repo`
+- plugin/runtime jars under `/home/gradle/libs` for legacy `apply plugin:`
+  builds
+- `/usr/local/bin/gretl`, a small Gradle runner
+
+The runner always uses:
+
+```bash
+gradle "$@" --init-script /home/gradle/init.gradle --no-daemon --console=plain
+```
+
+`--no-daemon` avoids lingering daemon processes in short-lived containers.
+`--console=plain` avoids rich console control characters in Docker and CI logs.
+
+The init script configures plugin resolution so modern jobs can use the
+`plugins {}` DSL without repeating plugin versions:
+
+```groovy
+plugins {
+    id 'ch.so.agi.gretl'
+    id 'ch.so.agi.gretl.geotools'
+}
+```
+
+It also adds the staged jars to the buildscript classpath as a best-effort
+compatibility path for older jobs that still use `apply plugin:`.
+
 ## Verification
 
 The tests use Gradle TestKit:
@@ -99,9 +186,11 @@ The tests use Gradle TestKit:
 - SQL and Db2Db are verified with SQLite.
 - GeoTools tasks run through the classloader-isolated worker.
 - Raster fixtures come from the existing `gretl-gt` experiments.
+- Worker logging is verified both through the Gradle bridge and through the
+  standalone stdout/stderr fallback.
 
 The expected project-level check is:
 
 ```bash
-./gradlew clean check
+./gradlew clean check stageRuntimeImage
 ```

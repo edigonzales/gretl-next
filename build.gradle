@@ -21,6 +21,17 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
+    plugins.withId('maven-publish') {
+        publishing {
+            repositories {
+                maven {
+                    name = 'runtimeImage'
+                    url = rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile.toURI()
+                }
+            }
+        }
+    }
+
     plugins.withType(JavaPlugin).configureEach {
         java {
             toolchain {
@@ -44,4 +55,80 @@ subprojects {
             useJUnitPlatform()
         }
     }
+}
+
+def runtimeImageDir = layout.buildDirectory.dir('runtime-image/docker')
+def runtimeImageRepoDir = layout.buildDirectory.dir('runtime-image/maven-repo')
+def dockerImageName = providers.gradleProperty('gretlDockerImage').orElse('sogis/gretl-modular:test')
+def externalRuntimeClasspath = { String projectPath ->
+    File gradleLibDir = gradle.gradleHomeDir == null ? null : new File(gradle.gradleHomeDir, 'lib').canonicalFile
+    project(projectPath).configurations.runtimeClasspath.files.findAll { File file ->
+        !file.name.startsWith('gradle-api-') &&
+                (gradleLibDir == null || !file.canonicalPath.startsWith(gradleLibDir.canonicalPath + File.separator))
+    }
+}
+
+tasks.register('cleanRuntimeImageRepository', Delete) {
+    delete runtimeImageRepoDir
+}
+
+subprojects {
+    plugins.withId('maven-publish') {
+        tasks.matching { it.name.endsWith('ToRuntimeImageRepository') }.configureEach {
+            dependsOn rootProject.tasks.named('cleanRuntimeImageRepository')
+        }
+    }
+}
+
+tasks.register('stageRuntimeImage', Sync) {
+    group = 'distribution'
+    description = 'Stages the Docker runtime image context with plugin Maven publications and runtime jars.'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    dependsOn ':gretl-core:publishAllPublicationsToRuntimeImageRepository'
+    dependsOn ':gretl-geotools:publishAllPublicationsToRuntimeImageRepository'
+    dependsOn ':gretl-core:jar'
+    dependsOn ':gretl-geotools:jar'
+
+    into runtimeImageDir
+
+    from('docker') {
+        include 'Dockerfile'
+        include 'gretl'
+        include 'init.gradle'
+    }
+    from(runtimeImageRepoDir) {
+        into 'maven-repo'
+        exclude '**/*-sources.jar*'
+        exclude '**/*-javadoc.jar*'
+    }
+    from({
+        [
+                project(':gretl-core').tasks.named('jar').get().archiveFile.get().asFile,
+                project(':gretl-geotools').tasks.named('jar').get().archiveFile.get().asFile
+        ]
+    }) {
+        into 'libs'
+    }
+    from({ externalRuntimeClasspath(':gretl-core') }) {
+        into 'libs'
+    }
+    from({ externalRuntimeClasspath(':gretl-geotools') }) {
+        into 'libs'
+    }
+
+    doLast {
+        file("${destinationDir}/build.info").text = """GRETL Modular ${project.version}
+Gradle ${gradle.gradleVersion}
+Java 17
+"""
+    }
+}
+
+tasks.register('buildRuntimeImage', Exec) {
+    group = 'distribution'
+    description = 'Builds the local Docker runtime image. Override with -PgretlDockerImage=name:tag.'
+    dependsOn tasks.named('stageRuntimeImage')
+    workingDir runtimeImageDir.get().asFile
+    commandLine 'docker', 'build', '-t', dockerImageName.get(), '.'
 }

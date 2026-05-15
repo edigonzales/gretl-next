@@ -1,23 +1,25 @@
 package ch.so.agi.gretl.logging;
 
 /**
- * Holds the global logging factory used by the Step and helper classes to get a
- * logger instance. Holds either a logging factory for standalone use of the
- * steps classes as in unit tests or the gradle * logging environment for
- * integrated use of the steps in gradle.
+ * Holds the logging factory used by steps and helper classes.
+ *
+ * <p>Gradle integration is activated explicitly by the plugin. Code that runs
+ * without the plugin, for example in standalone tests or future command-line
+ * wrappers, falls back to a console-oriented java.util.logging implementation.</p>
  */
 public class LogEnvironment {
 
     private static LogFactory currentLogFactory = null;
 
     public static void setLogFactory(LogFactory factory) {
+        if (factory == null) {
+            throw new IllegalArgumentException("factory must not be null");
+        }
         currentLogFactory = factory;
     }
 
     public static void initGradleIntegrated() {
-        if (currentLogFactory == null) {
-            setLogFactory(new GradleLogFactory());
-        }
+        setLogFactory(new GradleLogFactory());
     }
 
     public static void initStandalone() {
@@ -32,15 +34,7 @@ public class LogEnvironment {
 
     public static GretlLogger getLogger(Class logSource) {
         if (currentLogFactory == null) {
-            try {
-                if (Class.forName("org.gradle.api.logging.Logger") != null) {
-
-                }
-                setLogFactory(new GradleLogFactory());
-            } catch (ClassNotFoundException e) {
-                // use java logging if no gradle in classpath
-                setLogFactory(new CoreJavaLogFactory(Level.DEBUG));
-            }
+            setLogFactory(new CoreJavaLogFactory(Level.DEBUG));
         }
         if (logSource == null)
             throw new IllegalArgumentException("The logSource must not be null");

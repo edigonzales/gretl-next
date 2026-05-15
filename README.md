@@ -29,7 +29,19 @@ toolchains.
 ```bash
 ./gradlew --version
 ./gradlew clean check
+./gradlew stageRuntimeImage
 ```
+
+`stageRuntimeImage` creates a Docker build context under
+`build/runtime-image/docker`. If Docker is available, the local runtime image can
+be built with:
+
+```bash
+./gradlew buildRuntimeImage
+```
+
+The default image tag is `sogis/gretl-modular:test`; override it with
+`-PgretlDockerImage=registry/name:tag`.
 
 ## Core Usage Example
 
@@ -78,7 +90,37 @@ passes that classpath to `workerExecutor.classLoaderIsolation`. GeoTools and
 ImageIO dependencies are therefore not normal plugin implementation
 dependencies.
 
+## Logging And Docker
+
+Core tasks use Gradle logging directly through the `GretlLogger` abstraction.
+In Docker this still flows through Gradle's plain console output.
+
+GeoTools worker code logs through a small structured protocol. While running
+inside `classLoaderIsolation`, the worker receives a log sink from the plugin
+and the plugin maps worker levels to Gradle `lifecycle`, `info`, `debug` and
+`error`. If the worker runtime is ever used without that sink, it falls back to
+console lines in the form `GRETL_WORKER|<LEVEL>|<message>`; errors go to
+stderr, all other levels to stdout. The same format is parseable by the plugin
+for a later `processIsolation` implementation.
+
+The Docker runner executes:
+
+```bash
+gradle "$@" --init-script /home/gradle/init.gradle --no-daemon --console=plain
+```
+
+The staged image contains a file-based Maven repository for both plugin marker
+artifacts, so jobs can use:
+
+```groovy
+plugins {
+    id 'ch.so.agi.gretl'
+    id 'ch.so.agi.gretl.geotools'
+}
+```
+
 ## More Context
 
 See [docs/architecture.md](docs/architecture.md) for the detailed rationale,
-dependency boundaries, worker layout, and known limits of `classLoaderIsolation`.
+dependency boundaries, worker layout, logging boundary, Docker packaging, and
+known limits of `classLoaderIsolation`.

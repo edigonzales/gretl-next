@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+exec gradle "$@" --init-script /home/gradle/init.gradle --no-daemon --console=plain

@@ -1,0 +1,59 @@
+import java.net.URI
+
+def gretlVersion = System.getProperty('gretl.version', '0.1.0-SNAPSHOT')
+def localPluginRepository = new File(System.getProperty('gretl.mavenRepo', '/home/gradle/maven-repo'))
+def localRuntimeLibs = new File(System.getProperty('gretl.libsDir', '/home/gradle/libs'))
+
+def configureGretlRepositories = { repositories ->
+    repositories.maven {
+        name = 'gretlImagePlugins'
+        url = localPluginRepository.toURI()
+    }
+    repositories.mavenLocal()
+    repositories.maven {
+        name = 'sogeoMirror'
+        url = URI.create('https://jars.sogeo.services/mirror')
+    }
+    repositories.maven {
+        name = 'osgeoRelease'
+        url = URI.create('https://repo.osgeo.org/repository/release/')
+    }
+    repositories.maven {
+        name = 'geoSolutions'
+        url = URI.create('https://maven.geo-solutions.it')
+    }
+    repositories.mavenCentral()
+}
+
+settingsEvaluated { settings ->
+    settings.pluginManagement {
+        repositories {
+            configureGretlRepositories(delegate)
+            gradlePluginPortal()
+        }
+        plugins {
+            id 'ch.so.agi.gretl' version gretlVersion
+            id 'ch.so.agi.gretl.geotools' version gretlVersion
+        }
+    }
+}
+
+gradle.beforeProject { project ->
+    project.buildscript {
+        repositories {
+            configureGretlRepositories(delegate)
+            flatDir {
+                dirs localRuntimeLibs
+            }
+        }
+        dependencies {
+            if (localRuntimeLibs.isDirectory()) {
+                classpath project.files(project.fileTree(dir: localRuntimeLibs, include: '*.jar'))
+            }
+        }
+    }
+
+    project.repositories {
+        configureGretlRepositories(delegate)
+    }
+}
