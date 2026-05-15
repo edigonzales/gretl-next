@@ -1,120 +1,112 @@
 package ch.so.agi.gretl.tasks;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
+import ch.so.agi.gretl.internal.xslt.XsltEngine;
+import ch.so.agi.gretl.internal.xslt.XsltRequest;
+import ch.so.agi.gretl.logging.GretlLogger;
+import ch.so.agi.gretl.logging.LogEnvironment;
+import ch.so.agi.gretl.util.TaskUtil;
 import org.gradle.api.GradleException;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-import ch.so.agi.gretl.logging.GretlLogger;
-import ch.so.agi.gretl.logging.LogEnvironment;
-import ch.so.agi.gretl.steps.XslTransformerStep;
-import ch.so.agi.gretl.util.TaskUtil;
+import javax.inject.Inject;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
 
 public abstract class XslTransformer extends AbstractCoreGretlTask {
-    protected GretlLogger log;
+    private final ConfigurableFileCollection xmlFiles;
+    private final GretlLogger log;
 
-    private Object xslFile;
-    private FileCollection xmlFile;
-    private File outDirectory;
-    private String fileExtension = "xtf";
-
-    /**
-     * Name (`String`) der XSLT-Datei, die im `src/main/resources/xslt`-Verzeichnis liegen muss oder `File`-Objekt (beliebiger Pfad).
-     */
-    @Input
-    public Object getXslFile() {
-        return xslFile;
-    }
-    
-    /**
-     * XML-Dateien, die transformiert werden sollen.
-     */
-    @InputFiles
-    public FileCollection getXmlFile() {
-        return xmlFile;
-    }
-    
-    /**
-     * Verzeichnis, in das die transformierte Datei gespeichert wird. Der Name der transformierten Datei entspricht standardmässig dem Namen der Input-Datei mit Endung `.xtf`.
-     */
-    @OutputDirectory
-    public File getOutDirectory() {
-        return outDirectory;
-    }
-    
-    /**
-     * Fileextension der Resultatdatei. Default: `xtf`
-     */
+    @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract RegularFileProperty getXslFile();
+
     @Input
-    public String getFileExtension() {
-        return fileExtension;
+    @Optional
+    public abstract Property<String> getXslResource();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public ConfigurableFileCollection getXmlFiles() {
+        return xmlFiles;
     }
 
-    public void setXslFile(Object xslFile) {
-        this.xslFile = xslFile;
+    @OutputDirectory
+    public abstract DirectoryProperty getOutDirectory();
+
+    @Input
+    public abstract Property<String> getFileExtension();
+
+    @Inject
+    public XslTransformer() {
+        this.xmlFiles = getProject().files();
+        this.log = LogEnvironment.getLogger(XslTransformer.class);
+        getFileExtension().convention("xtf");
     }
 
-    public void setXmlFile(FileCollection xmlFile) {
-        this.xmlFile = xmlFile;
+    public void xslFile(Object path) {
+        getXslFile().set(getProject().file(path));
     }
 
-    public void setOutDirectory(File outDirectory) {
-        this.outDirectory = outDirectory;
+    public void xslResource(String resourceName) {
+        getXslResource().set(resourceName);
     }
-    
-    public void setFileExtension(String fileExtension) {
-        this.fileExtension = fileExtension;
+
+    public void xmlFiles(Object... paths) {
+        getXmlFiles().from(paths);
+    }
+
+    public void outDirectory(Object path) {
+        getOutDirectory().set(getProject().file(path));
+    }
+
+    public void fileExtension(String fileExtension) {
+        getFileExtension().set(fileExtension);
     }
 
     @TaskAction
     public void transform() {
-        log = LogEnvironment.getLogger(XslTransformer.class);
-        
-        if (xslFile == null) {
-            throw new IllegalArgumentException("xslFile must not be null");
-        }
-        if (xmlFile == null) {
-            throw new IllegalArgumentException("xmlFile must not be null");
-        }
-        if (outDirectory == null) {
-            throw new IllegalArgumentException("outDirectory must not be null");
-        }
-
-        FileCollection xmlFilesCollection = (FileCollection) xmlFile;
-
-        if (xmlFilesCollection == null || xmlFilesCollection.isEmpty()) {
-            // TODO: passt das? Job geht weiter.
-            return;
-        }
-        List<String> files = new ArrayList<String>();
-        for (File fileObj : xmlFilesCollection) {
-            String fileName = fileObj.getAbsolutePath();
-            files.add(fileName);
-        }
-        
         try {
-            for (String dataFile : files) {
-                XslTransformerStep xslTransformerStep = new XslTransformerStep();
-                if (xslFile instanceof String) {
-                    xslTransformerStep.execute((String) xslFile, new File(dataFile), outDirectory, fileExtension);
-                } else if (xslFile instanceof File) {
-                    xslTransformerStep.execute((File) xslFile, new File(dataFile), outDirectory, fileExtension);
-                } else {
-                    throw new GradleException("xslFile: illegal data type <"+xslFile.getClass()+">");
-                }
-            }
+            new XsltEngine().execute(createRequest());
         } catch (Exception e) {
             log.error("Exception in XslTransformer task.", e);
-            GradleException ge = TaskUtil.toGradleException(e);
-            throw ge;
+            throw TaskUtil.toGradleException(e);
         }
+    }
+
+    private XsltRequest createRequest() {
+        boolean hasFile = getXslFile().isPresent();
+        boolean hasResource = getXslResource().isPresent() && !getXslResource().get().isBlank();
+        if (hasFile == hasResource) {
+            throw new GradleException("Configure either xslFile or xslResource");
+        }
+        if (getXmlFiles().isEmpty()) {
+            throw new GradleException("xmlFiles must not be empty");
+        }
+
+        List<Path> xmlFilePaths = getXmlFiles().getFiles().stream()
+                .map(File::toPath)
+                .toList();
+
+        return new XsltRequest(
+                getName(),
+                hasFile ? getXslFile().get().getAsFile().toPath() : null,
+                hasResource ? getXslResource().get() : null,
+                xmlFilePaths,
+                getOutDirectory().get().getAsFile().toPath(),
+                getFileExtension().get()
+        );
     }
 }

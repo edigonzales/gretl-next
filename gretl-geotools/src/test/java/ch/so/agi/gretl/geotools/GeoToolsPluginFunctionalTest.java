@@ -42,8 +42,8 @@ class GeoToolsPluginFunctionalTest {
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
                 tasks.named('readShapefile') {
-                    shapefile.set(layout.projectDirectory.file('data/data.shp'))
-                    crsCode.set('EPSG:4326')
+                    shapefile 'data/data.shp'
+                    crsCode 'EPSG:4326'
                 }
                 """);
 
@@ -65,10 +65,10 @@ class GeoToolsPluginFunctionalTest {
                 System.setProperty('org.geotools.coverage.jaiext.enabled', 'true')
 
                 tasks.register('vectorize', Vectorize) {
-                    inputRaster.set(layout.projectDirectory.file('data/reclass.tif'))
-                    outputGeopackage.set(layout.buildDirectory.file('vectorized/output.gpkg'))
-                    band.set(0)
-                    cellValues.set([55d, 65d])
+                    inputRaster 'data/reclass.tif'
+                    outputGeopackage layout.buildDirectory.file('vectorized/output.gpkg').get().asFile
+                    band 0
+                    cellValues 55d, 65d
                 }
                 """);
 
@@ -89,14 +89,76 @@ class GeoToolsPluginFunctionalTest {
                 import ch.so.agi.gretl.geotools.tasks.RasterReclassify
 
                 tasks.register('reclassify', RasterReclassify) {
-                    inputRaster.set(layout.projectDirectory.file('data/Beispiel_Rasterfile.asc'))
-                    outputRaster.set(layout.buildDirectory.file('reclassified/reclass.tif'))
+                    inputRaster 'data/Beispiel_Rasterfile.asc'
+                    outputRaster layout.buildDirectory.file('reclassified/reclass.tif').get().asFile
                 }
                 """);
 
         run("reclassify");
 
         assertTrue(Files.exists(projectDir.resolve("build/reclassified/reclass.tif")));
+    }
+
+    @Test
+    void rejectsEmptyVectorizeCellValues() throws IOException, URISyntaxException {
+        writeSettings();
+        copyResourceTree("data/vectorize", projectDir.resolve("data"));
+        writeBuild("""
+                plugins { id 'ch.so.agi.gretl.geotools' }
+
+                import ch.so.agi.gretl.geotools.tasks.Vectorize
+
+                tasks.register('vectorize', Vectorize) {
+                    inputRaster 'data/reclass.tif'
+                    outputGeopackage layout.buildDirectory.file('vectorized/output.gpkg').get().asFile
+                    cellValues()
+                }
+                """);
+
+        BuildResult result = runAndFail("vectorize");
+
+        assertTrue(result.getOutput().contains("cellValues must not be empty"));
+    }
+
+    @Test
+    void rejectsNonIncreasingRasterBreaks() throws IOException, URISyntaxException {
+        writeSettings();
+        copyResourceTree("data/raster-reclassify", projectDir.resolve("data"));
+        writeBuild("""
+                plugins { id 'ch.so.agi.gretl.geotools' }
+
+                import ch.so.agi.gretl.geotools.tasks.RasterReclassify
+
+                tasks.register('reclassify', RasterReclassify) {
+                    inputRaster 'data/Beispiel_Rasterfile.asc'
+                    outputRaster layout.buildDirectory.file('reclassified/reclass.tif').get().asFile
+                    breaks 0d, 60d, 55d
+                }
+                """);
+
+        BuildResult result = runAndFail("reclassify");
+
+        assertTrue(result.getOutput().contains("breaks must be strictly increasing"));
+    }
+
+    @Test
+    void supportsKotlinDslForReadShapefile() throws IOException, URISyntaxException {
+        writeSettings();
+        copyResourceTree("data/shapefile", projectDir.resolve("data"));
+        writeKotlinBuild("""
+                import ch.so.agi.gretl.geotools.tasks.ReadShapefile
+
+                plugins { id("ch.so.agi.gretl.geotools") }
+
+                tasks.named<ReadShapefile>("readShapefile") {
+                    shapefile("data/data.shp")
+                    crsCode("EPSG:4326")
+                }
+                """);
+
+        BuildResult result = run("readShapefile");
+
+        assertTrue(result.getOutput().contains("Feature count:"));
     }
 
     private BuildResult run(String... arguments) {
@@ -106,6 +168,15 @@ class GeoToolsPluginFunctionalTest {
                 .withArguments(appendStacktrace(arguments))
                 .forwardOutput()
                 .build();
+    }
+
+    private BuildResult runAndFail(String... arguments) {
+        return GradleRunner.create()
+                .withProjectDir(projectDir.toFile())
+                .withPluginClasspath()
+                .withArguments(appendStacktrace(arguments))
+                .forwardOutput()
+                .buildAndFail();
     }
 
     private String[] appendStacktrace(String[] arguments) {
@@ -121,6 +192,10 @@ class GeoToolsPluginFunctionalTest {
 
     private void writeBuild(String content) throws IOException {
         Files.writeString(projectDir.resolve("build.gradle"), content, StandardCharsets.UTF_8);
+    }
+
+    private void writeKotlinBuild(String content) throws IOException {
+        Files.writeString(projectDir.resolve("build.gradle.kts"), content, StandardCharsets.UTF_8);
     }
 
     private void copyResourceTree(String resourcePath, Path target) throws IOException, URISyntaxException {

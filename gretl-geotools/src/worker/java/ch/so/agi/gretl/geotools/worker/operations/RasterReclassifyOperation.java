@@ -1,4 +1,4 @@
-package ch.so.agi.gretl.geotools.worker.steps;
+package ch.so.agi.gretl.geotools.worker.operations;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageFactory;
@@ -18,9 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-public final class RasterReclassify {
+public final class RasterReclassifyOperation {
 
-    private RasterReclassify() {}
+    private RasterReclassifyOperation() {}
 
     /**
      * Reclassify using consecutive breakpoints.

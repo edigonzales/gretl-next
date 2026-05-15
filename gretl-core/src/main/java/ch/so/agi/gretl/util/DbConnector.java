@@ -64,7 +64,7 @@ public class DbConnector {
             con.setAutoCommit(false);
 
             log.debug("DB connected with these Parameters:  ConnectionURL:" + connectionUrl + " Username: " + userName
-                    + " Password: " + password);
+                    + " Password: <redacted>");
 
         } catch (SQLException e) {
             if (con != null) {

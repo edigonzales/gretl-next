@@ -2,8 +2,8 @@ package ch.so.agi.gretl.geotools.worker;
 
 import ch.so.agi.gretl.geotools.worker.logging.GretlLogger;
 import ch.so.agi.gretl.geotools.worker.logging.LogEnvironment;
-import ch.so.agi.gretl.geotools.worker.steps.RasterReclassifyStep;
-import ch.so.agi.gretl.geotools.worker.steps.VectorizeStep;
+import ch.so.agi.gretl.geotools.worker.operations.RasterReclassifyEngine;
+import ch.so.agi.gretl.geotools.worker.operations.VectorizeEngine;
 import org.geotools.api.data.FileDataStore;
 import org.geotools.api.data.FileDataStoreFinder;
 import org.geotools.api.data.SimpleFeatureSource;
@@ -95,7 +95,7 @@ public final class GeoToolsWorkerRuntime {
         int band = Integer.parseInt(require(parameters, "band"));
         String taskName = parameters.get("taskName");
 
-        new VectorizeStep(taskName).execute(inputRaster, outputGeopackage, band, values);
+        new VectorizeEngine(taskName).execute(inputRaster, outputGeopackage, band, values);
     }
 
     private static void rasterReclassify(Map<String, String> parameters, List<Double> values) throws Exception {
@@ -105,7 +105,7 @@ public final class GeoToolsWorkerRuntime {
         String taskName = parameters.get("taskName");
         double[] breaks = values.stream().mapToDouble(Double::doubleValue).toArray();
 
-        new RasterReclassifyStep(taskName).execute(inputRaster, outputRaster, breaks, noData);
+        new RasterReclassifyEngine(taskName).execute(inputRaster, outputRaster, breaks, noData);
     }
 
     private static String require(Map<String, String> parameters, String key) {

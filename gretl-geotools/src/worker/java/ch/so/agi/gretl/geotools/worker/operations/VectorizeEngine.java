@@ -1,4 +1,4 @@
-package ch.so.agi.gretl.geotools.worker.steps;
+package ch.so.agi.gretl.geotools.worker.operations;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import org.locationtech.jts.operation.union.UnaryUnionOp;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.geotools.api.feature.type.GeometryDescriptor;
+import org.geotools.api.parameter.GeneralParameterValue;
 import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 
@@ -56,14 +57,14 @@ import org.geotools.referencing.CRS;
  * name.
  * </p>
  */
-public class VectorizeStep {
+public class VectorizeEngine {
     private final GretlLogger log;
     private final String taskName;
 
     /**
      * Creates a vectorize step instance using the class name as logging context.
      */
-    public VectorizeStep() {
+    public VectorizeEngine() {
         this(null);
     }
 
@@ -72,9 +73,9 @@ public class VectorizeStep {
      *
      * @param taskName optional descriptive name reported in lifecycle log messages
      */
-    public VectorizeStep(String taskName) {
+    public VectorizeEngine(String taskName) {
         if (taskName == null) {
-            this.taskName = VectorizeStep.class.getSimpleName();
+            this.taskName = VectorizeEngine.class.getSimpleName();
         } else {
             this.taskName = taskName;
         }
@@ -102,7 +103,7 @@ public class VectorizeStep {
         }
 
         log.lifecycle(String.format(Locale.ROOT,
-                "Start VectorizeStep(Name: %s rasterPath: %s geopackagePath: %s band: %d cellValues: %s)",
+                "Start VectorizeEngine(Name: %s rasterPath: %s geopackagePath: %s band: %d cellValues: %s)",
                 taskName,
                 rasterPath,
                 geopackagePath,
@@ -178,7 +179,7 @@ public class VectorizeStep {
         writeToGeoPackage(rasterPath, geopackagePath, extractedType, dissolvedFeatures);
 
         log.lifecycle(String.format(Locale.ROOT,
-                "Finished VectorizeStep(Name: %s rasterPath: %s geopackagePath: %s)",
+                "Finished VectorizeEngine(Name: %s rasterPath: %s geopackagePath: %s)",
                 taskName,
                 rasterPath,
                 geopackagePath));
@@ -196,7 +197,7 @@ public class VectorizeStep {
             if (reader == null) {
                 throw new IOException("No reader found for raster " + rasterPath);
             }
-            GridCoverage2D coverage = reader.read(null);
+            GridCoverage2D coverage = reader.read((GeneralParameterValue[]) null);
             if (coverage == null) {
                 throw new IOException("Unable to read raster coverage from " + rasterPath);
             }

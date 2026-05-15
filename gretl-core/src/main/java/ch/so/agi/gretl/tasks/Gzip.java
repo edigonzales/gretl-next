@@ -1,47 +1,45 @@
 package ch.so.agi.gretl.tasks;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.gradle.api.GradleException;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
-
+import ch.so.agi.gretl.internal.gzip.GzipEngine;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
-import ch.so.agi.gretl.steps.GzipStep;
+import org.gradle.api.GradleException;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskAction;
+
+import java.io.IOException;
 
 public abstract class Gzip extends AbstractCoreGretlTask {
-    private GretlLogger log;
+    private final GretlLogger log = LogEnvironment.getLogger(Gzip.class);
 
-    /**
-     * Datei, die gezipped werden soll.
-     */
     @InputFile
-    public abstract Property<File> getDataFile();
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract RegularFileProperty getDataFile();
 
-    /**
-     * Output-Datei
-     */
     @OutputFile
-    public abstract Property<File> getGzipFile();
+    public abstract RegularFileProperty getGzipFile();
+
+    public void dataFile(Object path) {
+        getDataFile().set(getProject().file(path));
+    }
+
+    public void gzipFile(Object path) {
+        getGzipFile().set(getProject().file(path));
+    }
 
     @TaskAction
     public void run() {
-        log = LogEnvironment.getLogger(Gzip.class);
-
-        if (!getDataFile().isPresent()) {
-            throw new IllegalArgumentException("dataFile must not be null");
-        }
-
-        GzipStep gzipStep = new GzipStep();
         try {
-            gzipStep.execute(getDataFile().get(), getGzipFile().get());
-            log.lifecycle("Gzip file written: " + getGzipFile().get().getAbsolutePath());
+            new GzipEngine().execute(
+                    getDataFile().get().getAsFile().toPath(),
+                    getGzipFile().get().getAsFile().toPath());
+            log.lifecycle("Gzip file written: " + getGzipFile().get().getAsFile().getAbsolutePath());
         } catch (IOException e) {
-            throw new GradleException("Could not gzip file: " + e.getMessage());
+            throw new GradleException("Could not gzip file: " + e.getMessage(), e);
         }
     }
 }

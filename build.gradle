@@ -21,6 +21,11 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
+    configurations.configureEach {
+        exclude group: 'xml-apis', module: 'xml-apis'
+        exclude group: 'xml-apis', module: 'xml-apis-ext'
+    }
+
     plugins.withId('maven-publish') {
         publishing {
             repositories {

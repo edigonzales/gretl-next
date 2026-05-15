@@ -1,5 +1,6 @@
 package ch.so.agi.gretl.geotools.tasks;
 
+import ch.so.agi.gretl.geotools.internal.operations.GeoToolsOperationRequest;
 import ch.so.agi.gretl.geotools.services.GeoToolsBuildService;
 import ch.so.agi.gretl.geotools.worker.GeoToolsWorkerAction;
 import org.gradle.api.DefaultTask;
@@ -33,6 +34,10 @@ public abstract class GeoToolsTask extends DefaultTask {
 
     @Internal
     public abstract Property<GeoToolsBuildService> getGeoToolsService();
+
+    protected void submitGeoToolsWork(GeoToolsOperationRequest request) {
+        submitGeoToolsWork(request.operation(), request.parameters(), request.values());
+    }
 
     protected void submitGeoToolsWork(String operation, Map<String, String> parameters, List<Double> values) {
         WorkQueue queue = getWorkerExecutor().classLoaderIsolation(spec -> {

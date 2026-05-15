@@ -51,16 +51,23 @@ plugins {
 }
 
 import ch.so.agi.gretl.tasks.SqlExecutor
+import ch.so.agi.gretl.tasks.Db2Db
 import ch.so.agi.gretl.tasks.Gzip
 
 tasks.register('executeSql', SqlExecutor) {
-    database.set(['jdbc:sqlite:/tmp/example.db'])
-    sqlFiles.set(files('sql/init.sql'))
+    database 'jdbc:sqlite:/tmp/example.db'
+    sqlFiles 'sql/init.sql'
+}
+
+tasks.register('copyRows', Db2Db) {
+    sourceDatabase 'jdbc:sqlite:/tmp/source.db'
+    targetDatabase 'jdbc:sqlite:/tmp/target.db'
+    transfer 'sql/select-colors.sql', 'colors', true
 }
 
 tasks.register('compressXml', Gzip) {
-    dataFile.set(file('data/input.xml'))
-    gzipFile.set(layout.buildDirectory.file('out/input.xml.gz').get().asFile)
+    dataFile 'data/input.xml'
+    gzipFile layout.buildDirectory.file('out/input.xml.gz').get().asFile
 }
 ```
 
@@ -78,10 +85,10 @@ gretlGeotools {
 }
 
 tasks.register('vectorizeRaster', Vectorize) {
-    inputRaster.set(layout.projectDirectory.file('data/input.tif'))
-    outputGeopackage.set(layout.buildDirectory.file('vectorized/output.gpkg'))
-    band.set(0)
-    cellValues.set([55d, 65d])
+    inputRaster 'data/input.tif'
+    outputGeopackage layout.buildDirectory.file('vectorized/output.gpkg').get().asFile
+    band 0
+    cellValues 55d, 65d
 }
 ```
 

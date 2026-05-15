@@ -1,4 +1,4 @@
-package ch.so.agi.gretl.geotools.worker.steps;
+package ch.so.agi.gretl.geotools.worker.operations;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.NoSuchAuthorityCodeException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
+import org.geotools.api.parameter.GeneralParameterValue;
 
 import ch.so.agi.gretl.geotools.worker.logging.GretlLogger;
 import ch.so.agi.gretl.geotools.worker.logging.LogEnvironment;
@@ -31,7 +32,7 @@ import ch.so.agi.gretl.geotools.worker.logging.LogEnvironment;
  * data ("no data").
  * </p>
  */
-public class RasterReclassifyStep {
+public class RasterReclassifyEngine {
     private GretlLogger log;
     private String taskName;
 
@@ -42,7 +43,7 @@ public class RasterReclassifyStep {
     /**
      * Creates a step instance using the class name for logging context.
      */
-    public RasterReclassifyStep() {
+    public RasterReclassifyEngine() {
         this(null);
     }
 
@@ -51,9 +52,9 @@ public class RasterReclassifyStep {
      *
      * @param taskName optional label used in lifecycle log messages; if {@code null} the class name is used
      */
-    public RasterReclassifyStep(String taskName) {
+    public RasterReclassifyEngine(String taskName) {
         if (taskName == null) {
-            this.taskName = RasterReclassifyStep.class.getSimpleName();
+            this.taskName = RasterReclassifyEngine.class.getSimpleName();
         } else {
             this.taskName = taskName;
         }
@@ -111,7 +112,7 @@ public class RasterReclassifyStep {
     private void executeInternal(Path inputPath, Path outputPath, double[] breaks, int[] classValues, double noData)
             throws IOException, NoSuchAuthorityCodeException, FactoryException {
         log.lifecycle(String.format(
-                "Start RasterReclassifyStep(Name: %s inputPath: %s outputPath: %s breaks: %s noData: %s)",
+                "Start RasterReclassifyEngine(Name: %s inputPath: %s outputPath: %s breaks: %s noData: %s)",
                 taskName,
                 inputPath,
                 outputPath,
@@ -123,7 +124,7 @@ public class RasterReclassifyStep {
         GridCoverage2D cov;
         try {
             reader = format.getReader(inputPath.toFile());
-            cov = reader.read(null);
+            cov = reader.read((GeneralParameterValue[]) null);
         } finally {
             if (reader != null) {
                 reader.dispose();
@@ -131,9 +132,9 @@ public class RasterReclassifyStep {
         }
 
         CoordinateReferenceSystem swiss = CRS.decode("EPSG:2056", true);
-        GridCoverage2D stamped = RasterReclassify.ensureCrs(cov, swiss);
+        GridCoverage2D stamped = RasterReclassifyOperation.ensureCrs(cov, swiss);
 
-        GridCoverage2D out = RasterReclassify.reclassifyByBreaks(stamped, 0, breaks, classValues, noData);
+        GridCoverage2D out = RasterReclassifyOperation.reclassifyByBreaks(stamped, 0, breaks, classValues, noData);
 
         File outFile = outputPath.toFile();
         File parent = outFile.getParentFile();
@@ -144,7 +145,7 @@ public class RasterReclassifyStep {
         GeoTiffWriter writer = null;
         try {
             writer = new GeoTiffWriter(outFile);
-            writer.write(out, null);
+            writer.write(out, (GeneralParameterValue[]) null);
         } finally {
             if (writer != null) {
                 writer.dispose();  // important: releases resources
