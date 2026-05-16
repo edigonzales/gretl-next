@@ -2,10 +2,8 @@ package ch.so.agi.gretl.internal.duckdb;
 
 import java.util.List;
 
-public interface DuckDbExportSpec {
-    String name();
-
-    String query();
+public interface DuckDbTargetSpec {
+    String alias();
 
     List<String> requiredExtensions();
 

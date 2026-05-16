@@ -1,8 +1,9 @@
 # DuckDbSqlExecutor
 
 `DuckDbSqlExecutor` runs SQL files in a DuckDB session that GRETL prepares from
-configured sources and exports. The MVP focuses on live federation: PostgreSQL
-and GeoPackage sources stay external and are exposed as logical DuckDB schemas.
+configured sources, writable targets and exports. The MVP focuses on live
+federation: PostgreSQL and GeoPackage sources stay external and are exposed as
+logical DuckDB schemas.
 
 ## Requirements
 
@@ -117,7 +118,79 @@ all relevant results are exported.
 GeoPackage and Parquet exports are written through temporary files first. The
 final target is replaced only after the DuckDB SQL and export steps complete.
 
+## PostgreSQL/PostGIS Targets
+
+PostgreSQL targets are writable attachments. They are separate from
+`sources.postgres`, which always stays read-only.
+
+```groovy
+targets {
+    postgres('out') {
+        database pgUrl, pgUser, pgPass
+    }
+}
+```
+
+The target alias is visible to user SQL:
+
+```sql
+CREATE TABLE out.agi_result.direct_result AS
+SELECT * FROM result.analyse;
+```
+
+Direct target SQL is the advanced mode. GRETL prepares credentials and the
+DuckDB attachment, but the SQL author is responsible for DDL, types and geometry
+conversion details.
+
+## PostgreSQL/PostGIS Exports
+
+The recommended PostgreSQL write path is a controlled export:
+
+```groovy
+exports {
+    postgres('analyse_db') {
+        target = 'out'
+        query = 'SELECT * FROM result.analyse'
+        table = 'agi_result.analyse'
+        mode = 'truncate'
+
+        geometry('geom') {
+            srid = 2056
+            type = 'MULTIPOLYGON'
+        }
+    }
+}
+```
+
+PostgreSQL export properties:
+
+- `target`: configured `targets.postgres` alias.
+- `query`: DuckDB query whose result is written.
+- `table`: fully qualified PostgreSQL target table, `schema.table`.
+- `mode`: required, one of `append`, `truncate`, `replace`.
+- `writePath`: optional, default `jdbc`; alternative `duckdb`.
+- `create`: default `false`; required for `mode = 'replace'`.
+
+`writePath = 'jdbc'` streams the DuckDB query result through GRETL and writes via
+PostgreSQL JDBC. This is the default because GRETL can validate target columns,
+map geometries with `ST_AsHEXWKB` and PostGIS `ST_GeomFromWKB`, and fail with a
+clear message when the mapping is incomplete.
+
+`writePath = 'duckdb'` uses DuckDB's PostgreSQL extension directly. It is useful
+for scalar tables and simple cases. Geometry mappings are intentionally rejected
+on this path; use `writePath = 'jdbc'` for controlled PostGIS geometry writes.
+
+When `create = true`, scalar column types are inferred from the DuckDB query
+metadata. Geometry columns must be declared explicitly because PostGIS table DDL
+needs SRID and geometry type.
+
+DuckDB permits only one attached database to be written inside a single
+transaction. Jobs that use writable DuckDB PostgreSQL targets therefore use
+explicit transaction boundaries around those writes. Controlled JDBC exports are
+still rollbacked on the PostgreSQL connection if a later task step fails.
+
 ## Runnable Examples
 
 - [GeoPackage only](examples/duckdb-sql-executor/gpkg-only/README.md)
 - [PostGIS and GeoPackage](examples/duckdb-sql-executor/postgis-gpkg/README.md)
+- [PostGIS target export](examples/duckdb-sql-executor/postgis-target/README.md)

@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,9 +47,11 @@ public class DuckDbFederationEngine {
         log.lifecycle(request.taskName() + ": DuckDB database: "
                 + (request.inMemory() ? ":memory:" : request.databaseFile().toAbsolutePath())
                 + ", Sources: " + request.sources().size()
+                + ", Targets: " + request.targets().size()
                 + ", Exports: " + request.exports().size());
 
         List<PendingExport> pendingExports = new ArrayList<>();
+        List<PostgresExportWriter.OpenTarget> openPostgresTargets = new ArrayList<>();
         try (Connection connection = openDuckDb(request.jdbcUrl())) {
             connection.setAutoCommit(false);
             try {
@@ -62,13 +65,25 @@ public class DuckDbFederationEngine {
                     executeSqlFiles(request.taskName(), connection, request.sqlFiles(), parameterSet);
                 }
 
-                pendingExports = exportResults(connection, request.exports());
+                if (!request.targets().isEmpty()) {
+                    connection.commit();
+                }
+                Map<String, PostgresTargetSpec> postgresTargets = postgresTargets(request.targets());
+                exportPostgres(connection, request.exports(), postgresTargets, openPostgresTargets);
+                if (hasNativePostgresExports(request.exports())) {
+                    connection.commit();
+                }
+                pendingExports = exportFiles(connection, request.exports());
                 builder.cleanup(connection, artifacts);
                 connection.commit();
+                commitPostgresTargets(openPostgresTargets);
             } catch (Exception e) {
                 rollback(connection);
+                rollbackPostgresTargets(openPostgresTargets);
                 cleanupTempExports(pendingExports);
                 throw e;
+            } finally {
+                closePostgresTargets(openPostgresTargets);
             }
         }
         moveExports(pendingExports);
@@ -106,11 +121,14 @@ public class DuckDbFederationEngine {
 
     private void validateExportTargets(List<DuckDbExportSpec> exports) throws IOException {
         for (DuckDbExportSpec export : exports) {
-            if (Files.exists(export.file()) && !export.overwrite()) {
-                throw new IllegalArgumentException("Export target already exists and overwrite is false: " + export.file());
+            if (!(export instanceof DuckDbFileExportSpec fileExport)) {
+                continue;
             }
-            if (export.file().getParent() != null) {
-                Files.createDirectories(export.file().getParent());
+            if (Files.exists(fileExport.file()) && !fileExport.overwrite()) {
+                throw new IllegalArgumentException("Export target already exists and overwrite is false: " + fileExport.file());
+            }
+            if (fileExport.file().getParent() != null) {
+                Files.createDirectories(fileExport.file().getParent());
             }
         }
     }
@@ -131,6 +149,9 @@ public class DuckDbFederationEngine {
         LinkedHashSet<String> extensions = new LinkedHashSet<>();
         for (DuckDbSourceSpec source : request.sources()) {
             extensions.addAll(source.requiredExtensions());
+        }
+        for (DuckDbTargetSpec target : request.targets()) {
+            extensions.addAll(target.requiredExtensions());
         }
         for (DuckDbExportSpec export : request.exports()) {
             extensions.addAll(export.requiredExtensions());
@@ -233,16 +254,35 @@ public class DuckDbFederationEngine {
         }
     }
 
-    private List<PendingExport> exportResults(Connection connection, List<DuckDbExportSpec> exports) throws SQLException, IOException {
+    private void exportPostgres(Connection connection, List<DuckDbExportSpec> exports,
+            Map<String, PostgresTargetSpec> postgresTargets, List<PostgresExportWriter.OpenTarget> openTargets)
+            throws SQLException {
+        PostgresExportWriter writer = new PostgresExportWriter(log);
+        for (DuckDbExportSpec export : exports) {
+            if (export instanceof PostgresExportSpec postgres) {
+                writer.export(connection, postgres, postgresTargets, openTargets);
+            }
+        }
+    }
+
+    private List<PendingExport> exportFiles(Connection connection, List<DuckDbExportSpec> exports) throws SQLException, IOException {
         List<PendingExport> pending = new ArrayList<>();
+        boolean hasFileExports = exports.stream().anyMatch(DuckDbFileExportSpec.class::isInstance);
+        if (!hasFileExports) {
+            return pending;
+        }
         execute(connection, "CREATE SCHEMA IF NOT EXISTS \"__gretl_export\"");
         for (DuckDbExportSpec export : exports) {
-            Path temp = tempExportPath(export.file());
-            pending.add(new PendingExport(temp, export.file(), export.overwrite()));
             if (export instanceof GpkgExportSpec gpkg) {
+                Path temp = tempExportPath(gpkg.file());
+                pending.add(new PendingExport(temp, gpkg.file(), gpkg.overwrite()));
                 exportGpkg(connection, gpkg, temp);
             } else if (export instanceof ParquetExportSpec parquet) {
+                Path temp = tempExportPath(parquet.file());
+                pending.add(new PendingExport(temp, parquet.file(), parquet.overwrite()));
                 exportParquet(connection, parquet, temp);
+            } else if (export instanceof PostgresExportSpec) {
+                // PostgreSQL exports are handled before file exports.
             } else {
                 throw new IllegalArgumentException("Unsupported DuckDB export: " + export);
             }
@@ -392,6 +432,53 @@ public class DuckDbFederationEngine {
             connection.rollback();
         } catch (SQLException e) {
             log.error("failed to rollback", e);
+        }
+    }
+
+    private Map<String, PostgresTargetSpec> postgresTargets(List<DuckDbTargetSpec> targets) {
+        Map<String, PostgresTargetSpec> result = new LinkedHashMap<>();
+        for (DuckDbTargetSpec target : targets) {
+            if (target instanceof PostgresTargetSpec postgres) {
+                result.put(postgres.alias(), postgres);
+            }
+        }
+        return result;
+    }
+
+    private boolean hasNativePostgresExports(List<DuckDbExportSpec> exports) {
+        return exports.stream()
+                .filter(PostgresExportSpec.class::isInstance)
+                .map(PostgresExportSpec.class::cast)
+                .anyMatch(export -> export.writePath() == PostgresWritePath.DUCKDB);
+    }
+
+    private void commitPostgresTargets(List<PostgresExportWriter.OpenTarget> targets) {
+        for (PostgresExportWriter.OpenTarget target : targets) {
+            try {
+                target.connection().commit();
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to commit PostgreSQL target " + target.alias(), e);
+            }
+        }
+    }
+
+    private void rollbackPostgresTargets(List<PostgresExportWriter.OpenTarget> targets) {
+        for (PostgresExportWriter.OpenTarget target : targets) {
+            try {
+                target.connection().rollback();
+            } catch (SQLException e) {
+                log.error("failed to rollback PostgreSQL target " + target.alias(), e);
+            }
+        }
+    }
+
+    private void closePostgresTargets(List<PostgresExportWriter.OpenTarget> targets) {
+        for (PostgresExportWriter.OpenTarget target : targets) {
+            try {
+                target.connection().close();
+            } catch (SQLException e) {
+                log.error("failed to close PostgreSQL target " + target.alias(), e);
+            }
         }
     }
 

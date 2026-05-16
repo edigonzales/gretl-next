@@ -25,6 +25,14 @@ public class DuckDbSessionBuilder {
         List<String> logicalSchemas = new ArrayList<>();
         List<String> rawAttachments = new ArrayList<>();
 
+        for (DuckDbTargetSpec target : request.targets()) {
+            if (target instanceof PostgresTargetSpec postgres) {
+                rawAttachments.add(bootstrapPostgresTarget(duckdb, postgres));
+            } else {
+                throw new IllegalArgumentException("Unsupported DuckDB target: " + target);
+            }
+        }
+
         for (DuckDbSourceSpec source : request.sources()) {
             logicalSchemas.add(source.alias());
             if (source instanceof PostgresSourceSpec postgres) {
@@ -74,6 +82,22 @@ public class DuckDbSessionBuilder {
             }
         }
         return rawAlias;
+    }
+
+    private String bootstrapPostgresTarget(Connection duckdb, PostgresTargetSpec target) throws Exception {
+        PostgresJdbcUrl jdbcUrl = PostgresJdbcUrl.parse(target.database().jdbcUrl());
+        String secretName = "__gretl_" + target.alias() + "_target_secret";
+
+        log.info("Creating DuckDB postgres secret for target " + target.alias() + " (<redacted>)");
+        execute(duckdb, createPostgresSecretSql(secretName, jdbcUrl,
+                target.database().username(), target.database().password()));
+
+        String attachOptions = jdbcUrl.libpqOptionsWithoutCredentials();
+        String attach = "ATTACH " + DuckDbSql.quoteLiteral(attachOptions)
+                + " AS " + DuckDbSql.quoteIdentifier(target.alias())
+                + " (TYPE postgres, SECRET " + DuckDbSql.quoteIdentifier(secretName) + ")";
+        execute(duckdb, attach);
+        return target.alias();
     }
 
     private void bootstrapGpkg(Connection duckdb, GpkgSourceSpec source) throws Exception {

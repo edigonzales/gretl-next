@@ -30,7 +30,8 @@ public record PostgresSourceSpec(
 
     @Override
     public String inputSignature() {
-        return "postgres|" + alias + "|" + database.jdbcUrl() + "|" + database.username()
+        return "postgres|" + alias + "|" + PostgresJdbcUrl.parse(database.jdbcUrl()).inputSignatureWithoutCredentials()
+                + "|" + database.username()
                 + "|" + mode + "|" + autoDetectGeometry + "|" + tables.stream()
                 .map(PostgresTableSpec::inputSignature)
                 .toList();

@@ -4,15 +4,21 @@ import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.internal.duckdb.DuckDbExecutionRequest;
 import ch.so.agi.gretl.internal.duckdb.DuckDbExportSpec;
+import ch.so.agi.gretl.internal.duckdb.DuckDbFileExportSpec;
 import ch.so.agi.gretl.internal.duckdb.DuckDbFederationEngine;
 import ch.so.agi.gretl.internal.duckdb.DuckDbSourceSpec;
+import ch.so.agi.gretl.internal.duckdb.DuckDbTargetSpec;
 import ch.so.agi.gretl.internal.duckdb.GeometryOverrideSpec;
 import ch.so.agi.gretl.internal.duckdb.GpkgExportSpec;
 import ch.so.agi.gretl.internal.duckdb.GpkgLayerSpec;
 import ch.so.agi.gretl.internal.duckdb.GpkgSourceSpec;
 import ch.so.agi.gretl.internal.duckdb.ParquetExportSpec;
+import ch.so.agi.gretl.internal.duckdb.PostgresExportSpec;
 import ch.so.agi.gretl.internal.duckdb.PostgresSourceSpec;
 import ch.so.agi.gretl.internal.duckdb.PostgresTableSpec;
+import ch.so.agi.gretl.internal.duckdb.PostgresTargetSpec;
+import ch.so.agi.gretl.internal.duckdb.PostgresWriteMode;
+import ch.so.agi.gretl.internal.duckdb.PostgresWritePath;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
@@ -52,6 +58,7 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection sourceFiles;
     private final ConfigurableFileCollection exportFiles;
     private final List<DuckDbSourceSpec> sources;
+    private final List<DuckDbTargetSpec> targets;
     private final List<DuckDbExportSpec> exports;
     private final GretlLogger log;
 
@@ -96,6 +103,11 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
     }
 
     @Input
+    public List<String> getTargetConfiguration() {
+        return targets.stream().map(DuckDbTargetSpec::inputSignature).toList();
+    }
+
+    @Input
     public List<String> getExportConfiguration() {
         return exports.stream().map(DuckDbExportSpec::inputSignature).toList();
     }
@@ -106,6 +118,7 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         this.sourceFiles = getProject().files();
         this.exportFiles = getProject().files();
         this.sources = new ArrayList<>();
+        this.targets = new ArrayList<>();
         this.exports = new ArrayList<>();
         this.log = LogEnvironment.getLogger(DuckDbSqlExecutor.class);
         getInMemory().convention(false);
@@ -142,6 +155,16 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
 
     public void sources(Closure<?> closure) {
         getProject().configure(new SourcesConfig(this), closure);
+    }
+
+    @GretlDslMethod(description = "Configures writable targets for SQL and exports.")
+    public void targets(Action<TargetsConfig> action) {
+        TargetsConfig config = new TargetsConfig(this);
+        action.execute(config);
+    }
+
+    public void targets(Closure<?> closure) {
+        getProject().configure(new TargetsConfig(this), closure);
     }
 
     @GretlDslMethod(description = "Configures exports executed after the SQL files.")
@@ -200,6 +223,7 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
                 inMemory,
                 getInstallExtensions().get(),
                 sources,
+                targets,
                 files,
                 resolveParameterSets(),
                 exports
@@ -213,9 +237,15 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         }
     }
 
+    private void addTarget(DuckDbTargetSpec target) {
+        targets.add(target);
+    }
+
     private void addExport(DuckDbExportSpec export) {
         exports.add(export);
-        exportFiles.from(export.file().toFile());
+        if (export instanceof DuckDbFileExportSpec fileExport) {
+            exportFiles.from(fileExport.file().toFile());
+        }
     }
 
     private List<Map<String, String>> resolveParameterSets() {
@@ -287,6 +317,50 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
             GpkgConfig config = new GpkgConfig(task.getProject(), alias);
             task.getProject().configure(config, closure);
             task.addSource(config.toSpec());
+        }
+    }
+
+    public static final class TargetsConfig {
+        private final DuckDbSqlExecutor task;
+
+        private TargetsConfig(DuckDbSqlExecutor task) {
+            this.task = task;
+        }
+
+        public void postgres(String alias, Action<PostgresTargetConfig> action) {
+            PostgresTargetConfig config = new PostgresTargetConfig(alias);
+            action.execute(config);
+            task.addTarget(config.toSpec());
+        }
+
+        public void postgres(String alias, Closure<?> closure) {
+            PostgresTargetConfig config = new PostgresTargetConfig(alias);
+            task.getProject().configure(config, closure);
+            task.addTarget(config.toSpec());
+        }
+    }
+
+    public static final class PostgresTargetConfig {
+        private final String alias;
+        private DatabaseSpec database;
+
+        private PostgresTargetConfig(String alias) {
+            this.alias = alias;
+        }
+
+        public void database(String jdbcUrl) {
+            this.database = new DatabaseSpec(jdbcUrl, null, null);
+        }
+
+        public void database(String jdbcUrl, String username, String password) {
+            this.database = new DatabaseSpec(jdbcUrl, username, password);
+        }
+
+        private PostgresTargetSpec toSpec() {
+            if (database == null) {
+                throw new IllegalArgumentException("postgres target database is not configured");
+            }
+            return new PostgresTargetSpec(alias, database);
         }
     }
 
@@ -565,6 +639,18 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
             task.getProject().configure(config, closure);
             task.addExport(config.toSpec());
         }
+
+        public void postgres(String name, Action<PostgresExportConfig> action) {
+            PostgresExportConfig config = new PostgresExportConfig(name);
+            action.execute(config);
+            task.addExport(config.toSpec());
+        }
+
+        public void postgres(String name, Closure<?> closure) {
+            PostgresExportConfig config = new PostgresExportConfig(name);
+            task.getProject().configure(config, closure);
+            task.addExport(config.toSpec());
+        }
     }
 
     public abstract static class BaseExportConfig {
@@ -636,6 +722,83 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
                 throw new IllegalArgumentException("parquet export file is not configured");
             }
             return new ParquetExportSpec(name, query, file, overwrite);
+        }
+    }
+
+    public static final class PostgresExportConfig {
+        private final String name;
+        private String target;
+        private String query;
+        private String table;
+        private String mode;
+        private String writePath;
+        private boolean create;
+        private final List<GeometryOverrideSpec> geometries = new ArrayList<>();
+
+        private PostgresExportConfig(String name) {
+            this.name = name;
+        }
+
+        public void target(String target) {
+            this.target = target;
+        }
+
+        public void setTarget(String target) {
+            this.target = target;
+        }
+
+        public void query(String query) {
+            this.query = query;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
+
+        public void table(String table) {
+            this.table = table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public void setWritePath(String writePath) {
+            this.writePath = writePath;
+        }
+
+        public void setCreate(boolean create) {
+            this.create = create;
+        }
+
+        public void geometry(String column, Action<GeometryConfig> action) {
+            GeometryConfig config = new GeometryConfig(column);
+            action.execute(config);
+            geometries.add(config.toSpec());
+        }
+
+        public void geometry(String column, Closure<?> closure) {
+            GeometryConfig config = new GeometryConfig(column);
+            closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+            closure.setDelegate(config);
+            closure.call();
+            geometries.add(config.toSpec());
+        }
+
+        private PostgresExportSpec toSpec() {
+            return new PostgresExportSpec(
+                    name,
+                    target,
+                    query,
+                    table,
+                    PostgresWriteMode.parseRequired(mode),
+                    PostgresWritePath.parse(writePath),
+                    create,
+                    geometries);
         }
     }
 }

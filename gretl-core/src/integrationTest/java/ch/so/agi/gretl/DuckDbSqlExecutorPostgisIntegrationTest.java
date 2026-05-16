@@ -152,6 +152,237 @@ class DuckDbSqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupp
                 .formatted(projectDir.resolve("build/objekt.parquet").toAbsolutePath())));
     }
 
+    @Test
+    void exportsToExistingPostgisTableWithJdbcPath() throws Exception {
+        writeSettings();
+        createPointTargetTable("duckdbexecutor_pgexport");
+        Files.writeString(projectDir.resolve("export.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.points AS
+                SELECT 1::INTEGER AS id, 'first'::VARCHAR AS name, ST_GeomFromText('POINT(1 2)') AS geom
+                UNION ALL
+                SELECT 2::INTEGER AS id, 'second'::VARCHAR AS name, ST_GeomFromText('POINT(3 4)') AS geom;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('exportPostgis', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    targets {
+                        postgres('out') {
+                            database pgUrl, pgUser, pgPass
+                        }
+                    }
+
+                    sqlFiles 'export.sql'
+
+                    exports {
+                        postgres('points') {
+                            target = 'out'
+                            query = 'SELECT * FROM result.points ORDER BY id'
+                            table = 'duckdbexecutor_pgexport.points'
+                            mode = 'truncate'
+                            geometry('geom') {
+                                srid = 2056
+                                type = 'POINT'
+                            }
+                        }
+                    }
+                }
+                """));
+
+        BuildResult result = run("exportPostgis");
+
+        assertEquals(2, count("SELECT count(*) FROM duckdbexecutor_pgexport.points"));
+        assertEquals("2056", scalar("SELECT ST_SRID(geom)::text FROM duckdbexecutor_pgexport.points WHERE id = 1"));
+        assertEquals("POINT(1 2)", scalar("SELECT ST_AsText(geom) FROM duckdbexecutor_pgexport.points WHERE id = 1"));
+        assertFalse(result.getOutput().contains(POSTGIS.getPassword()));
+        assertFalse(result.getOutput().contains("CREATE SECRET"));
+    }
+
+    @Test
+    void createsPostgisTableWithJdbcPath() throws Exception {
+        writeSettings();
+        createOrReplaceSchema("duckdbexecutor_pgcreate");
+        Files.writeString(projectDir.resolve("create_export.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.points AS
+                SELECT 5::INTEGER AS id, ST_GeomFromText('POINT(5 6)') AS geom;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('createPostgis', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    targets {
+                        postgres('out') {
+                            database pgUrl, pgUser, pgPass
+                        }
+                    }
+
+                    sqlFiles 'create_export.sql'
+
+                    exports {
+                        postgres('createdPoints') {
+                            target = 'out'
+                            query = 'SELECT * FROM result.points'
+                            table = 'duckdbexecutor_pgcreate.points'
+                            mode = 'replace'
+                            create = true
+                            geometry('geom') {
+                                srid = 2056
+                                type = 'POINT'
+                            }
+                        }
+                    }
+                }
+                """));
+
+        run("createPostgis");
+
+        assertEquals(1, count("SELECT count(*) FROM duckdbexecutor_pgcreate.points"));
+        assertEquals("POINT(5 6)", scalar("SELECT ST_AsText(geom) FROM duckdbexecutor_pgcreate.points"));
+        assertEquals("POINT", scalar("""
+                SELECT type
+                FROM geometry_columns
+                WHERE f_table_schema = 'duckdbexecutor_pgcreate'
+                  AND f_table_name = 'points'
+                  AND f_geometry_column = 'geom'
+                """));
+    }
+
+    @Test
+    void supportsNativeDuckDbScalarExportToPostgres() throws Exception {
+        writeSettings();
+        createScalarTargetTable("duckdbexecutor_pgnative");
+        Files.writeString(projectDir.resolve("native.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.records AS
+                SELECT 1::INTEGER AS id, 'native'::VARCHAR AS name;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('nativePostgis', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    targets {
+                        postgres('out') {
+                            database pgUrl, pgUser, pgPass
+                        }
+                    }
+
+                    sqlFiles 'native.sql'
+
+                    exports {
+                        postgres('values') {
+                            target = 'out'
+                            query = 'SELECT * FROM result.records'
+                            table = 'duckdbexecutor_pgnative.records'
+                            mode = 'append'
+                            writePath = 'duckdb'
+                        }
+                    }
+                }
+                """));
+
+        run("nativePostgis");
+
+        assertEquals("native", scalar("SELECT name FROM duckdbexecutor_pgnative.records WHERE id = 1"));
+    }
+
+    @Test
+    void exposesWritablePostgresTargetToUserSql() throws Exception {
+        writeSettings();
+        createOrReplaceSchema("duckdbexecutor_direct");
+        Files.writeString(projectDir.resolve("direct.sql"), """
+                CREATE TABLE out.duckdbexecutor_direct.records AS
+                SELECT 7::INTEGER AS id, 'direct'::VARCHAR AS name;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('directTarget', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    targets {
+                        postgres('out') {
+                            database pgUrl, pgUser, pgPass
+                        }
+                    }
+
+                    sqlFiles 'direct.sql'
+                }
+                """));
+
+        run("directTarget");
+
+        assertEquals("direct", scalar("SELECT name FROM duckdbexecutor_direct.records WHERE id = 7"));
+    }
+
+    @Test
+    void rollsBackJdbcPostgresExportWhenLaterExportFails() throws Exception {
+        writeSettings();
+        createScalarTargetTable("duckdbexecutor_pgrollback");
+        try (var connection = pg(); var statement = connection.createStatement()) {
+            statement.execute("INSERT INTO duckdbexecutor_pgrollback.records VALUES (99, 'existing')");
+        }
+        Files.writeString(projectDir.resolve("rollback.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.records AS
+                SELECT 1::INTEGER AS id, 'new'::VARCHAR AS name;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('rollbackPostgis', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    targets {
+                        postgres('out') {
+                            database pgUrl, pgUser, pgPass
+                        }
+                    }
+
+                    sqlFiles 'rollback.sql'
+
+                    exports {
+                        postgres('values') {
+                            target = 'out'
+                            query = 'SELECT * FROM result.records'
+                            table = 'duckdbexecutor_pgrollback.records'
+                            mode = 'append'
+                        }
+                        parquet('broken') {
+                            query = 'SELECT * FROM missing_table'
+                            file file('build/broken.parquet')
+                            overwrite = true
+                        }
+                    }
+                }
+                """));
+
+        runAndFail("rollbackPostgis");
+
+        assertEquals(1, count("SELECT count(*) FROM duckdbexecutor_pgrollback.records"));
+        assertEquals("existing", scalar("SELECT name FROM duckdbexecutor_pgrollback.records WHERE id = 99"));
+        assertFalse(Files.exists(projectDir.resolve("build/broken.parquet")));
+    }
+
+    @Test
+    void runsDocumentedPostgisTargetExample() throws Exception {
+        createOrReplaceSchema("duckdbexecutor_example_target");
+        copyTree(examplePath("postgis-target"), projectDir);
+
+        run("exportToPostgis", "-PpgSchema=duckdbexecutor_example_target");
+
+        assertEquals(2, count("SELECT count(*) FROM duckdbexecutor_example_target.duckdb_executor_points"));
+        assertEquals("POINT", scalar("""
+                SELECT type
+                FROM geometry_columns
+                WHERE f_table_schema = 'duckdbexecutor_example_target'
+                  AND f_table_name = 'duckdb_executor_points'
+                  AND f_geometry_column = 'geom'
+                """));
+    }
+
     private void createGemeindenTable(String schema) throws Exception {
         createOrReplaceSchema(schema);
         try (var connection = pg(); var statement = connection.createStatement()) {
@@ -174,11 +405,50 @@ class DuckDbSqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupp
         }
     }
 
+    private void createPointTargetTable(String schema) throws Exception {
+        createOrReplaceSchema(schema);
+        try (var connection = pg(); var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE " + schema + ".points("
+                    + "id integer primary key, name text, geom geometry(Point, 2056))");
+        }
+    }
+
+    private void createScalarTargetTable(String schema) throws Exception {
+        createOrReplaceSchema(schema);
+        try (var connection = pg(); var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE " + schema + ".records("
+                    + "id integer primary key, name text)");
+        }
+    }
+
     private void copyTestDuckdbGpkg(String target) throws Exception {
         Path source = Path.of("src/test/resources/original-gretl/duckdb/data/ch.so.afu.abbaustellen.gpkg");
         Path destination = projectDir.resolve(target);
         Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private Path examplePath(String name) {
+        Path fromModule = Path.of("../docs/examples/duckdb-sql-executor", name).normalize();
+        if (Files.isDirectory(fromModule)) {
+            return fromModule;
+        }
+        return Path.of("docs/examples/duckdb-sql-executor", name).normalize();
+    }
+
+    private void copyTree(Path source, Path target) throws Exception {
+        try (var stream = Files.walk(source)) {
+            stream.filter(Files::isRegularFile).forEach(path -> {
+                Path relative = source.relativize(path);
+                Path destination = target.resolve(relative);
+                try {
+                    Files.createDirectories(destination.getParent());
+                    Files.copy(path, destination, StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
     }
 
     private String duckDbBuild(String taskDefinition) {

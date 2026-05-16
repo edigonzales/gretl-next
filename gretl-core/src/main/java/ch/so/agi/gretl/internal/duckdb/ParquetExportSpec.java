@@ -8,7 +8,7 @@ public record ParquetExportSpec(
         String query,
         Path file,
         boolean overwrite
-) implements DuckDbExportSpec {
+) implements DuckDbFileExportSpec {
     public ParquetExportSpec {
         DuckDbSql.requireSimpleIdentifier(name, "export name");
         if (query == null || query.isBlank()) {

@@ -32,6 +32,18 @@ class PostgresJdbcUrlTest {
     }
 
     @Test
+    void omitsCredentialsFromInputSignature() {
+        PostgresJdbcUrl url = PostgresJdbcUrl.parse(
+                "jdbc:postgresql://localhost/pub?user=secret_user&password=secret_pwd&loggerLevel=OFF");
+
+        String signature = url.inputSignatureWithoutCredentials();
+
+        assertEquals("jdbc:postgresql://localhost:5432/pub?loggerLevel=OFF", signature);
+        assertFalse(signature.contains("secret_user"));
+        assertFalse(signature.contains("secret_pwd"));
+    }
+
+    @Test
     void rejectsUnsupportedUrl() {
         assertThrows(IllegalArgumentException.class,
                 () -> PostgresJdbcUrl.parse("jdbc:sqlite:/tmp/test.db"));

@@ -10,7 +10,7 @@ public record GpkgExportSpec(
         String layer,
         String srs,
         boolean overwrite
-) implements DuckDbExportSpec {
+) implements DuckDbFileExportSpec {
     public GpkgExportSpec {
         DuckDbSql.requireSimpleIdentifier(name, "export name");
         if (query == null || query.isBlank()) {

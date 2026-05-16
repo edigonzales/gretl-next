@@ -11,6 +11,7 @@ public record DuckDbExecutionRequest(
         boolean inMemory,
         boolean installExtensions,
         List<DuckDbSourceSpec> sources,
+        List<DuckDbTargetSpec> targets,
         List<Path> sqlFiles,
         List<Map<String, String>> parameterSets,
         List<DuckDbExportSpec> exports
@@ -29,6 +30,8 @@ public record DuckDbExecutionRequest(
             throw new IllegalArgumentException("sqlFiles must not be empty");
         }
         sources = List.copyOf(sources == null ? List.of() : sources);
+        targets = List.copyOf(targets == null ? List.of() : targets);
+        validateAliases(sources, targets);
         sqlFiles = List.copyOf(sqlFiles);
         parameterSets = normalizeParameterSets(parameterSets);
         exports = List.copyOf(exports == null ? List.of() : exports);
@@ -48,5 +51,21 @@ public record DuckDbExecutionRequest(
         return parameterSets.stream()
                 .map(parameterSet -> Map.copyOf(new LinkedHashMap<>(parameterSet)))
                 .toList();
+    }
+
+    private static void validateAliases(List<DuckDbSourceSpec> sources, List<DuckDbTargetSpec> targets) {
+        Map<String, String> aliases = new LinkedHashMap<>();
+        for (DuckDbSourceSpec source : sources) {
+            String previous = aliases.put(source.alias(), "source");
+            if (previous != null) {
+                throw new IllegalArgumentException("DuckDB alias is configured more than once: " + source.alias());
+            }
+        }
+        for (DuckDbTargetSpec target : targets) {
+            String previous = aliases.put(target.alias(), "target");
+            if (previous != null) {
+                throw new IllegalArgumentException("DuckDB alias is configured more than once: " + target.alias());
+            }
+        }
     }
 }

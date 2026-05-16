@@ -97,6 +97,25 @@ public record PostgresJdbcUrl(
         return builder.toString();
     }
 
+    public String inputSignatureWithoutCredentials() {
+        StringBuilder builder = new StringBuilder("jdbc:postgresql://")
+                .append(host)
+                .append(":")
+                .append(port)
+                .append("/")
+                .append(database);
+        String separator = "?";
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            String normalized = entry.getKey().toLowerCase();
+            if (normalized.equals("user") || normalized.equals("password")) {
+                continue;
+            }
+            builder.append(separator).append(entry.getKey()).append("=").append(entry.getValue());
+            separator = "&";
+        }
+        return builder.toString();
+    }
+
     private static Map<String, String> parseQuery(String query) {
         Map<String, String> parameters = new LinkedHashMap<>();
         if (query == null || query.isBlank()) {

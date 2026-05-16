@@ -41,7 +41,8 @@ DSL methods:
 - `inMemoryDatabase()`
 - `installExtensions(boolean value)`
 - `sources { postgres(alias) { ... }; gpkg(alias) { ... } }`
-- `exports { gpkg(name) { ... }; parquet(name) { ... } }`
+- `targets { postgres(alias) { ... } }`
+- `exports { gpkg(name) { ... }; parquet(name) { ... }; postgres(name) { ... } }`
 - `sqlFiles(Object... paths)`
 - `sqlParameters(Map<String, ?> parameters)`
 - `sqlParameterSets(Map<String, ?>... parameterSets)`
@@ -57,6 +58,15 @@ Semantics and defaults:
 - `mode = "materialize"` copies the configured table/layer into DuckDB before
   user SQL runs.
 - PostgreSQL sources are attached read-only.
+- PostgreSQL targets are writable and are exposed under their target alias.
+- PostgreSQL exports require `mode = "append"`, `mode = "truncate"` or
+  `mode = "replace"`.
+- PostgreSQL export `writePath = "jdbc"` is the default and supports controlled
+  PostGIS geometry writes.
+- PostgreSQL export `writePath = "duckdb"` uses the DuckDB PostgreSQL extension
+  directly and is intended for scalar/simple writes.
+- PostgreSQL export `create = false` by default; `mode = "replace"` requires
+  `create = true`.
 - `installExtensions = false` by default; production Docker images should
   preinstall DuckDB extensions.
 - GeoPackage and Parquet exports write to temporary files first and then move

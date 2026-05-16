@@ -1,0 +1,38 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.DuckDbSqlExecutor
+
+def pgUrl = providers.gradleProperty('pgUrl').get()
+def pgUser = providers.gradleProperty('pgUser').get()
+def pgPass = providers.gradleProperty('pgPass').get()
+def pgSchema = providers.gradleProperty('pgSchema').orElse('public').get()
+
+tasks.register('exportToPostgis', DuckDbSqlExecutor) {
+    inMemoryDatabase()
+    installExtensions true
+
+    targets {
+        postgres('out') {
+            database pgUrl, pgUser, pgPass
+        }
+    }
+
+    sqlFiles 'sql/010_prepare.sql'
+
+    exports {
+        postgres('points') {
+            target = 'out'
+            query = 'SELECT * FROM result.points ORDER BY id'
+            table = "${pgSchema}.duckdb_executor_points"
+            mode = 'replace'
+            create = true
+
+            geometry('geom') {
+                srid = 2056
+                type = 'POINT'
+            }
+        }
+    }
+}

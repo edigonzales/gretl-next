@@ -82,6 +82,11 @@ tasks.register<Db2Db>("copyParcels") {
 Groovy-only keywords such as `as`; table and layer renaming uses `alias`, so a
 future Kotlin DSL can map the same model without a breaking rename.
 
+The same applies to PostgreSQL writes: `targets` names writable connections,
+while `exports.postgres` describes a concrete query-to-table write. The
+properties use Kotlin-friendly names such as `target`, `table`, `mode`,
+`writePath` and `create`.
+
 ## Gzip
 
 ```kotlin
