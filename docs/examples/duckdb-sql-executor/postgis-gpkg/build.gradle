@@ -1,0 +1,46 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.DuckDbSqlExecutor
+
+def pgUrl = providers.gradleProperty('pgUrl').get()
+def pgUser = providers.gradleProperty('pgUser').get()
+def pgPass = providers.gradleProperty('pgPass').get()
+
+tasks.register('analyse', DuckDbSqlExecutor) {
+    inMemoryDatabase()
+    installExtensions true
+
+    sources {
+        postgres('pub') {
+            database pgUrl, pgUser, pgPass
+            table('agi_pub.gemeindegrenzen') {
+                alias = 'gemeinden'
+            }
+        }
+
+        gpkg('input') {
+            file file('data/abbaustellen.gpkg')
+            layer('abbaustelle')
+        }
+    }
+
+    sqlFiles 'sql/010_analyse.sql'
+
+    exports {
+        gpkg('analyse') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.gpkg')
+            layer = 'analyse'
+            srs = 'EPSG:2056'
+            overwrite = true
+        }
+
+        parquet('analyse_parquet') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.parquet')
+            overwrite = true
+        }
+    }
+}

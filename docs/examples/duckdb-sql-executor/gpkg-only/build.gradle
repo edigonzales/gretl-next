@@ -1,0 +1,35 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.DuckDbSqlExecutor
+
+tasks.register('analyse', DuckDbSqlExecutor) {
+    database file('build/work.duckdb')
+    installExtensions true
+
+    sources {
+        gpkg('input') {
+            file file('data/abbaustellen.gpkg')
+            layer('abbaustelle')
+        }
+    }
+
+    sqlFiles 'sql/010_analyse.sql'
+
+    exports {
+        gpkg('analyse') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.gpkg')
+            layer = 'analyse'
+            srs = 'EPSG:2056'
+            overwrite = true
+        }
+
+        parquet('analyse_parquet') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.parquet')
+            overwrite = true
+        }
+    }
+}

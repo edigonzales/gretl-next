@@ -76,6 +76,12 @@ tasks.register<Db2Db>("copyParcels") {
 }
 ```
 
+## DuckDbSqlExecutor
+
+`DuckDbSqlExecutor` is Groovy-DSL-first in the MVP. The public names avoid
+Groovy-only keywords such as `as`; table and layer renaming uses `alias`, so a
+future Kotlin DSL can map the same model without a breaking rename.
+
 ## Gzip
 
 ```kotlin

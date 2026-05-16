@@ -28,8 +28,10 @@ COPY --chown=gradle:root libs /home/gradle/libs
 
 RUN chmod +x /usr/local/bin/gretl
 
-WORKDIR /home/gradle/project
 USER gradle
+RUN java -cp "/home/gradle/libs/*" ch.so.agi.gretl.internal.duckdb.DuckDbExtensionInstaller postgres spatial
+
+WORKDIR /home/gradle/project
 
 ENTRYPOINT ["gretl"]
 CMD ["tasks"]

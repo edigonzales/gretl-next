@@ -8,6 +8,8 @@ points.
 
 - Writing jobs: use the compact examples in the [README](../README.md) and the
   task overview in [Task reference](task-reference.md).
+- Federated DuckDB SQL jobs: read
+  [DuckDbSqlExecutor](duckdb-sql-executor.md).
 - Migrating old jobs: read [Migration from original GRETL](migration-from-gretl.md).
 - Writing Kotlin builds: use the complete examples in [Kotlin DSL examples](kotlin-dsl.md).
 - Understanding the plugin split: read [Architecture](architecture.md).

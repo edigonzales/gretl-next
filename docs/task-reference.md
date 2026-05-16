@@ -31,6 +31,40 @@ Semantics and defaults:
 - Use either `sqlParameters` or `sqlParameterSets`, not both.
 - Password is `@Internal` and not a normal Gradle task input.
 
+## DuckDbSqlExecutor
+
+Purpose: execute SQL files in a prepared DuckDB federation session.
+
+DSL methods:
+
+- `database(Object file)`
+- `inMemoryDatabase()`
+- `installExtensions(boolean value)`
+- `sources { postgres(alias) { ... }; gpkg(alias) { ... } }`
+- `exports { gpkg(name) { ... }; parquet(name) { ... } }`
+- `sqlFiles(Object... paths)`
+- `sqlParameters(Map<String, ?> parameters)`
+- `sqlParameterSets(Map<String, ?>... parameterSets)`
+
+Required:
+
+- exactly one of `database file(...)` or `inMemoryDatabase()`
+- at least one SQL file via `sqlFiles(...)`
+
+Semantics and defaults:
+
+- `mode = "view"` is the default for sources and source objects.
+- `mode = "materialize"` copies the configured table/layer into DuckDB before
+  user SQL runs.
+- PostgreSQL sources are attached read-only.
+- `installExtensions = false` by default; production Docker images should
+  preinstall DuckDB extensions.
+- GeoPackage and Parquet exports write to temporary files first and then move
+  them to the configured target path.
+- `overwrite = false` by default for exports.
+- PostgreSQL passwords are `@Internal` and not normal Gradle task inputs.
+- SQL parameters and parameter sets behave like `SqlExecutor`.
+
 ## Db2Db
 
 Purpose: copy rows selected from a source database into a target table.
