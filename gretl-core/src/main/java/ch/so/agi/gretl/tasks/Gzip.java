@@ -1,6 +1,8 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.internal.gzip.GzipEngine;
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import org.gradle.api.GradleException;
@@ -13,6 +15,7 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.IOException;
 
+@GretlTaskDoc(name = "Gzip", description = "Writes a gzip-compressed copy of one file.")
 public abstract class Gzip extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Gzip.class);
 
@@ -23,10 +26,12 @@ public abstract class Gzip extends AbstractCoreGretlTask {
     @OutputFile
     public abstract RegularFileProperty getGzipFile();
 
+    @GretlDslMethod(required = true, description = "Configures the input file to compress.")
     public void dataFile(Object path) {
         getDataFile().set(getProject().file(path));
     }
 
+    @GretlDslMethod(required = true, description = "Configures the gzip output file.")
     public void gzipFile(Object path) {
         getGzipFile().set(getProject().file(path));
     }

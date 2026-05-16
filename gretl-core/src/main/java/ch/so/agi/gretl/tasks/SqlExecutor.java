@@ -3,6 +3,8 @@ package ch.so.agi.gretl.tasks;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import ch.so.agi.gretl.internal.sql.SqlExecutionEngine;
 import ch.so.agi.gretl.internal.sql.SqlExecutionRequest;
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 
+@GretlTaskDoc(name = "SqlExecutor", description = "Executes one or more SQL files against one database.")
 public abstract class SqlExecutor extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection sqlFiles;
     private final GretlLogger log;
@@ -85,6 +88,7 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Konfiguriert die Datenbank nur mit JDBC-URL.
      */
+    @GretlDslMethod(required = true, description = "Configures the database connection with only a JDBC URL.")
     public void database(String jdbcUrl) {
         getJdbcUrl().set(jdbcUrl);
     }
@@ -92,6 +96,7 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Konfiguriert die Datenbank mit JDBC-URL, Benutzer und Passwort.
      */
+    @GretlDslMethod(required = true, description = "Configures the database connection with JDBC URL, username and password.")
     public void database(String jdbcUrl, String username, String password) {
         getJdbcUrl().set(jdbcUrl);
         getUsername().set(username);
@@ -101,6 +106,7 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Fügt SQL-Dateien hinzu. Pfade werden relativ zum Gradle-Projekt aufgelöst.
      */
+    @GretlDslMethod(required = true, description = "Adds SQL files. Paths are resolved relative to the Gradle project.")
     public void sqlFiles(Object... paths) {
         getSqlFiles().from(paths);
     }
@@ -108,6 +114,7 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Setzt ein einzelnes SQL-Parameter-Set.
      */
+    @GretlDslMethod(description = "Sets one SQL parameter map used for a single execution of all SQL files.")
     public void sqlParameters(Map<String, ?> parameters) {
         getSqlParameters().set(toStringMap(parameters));
     }
@@ -115,6 +122,7 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Setzt mehrere SQL-Parameter-Sets. Pro Set werden alle SQL-Dateien in Reihenfolge ausgeführt.
      */
+    @GretlDslMethod(description = "Sets multiple SQL parameter maps. For each map, all SQL files are executed in order.")
     @SafeVarargs
     public final void sqlParameterSets(Map<String, ?>... parameterSets) {
         getSqlParameterSets().set(Stream.of(parameterSets)

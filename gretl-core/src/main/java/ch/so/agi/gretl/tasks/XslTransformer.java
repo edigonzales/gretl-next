@@ -2,6 +2,8 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.internal.xslt.XsltEngine;
 import ch.so.agi.gretl.internal.xslt.XsltRequest;
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -24,6 +26,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
+@GretlTaskDoc(name = "XslTransformer", description = "Transforms one or more XML files with one XSLT stylesheet.")
 public abstract class XslTransformer extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection xmlFiles;
     private final GretlLogger log;
@@ -56,22 +59,27 @@ public abstract class XslTransformer extends AbstractCoreGretlTask {
         getFileExtension().convention("xtf");
     }
 
+    @GretlDslMethod(required = true, description = "Configures a stylesheet file. Use either xslFile(...) or xslResource(...).")
     public void xslFile(Object path) {
         getXslFile().set(getProject().file(path));
     }
 
+    @GretlDslMethod(required = true, description = "Configures a classpath stylesheet resource. Use either xslFile(...) or xslResource(...).")
     public void xslResource(String resourceName) {
         getXslResource().set(resourceName);
     }
 
+    @GretlDslMethod(required = true, description = "Adds XML input files to transform.")
     public void xmlFiles(Object... paths) {
         getXmlFiles().from(paths);
     }
 
+    @GretlDslMethod(required = true, description = "Configures the output directory.")
     public void outDirectory(Object path) {
         getOutDirectory().set(getProject().file(path));
     }
 
+    @GretlDslMethod(defaultValue = "xtf", description = "Sets the output file extension without leading dot.")
     public void fileExtension(String fileExtension) {
         getFileExtension().set(fileExtension);
     }

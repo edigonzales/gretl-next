@@ -45,27 +45,36 @@ public class DbTransferEngine {
                 + ", Transfers: " + request.transfers().size());
 
         try (Connection source = openConnection(request.sourceDatabase().jdbcUrl(),
-                request.sourceDatabase().username(), request.sourceDatabase().password());
-             Connection target = openConnection(request.targetDatabase().jdbcUrl(),
-                     request.targetDatabase().username(), request.targetDatabase().password())) {
-            List<Integer> rowCounts = new ArrayList<>();
-            try {
-                for (Map<String, String> parameterSet : request.parameterSets()) {
-                    for (DbTransferSpec transfer : request.transfers()) {
-                        rowCounts.add(processTransfer(source, target, transfer, parameterSet, request));
-                    }
+                request.sourceDatabase().username(), request.sourceDatabase().password())) {
+            if (request.sourceDatabase().equals(request.targetDatabase())) {
+                executeTransfers(source, source, request);
+            } else {
+                try (Connection target = openConnection(request.targetDatabase().jdbcUrl(),
+                        request.targetDatabase().username(), request.targetDatabase().password())) {
+                    executeTransfers(source, target, request);
+                } finally {
+                    rollback(source);
                 }
-                target.commit();
-                String counts = rowCounts.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("");
-                log.lifecycle(String.format(
-                        "%s: Finished Db2Db. Number of transfer executions: %s, transferred rows: [%s]",
-                        request.taskName(), rowCounts.size(), counts));
-            } catch (Exception e) {
-                rollback(target);
-                throw e;
-            } finally {
-                rollback(source);
             }
+        }
+    }
+
+    private void executeTransfers(Connection source, Connection target, DbTransferRequest request) throws Exception {
+        List<Integer> rowCounts = new ArrayList<>();
+        try {
+            for (Map<String, String> parameterSet : request.parameterSets()) {
+                for (DbTransferSpec transfer : request.transfers()) {
+                    rowCounts.add(processTransfer(source, target, transfer, parameterSet, request));
+                }
+            }
+            target.commit();
+            String counts = rowCounts.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("");
+            log.lifecycle(String.format(
+                    "%s: Finished Db2Db. Number of transfer executions: %s, transferred rows: [%s]",
+                    request.taskName(), rowCounts.size(), counts));
+        } catch (Exception e) {
+            rollback(target);
+            throw e;
         }
     }
 

@@ -7,7 +7,21 @@ base {
     archivesName = 'gretl-core'
 }
 
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
+    compileOnly project(':gretl-doclet')
+
     implementation "commons-io:commons-io:${commonsIoVersion}"
     implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
@@ -20,9 +34,16 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
+    testRuntimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
+
+    integrationTestImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    integrationTestImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    integrationTestRuntimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
 }
 
 gradlePlugin {
+    testSourceSets sourceSets.test, sourceSets.integrationTest
+
     plugins {
         gretlCore {
             id = 'ch.so.agi.gretl'
@@ -31,4 +52,13 @@ gradlePlugin {
             description = 'Core Gradle tasks for GRETL pipelines.'
         }
     }
+}
+
+tasks.register('integrationTest', Test) {
+    group = 'verification'
+    description = 'Runs Docker-backed integration tests.'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+    useJUnitPlatform()
 }

@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.geotools.tasks;
 
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.geotools.internal.operations.VectorizeRequest;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -15,6 +17,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.List;
 import java.util.Objects;
 
+@GretlTaskDoc(name = "Vectorize", description = "Vectorizes selected raster cell values into a GeoPackage.")
 public abstract class Vectorize extends GeoToolsTask {
 
     public Vectorize() {
@@ -35,18 +38,22 @@ public abstract class Vectorize extends GeoToolsTask {
     @Input
     public abstract ListProperty<Double> getCellValues();
 
+    @GretlDslMethod(required = true, description = "Configures the input raster file.")
     public void inputRaster(Object path) {
         getInputRaster().set(getProject().file(path));
     }
 
+    @GretlDslMethod(required = true, description = "Configures the output GeoPackage file.")
     public void outputGeopackage(Object path) {
         getOutputGeopackage().set(getProject().file(path));
     }
 
+    @GretlDslMethod(defaultValue = "0", description = "Sets the raster band index to read.")
     public void band(int band) {
         getBand().set(band);
     }
 
+    @GretlDslMethod(required = true, description = "Sets the raster cell values to vectorize.")
     public void cellValues(Number... values) {
         getCellValues().set(toDoubleList(values));
     }

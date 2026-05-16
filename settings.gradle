@@ -20,3 +20,4 @@ rootProject.name = 'gretl-modular'
 
 include 'gretl-core'
 include 'gretl-geotools'
+include 'gretl-doclet'

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TRANSFER xmlns="http://www.interlis.ch/INTERLIS2.3">
+   <HEADERSECTION SENDER="eCH0132_to_xtf" VERSION="2.3">
+      <MODELS>
+         <MODEL NAME="SO_AGI_SGV_Meldungen_20221109"
+                 VERSION="2022-11-09"
+                 URI="https://agi.so.ch"/>
+      </MODELS>
+   </HEADERSECTION>
+   <DATASECTION>
+      <SO_AGI_SGV_Meldungen_20221109.Meldungen BID="SO_AGI_SGV_Meldungen_20221109.Meldungen">
+         <SO_AGI_SGV_Meldungen_20221109.Meldungen.Meldung TID="1">
+            <Grundstuecksnummer>2566</Grundstuecksnummer>
+            <EGRID>CH933270068783</EGRID>
+            <NBIdent>SO0200002601</NBIdent>
+            <Datum_Meldung>2025-04-21</Datum_Meldung>
+            <Meldegrund>Umbau</Meldegrund>
+            <Baujahr>1931</Baujahr>
+            <Gebaeudebezeichnung>Reine Wohngebäude (Wohnnutzung ausschliesslich)</Gebaeudebezeichnung>
+            <Gebaeudeadresse>Zurmattenstrasse 3, 4500 Solothurn</Gebaeudeadresse>
+            <Versicherungsbeginn>2023-01-24</Versicherungsbeginn>
+            <Verwalter>Ayhan Cilginözü, Zurmattenstrasse 3, 4500 Solothurn</Verwalter>
+            <Eigentuemer>Sibel Ekinci Cilginözü, Zurmattenstrasse 3, 4500 Solothurn / Ayhan Cilginözü, Zurmattenstrasse 3, 4500 Solothurn</Eigentuemer>
+            <Baulicher_Mehrwert>260000</Baulicher_Mehrwert>
+            <Status>neu</Status>
+            <MessageId>b3b3731b-6a80-4c84-83fa-7c5b5f42f9d9</MessageId>
+            <InsuranceObjectId>G-0004052</InsuranceObjectId>
+         </SO_AGI_SGV_Meldungen_20221109.Meldungen.Meldung>
+      </SO_AGI_SGV_Meldungen_20221109.Meldungen>
+   </DATASECTION>
+</TRANSFER>

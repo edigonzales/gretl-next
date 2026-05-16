@@ -102,6 +102,12 @@ standalone fallback is only used when core classes are executed outside the
 Gradle plugin. This avoids accidental behavior changes just because Gradle
 classes happen to be visible on a classpath.
 
+Public job syntax and migration guidance are documented separately:
+
+- [Migration from original GRETL](migration-from-gretl.md)
+- [Kotlin DSL examples](kotlin-dsl.md)
+- [Task reference](task-reference.md)
+
 GeoTools worker code cannot depend on Gradle logging APIs because the worker
 runtime is meant to remain movable between `classLoaderIsolation`,
 `processIsolation`, and possible standalone diagnostics. The worker runtime
@@ -183,14 +189,28 @@ compatibility path for older jobs that still use `apply plugin:`.
 The tests use Gradle TestKit:
 
 - Core tasks run in temporary Gradle builds against small local fixtures.
-- SQL and Db2Db are verified with SQLite.
+- `SqlExecutor` and `Db2Db` are verified with SQLite in the fast test suite.
+- `SqlExecutor` and `Db2Db` are also verified against PostgreSQL/PostGIS with
+  Testcontainers in the separate `:gretl-core:integrationTest` suite.
 - GeoTools tasks run through the classloader-isolated worker.
 - Raster fixtures come from the existing `gretl-gt` experiments.
 - Worker logging is verified both through the Gradle bridge and through the
   standalone stdout/stderr fallback.
 
-The expected project-level check is:
+The fast project-level check is:
 
 ```bash
-./gradlew clean check stageRuntimeImage
+./gradlew clean check
+```
+
+The Docker-backed database integration tests run separately:
+
+```bash
+./gradlew :gretl-core:integrationTest
+```
+
+The runtime image can be staged independently:
+
+```bash
+./gradlew stageRuntimeImage
 ```

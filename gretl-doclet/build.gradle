@@ -1,0 +1,15 @@
+plugins {
+    id 'java-library'
+}
+
+base {
+    archivesName = 'gretl-doclet'
+}
+
+dependencies {
+    testImplementation gradleApi()
+    testImplementation project(':gretl-core')
+    testImplementation project(':gretl-geotools')
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}

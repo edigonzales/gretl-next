@@ -4,6 +4,8 @@ import ch.so.agi.gretl.internal.db2db.DbTransferEngine;
 import ch.so.agi.gretl.internal.db2db.DbTransferRequest;
 import ch.so.agi.gretl.internal.db2db.DbTransferSpec;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@GretlTaskDoc(name = "Db2Db", description = "Copies rows selected from a source database into a target table.")
 public abstract class Db2Db extends AbstractCoreGretlTask {
 
     private final List<DbTransferSpec> transfers;
@@ -94,26 +97,31 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
         getSqlParameterSets().convention(Collections.emptyList());
     }
 
+    @GretlDslMethod(required = true, description = "Configures the source database connection with only a JDBC URL.")
     public void sourceDatabase(String jdbcUrl) {
         getSourceJdbcUrl().set(jdbcUrl);
     }
 
+    @GretlDslMethod(required = true, description = "Configures the source database connection with JDBC URL, username and password.")
     public void sourceDatabase(String jdbcUrl, String username, String password) {
         getSourceJdbcUrl().set(jdbcUrl);
         getSourceUsername().set(username);
         getSourcePassword().set(password);
     }
 
+    @GretlDslMethod(required = true, description = "Configures the target database connection with only a JDBC URL.")
     public void targetDatabase(String jdbcUrl) {
         getTargetJdbcUrl().set(jdbcUrl);
     }
 
+    @GretlDslMethod(required = true, description = "Configures the target database connection with JDBC URL, username and password.")
     public void targetDatabase(String jdbcUrl, String username, String password) {
         getTargetJdbcUrl().set(jdbcUrl);
         getTargetUsername().set(username);
         getTargetPassword().set(password);
     }
 
+    @GretlDslMethod(required = true, description = "Adds a transfer from a SQL file into a target table.")
     public void transfer(Object sqlFile, String targetTable, boolean deleteAllRows, String... geometryColumns) {
         addTransfer(new TransferConfig()
                 .sqlFile(sqlFile)
@@ -122,16 +130,19 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
                 .geometryColumns(geometryColumns));
     }
 
+    @GretlDslMethod(required = true, description = "Adds a transfer using nested configuration: sqlFile(...), targetTable(...), deleteAllRows(...) and geometryColumns(...).")
     public void transfer(Action<TransferConfig> action) {
         TransferConfig config = new TransferConfig();
         action.execute(config);
         addTransfer(config);
     }
 
+    @GretlDslMethod(description = "Sets one SQL parameter map used for a single execution of all transfers.")
     public void sqlParameters(Map<String, ?> parameters) {
         getSqlParameters().set(toStringMap(parameters));
     }
 
+    @GretlDslMethod(description = "Sets multiple SQL parameter maps. For each map, all transfers are executed in order.")
     @SafeVarargs
     public final void sqlParameterSets(Map<String, ?>... parameterSets) {
         getSqlParameterSets().set(Stream.of(parameterSets)
@@ -139,10 +150,12 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
                 .toList());
     }
 
+    @GretlDslMethod(defaultValue = "5000", description = "Sets the JDBC batch size for target inserts.")
     public void batchSize(int value) {
         getBatchSize().set(value);
     }
 
+    @GretlDslMethod(defaultValue = "5000", description = "Sets the JDBC fetch size for source reads.")
     public void fetchSize(int value) {
         getFetchSize().set(value);
     }

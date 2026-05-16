@@ -8,20 +8,20 @@ tasks from GeoTools-heavy processing.
 
 - `gretl-core`
   - Gradle plugin ID: `ch.so.agi.gretl`
-  - First ported tasks: `SqlExecutor`, `Db2Db`, `Gzip`, `XslTransformer`
+  - Ported tasks: `SqlExecutor`, `Db2Db`, `Gzip`, `XslTransformer`
   - Shared service: `gretlCoreService`
-  - Package compatibility is kept under `ch.so.agi.gretl.*`.
+  - Public task types stay under `ch.so.agi.gretl.tasks.*`.
 
 - `gretl-geotools`
   - Gradle plugin ID: `ch.so.agi.gretl.geotools`
-  - First GeoTools tasks: `ReadShapefile`, `Vectorize`, `RasterReclassify`
+  - Ported tasks: `ReadShapefile`, `Vectorize`, `RasterReclassify`
   - Shared service: `gretlGeoToolsService`
   - GeoTools code runs through Gradle Worker API with `classLoaderIsolation`.
 
 There is intentionally no raster plugin yet. Raster-like GeoTools tasks stay in
 `gretl-geotools` for this prototype.
 
-## Build
+## Build And Test
 
 The wrapper is pinned to Gradle 7.6.4. Java 17 is configured through Gradle
 toolchains.
@@ -29,8 +29,13 @@ toolchains.
 ```bash
 ./gradlew --version
 ./gradlew clean check
+./gradlew :gretl-core:integrationTest
 ./gradlew stageRuntimeImage
 ```
+
+`./gradlew clean check` is the fast local check and does not require Docker.
+The `:gretl-core:integrationTest` task starts PostgreSQL/PostGIS containers with
+Testcontainers and is run separately.
 
 `stageRuntimeImage` creates a Docker build context under
 `build/runtime-image/docker`. If Docker is available, the local runtime image can
@@ -92,42 +97,10 @@ tasks.register('vectorizeRaster', Vectorize) {
 }
 ```
 
-The GeoTools plugin embeds a worker runtime classpath as plugin resources and
-passes that classpath to `workerExecutor.classLoaderIsolation`. GeoTools and
-ImageIO dependencies are therefore not normal plugin implementation
-dependencies.
+## Documentation
 
-## Logging And Docker
-
-Core tasks use Gradle logging directly through the `GretlLogger` abstraction.
-In Docker this still flows through Gradle's plain console output.
-
-GeoTools worker code logs through a small structured protocol. While running
-inside `classLoaderIsolation`, the worker receives a log sink from the plugin
-and the plugin maps worker levels to Gradle `lifecycle`, `info`, `debug` and
-`error`. If the worker runtime is ever used without that sink, it falls back to
-console lines in the form `GRETL_WORKER|<LEVEL>|<message>`; errors go to
-stderr, all other levels to stdout. The same format is parseable by the plugin
-for a later `processIsolation` implementation.
-
-The Docker runner executes:
-
-```bash
-gradle "$@" --init-script /home/gradle/init.gradle --no-daemon --console=plain
-```
-
-The staged image contains a file-based Maven repository for both plugin marker
-artifacts, so jobs can use:
-
-```groovy
-plugins {
-    id 'ch.so.agi.gretl'
-    id 'ch.so.agi.gretl.geotools'
-}
-```
-
-## More Context
-
-See [docs/architecture.md](docs/architecture.md) for the detailed rationale,
-dependency boundaries, worker layout, logging boundary, Docker packaging, and
-known limits of `classLoaderIsolation`.
+- [Documentation index](docs/index.md)
+- [Migration from original GRETL](docs/migration-from-gretl.md)
+- [Kotlin DSL examples](docs/kotlin-dsl.md)
+- [Task reference](docs/task-reference.md)
+- [Architecture](docs/architecture.md)

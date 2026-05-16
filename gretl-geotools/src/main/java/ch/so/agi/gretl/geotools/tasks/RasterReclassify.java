@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.geotools.tasks;
 
+import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.geotools.internal.operations.RasterReclassifyRequest;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -14,6 +16,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.List;
 import java.util.Objects;
 
+@GretlTaskDoc(name = "RasterReclassify", description = "Reclassifies raster values into a new raster.")
 public abstract class RasterReclassify extends GeoToolsTask {
 
     private static final List<Double> DEFAULT_BREAKS = List.of(0d, 55d, 60d, 65d, 70d, 500d);
@@ -37,18 +40,22 @@ public abstract class RasterReclassify extends GeoToolsTask {
     @Input
     public abstract Property<Double> getNoData();
 
+    @GretlDslMethod(required = true, description = "Configures the input raster file.")
     public void inputRaster(Object path) {
         getInputRaster().set(getProject().file(path));
     }
 
+    @GretlDslMethod(required = true, description = "Configures the output raster file.")
     public void outputRaster(Object path) {
         getOutputRaster().set(getProject().file(path));
     }
 
+    @GretlDslMethod(defaultValue = "0, 55, 60, 65, 70, 500", description = "Sets strictly increasing class break values.")
     public void breaks(Number... values) {
         getBreaks().set(toDoubleList(values));
     }
 
+    @GretlDslMethod(defaultValue = "-100", description = "Sets the no-data value for the output raster.")
     public void noData(Number value) {
         getNoData().set(value.doubleValue());
     }

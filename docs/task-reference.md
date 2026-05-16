@@ -1,0 +1,175 @@
+# Task Reference
+
+This is a compact starting point for the public task DSL. It lists the intended
+job-facing methods, required fields and important defaults. Detailed error
+catalogues and larger examples can be added later.
+
+## SqlExecutor
+
+Purpose: execute one or more SQL files against one database.
+
+DSL methods:
+
+- `database(String jdbcUrl)`
+- `database(String jdbcUrl, String username, String password)`
+- `sqlFiles(Object... paths)`
+- `sqlParameters(Map<String, ?> parameters)`
+- `sqlParameterSets(Map<String, ?>... parameterSets)`
+
+Required:
+
+- `database(...)`
+- at least one SQL file via `sqlFiles(...)`
+
+Semantics and defaults:
+
+- The whole task runs in one database transaction.
+- Without parameters, the SQL file list is executed once.
+- With `sqlParameters`, the SQL file list is executed once with that parameter map.
+- With `sqlParameterSets`, every parameter set executes the complete SQL file
+  list in order.
+- Use either `sqlParameters` or `sqlParameterSets`, not both.
+- Password is `@Internal` and not a normal Gradle task input.
+
+## Db2Db
+
+Purpose: copy rows selected from a source database into a target table.
+
+DSL methods:
+
+- `sourceDatabase(String jdbcUrl)`
+- `sourceDatabase(String jdbcUrl, String username, String password)`
+- `targetDatabase(String jdbcUrl)`
+- `targetDatabase(String jdbcUrl, String username, String password)`
+- `transfer(Object sqlFile, String targetTable, boolean deleteAllRows, String... geometryColumns)`
+- `transfer { sqlFile(...); targetTable(...); deleteAllRows(...); geometryColumns(...) }`
+- `sqlParameters(Map<String, ?> parameters)`
+- `sqlParameterSets(Map<String, ?>... parameterSets)`
+- `batchSize(int value)`
+- `fetchSize(int value)`
+
+Required:
+
+- `sourceDatabase(...)`
+- `targetDatabase(...)`
+- at least one `transfer(...)`
+
+Semantics and defaults:
+
+- The whole task runs in one target-database transaction.
+- Source database access is read-only from the task perspective.
+- `deleteAllRows` runs in the same target transaction as the inserts.
+- With `sqlParameterSets`, every parameter set executes the complete transfer
+  list in order.
+- Default `batchSize`: `5000`
+- Default `fetchSize`: `5000`
+- Source and target passwords are `@Internal`.
+- Geometry column definitions use `column:TYPE` or `column:TYPE:SRID`.
+
+## Gzip
+
+Purpose: write a gzip-compressed copy of one file.
+
+DSL methods:
+
+- `dataFile(Object path)`
+- `gzipFile(Object path)`
+
+Required:
+
+- `dataFile(...)`
+- `gzipFile(...)`
+
+Semantics and defaults:
+
+- The output parent directory is created when needed.
+- There are no task-specific defaults.
+
+## XslTransformer
+
+Purpose: transform one or more XML files with one XSLT stylesheet.
+
+DSL methods:
+
+- `xslFile(Object path)`
+- `xslResource(String resourceName)`
+- `xmlFiles(Object... paths)`
+- `outDirectory(Object path)`
+- `fileExtension(String fileExtension)`
+
+Required:
+
+- exactly one of `xslFile(...)` or `xslResource(...)`
+- at least one XML file via `xmlFiles(...)`
+- `outDirectory(...)`
+
+Semantics and defaults:
+
+- The stylesheet is compiled once per task execution.
+- Every XML input file is transformed into the output directory.
+- Default `fileExtension`: `xtf`
+
+## ReadShapefile
+
+Purpose: read a shapefile through the GeoTools worker runtime and log basic
+diagnostics.
+
+DSL methods:
+
+- `shapefile(Object path)`
+- `crsCode(String crsCode)`
+
+Required:
+
+- `shapefile(...)`
+
+Semantics and defaults:
+
+- `crsCode(...)` is optional.
+- Execution happens in the GeoTools worker runtime.
+
+## Vectorize
+
+Purpose: vectorize selected raster cell values into a GeoPackage.
+
+DSL methods:
+
+- `inputRaster(Object path)`
+- `outputGeopackage(Object path)`
+- `band(int band)`
+- `cellValues(Number... values)`
+
+Required:
+
+- `inputRaster(...)`
+- `outputGeopackage(...)`
+- non-empty `cellValues(...)`
+
+Semantics and defaults:
+
+- Default `band`: `0`
+- `cellValues` must not be empty and must not contain null values.
+- Execution happens in the GeoTools worker runtime.
+
+## RasterReclassify
+
+Purpose: reclassify raster values into a new raster.
+
+DSL methods:
+
+- `inputRaster(Object path)`
+- `outputRaster(Object path)`
+- `breaks(Number... values)`
+- `noData(Number value)`
+
+Required:
+
+- `inputRaster(...)`
+- `outputRaster(...)`
+
+Semantics and defaults:
+
+- Default `breaks`: `0, 55, 60, 65, 70, 500`
+- Default `noData`: `-100`
+- Breaks must contain at least two strictly increasing values.
+- Execution happens in the GeoTools worker runtime.
