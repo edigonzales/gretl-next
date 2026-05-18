@@ -16,6 +16,9 @@ points.
 - Testing local changes: run `./gradlew clean check` first; run
   `./gradlew :gretl-core:integrationTest` when PostgreSQL/PostGIS behavior is
   relevant.
+- Operating jobs: use the lightweight [GRETL Control Plane](control-plane.md)
+  server and pull worker when Jenkins-style scheduling and run history are
+  needed without replacing the GRETL Gradle runtime.
 
 ## Planned Documentation Areas
 

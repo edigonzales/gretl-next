@@ -17,6 +17,10 @@ tasks from GeoTools-heavy processing.
   - Ported tasks: `ReadShapefile`, `Vectorize`, `RasterReclassify`
   - Shared service: `gretlGeoToolsService`
   - GeoTools code runs through Gradle Worker API with `classLoaderIsolation`.
+- `gretl-control-common`, `gretl-control-server`, `gretl-control-worker`
+  - Lightweight GRETL control plane prototype with a Spring Boot server,
+    Git-backed job manifest, Quartz scheduling, run history, log storage,
+    encrypted server-side secrets and pull workers that start `gretl` processes.
 
 There is intentionally no raster plugin yet. Raster-like GeoTools tasks stay in
 `gretl-geotools` for this prototype.
@@ -31,6 +35,8 @@ toolchains.
 ./gradlew clean check
 ./gradlew :gretl-core:integrationTest
 ./gradlew stageRuntimeImage
+./gradlew :gretl-control-server:bootRun
+./gradlew :gretl-control-worker:bootRun
 ```
 
 `./gradlew clean check` is the fast local check and does not require Docker.
@@ -104,3 +110,4 @@ tasks.register('vectorizeRaster', Vectorize) {
 - [Kotlin DSL examples](docs/kotlin-dsl.md)
 - [Task reference](docs/task-reference.md)
 - [Architecture](docs/architecture.md)
+- [Control Plane](docs/control-plane.md)

@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+}
+
+base {
+    archivesName = 'gretl-control-worker'
+}
+
+dependencies {
+    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+
+    implementation project(':gretl-control-common')
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework:spring-web'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+bootJar {
+    mainClass = 'ch.so.agi.gretl.control.worker.GretlControlWorkerApplication'
+}

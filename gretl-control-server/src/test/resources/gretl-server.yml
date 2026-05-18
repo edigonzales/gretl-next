@@ -1,0 +1,18 @@
+jobs:
+  - id: import-colors
+    name: Import colors
+    projectDir: jobs/colors
+    tasks: [importData]
+    enabled: true
+    cron: "0 0 2 * * ?"
+    timezone: Europe/Zurich
+    timeout: PT15M
+    workerLabels: [small]
+    jvm:
+      maxHeap: 512m
+      args: ["-Dgretl.test=true"]
+    parameters:
+      - name: limit
+        type: INTEGER
+        defaultValue: 100
+    secretRefs: [db-password]

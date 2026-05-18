@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: gretl-control-worker
+  main:
+    web-application-type: none
+
+gretl:
+  control:
+    worker:
+      server-url: ${GRETL_CONTROL_SERVER_URL:http://localhost:8080}
+      token: ${GRETL_CONTROL_WORKER_TOKEN:dev-worker-token}
+      labels: ${GRETL_CONTROL_WORKER_LABELS:}
+      capacity: ${GRETL_CONTROL_WORKER_CAPACITY:1}
+      workspace-root: ${GRETL_CONTROL_WORKSPACE_ROOT:.}
+      gretl-executable: ${GRETL_CONTROL_GRETL_EXECUTABLE:gretl}
+      poll-interval: 5s
+      heartbeat-interval: 15s
+      cancel-poll-interval: 2s

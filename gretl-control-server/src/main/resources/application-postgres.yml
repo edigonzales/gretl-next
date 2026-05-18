@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${GRETL_CONTROL_JDBC_URL}
+    username: ${GRETL_CONTROL_JDBC_USERNAME}
+    password: ${GRETL_CONTROL_JDBC_PASSWORD}
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never

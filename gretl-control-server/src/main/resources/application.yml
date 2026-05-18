@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: gretl-control-server
+  datasource:
+    url: jdbc:h2:mem:gretl-control;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+  quartz:
+    job-store-type: memory
+
+gretl:
+  control:
+    manifest-path: gretl-server.yml
+    log-directory: build/gretl-control/logs
+    default-timezone: Europe/Zurich
+    worker-offline-after: 2m
+    security:
+      oidc-enabled: false
+      worker-token: ${GRETL_CONTROL_WORKER_TOKEN:dev-worker-token}
+    secrets:
+      master-key: ${GRETL_CONTROL_SECRET_KEY:}
