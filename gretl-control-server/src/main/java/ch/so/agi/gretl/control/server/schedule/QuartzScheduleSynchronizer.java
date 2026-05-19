@@ -11,18 +11,22 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
 @Component
 public class QuartzScheduleSynchronizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(QuartzScheduleSynchronizer.class);
-    private static final String GROUP = "gretl-control-jobs";
+    public static final String GROUP = "gretl-control-jobs";
 
     private final Scheduler scheduler;
     private final ManifestCatalog catalog;
@@ -36,11 +40,28 @@ public class QuartzScheduleSynchronizer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void synchronize() throws SchedulerException {
-        for (JobDefinition job : catalog.jobs()) {
+        synchronize(catalog.jobs());
+    }
+
+    public synchronized void synchronize(List<JobDefinition> jobs) throws SchedulerException {
+        Set<JobKey> manifestJobKeys = new HashSet<>();
+        for (JobDefinition job : jobs) {
+            manifestJobKeys.add(JobKey.jobKey(job.id(), GROUP));
+        }
+        for (JobKey existingJobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(GROUP))) {
+            if (!manifestJobKeys.contains(existingJobKey)) {
+                scheduler.deleteJob(existingJobKey);
+                LOGGER.info("Removed Quartz schedule for GRETL job {} because it is no longer in the manifest.",
+                        existingJobKey.getName());
+            }
+        }
+
+        for (JobDefinition job : jobs) {
             JobKey jobKey = JobKey.jobKey(job.id(), GROUP);
             TriggerKey triggerKey = TriggerKey.triggerKey(job.id(), GROUP);
             scheduler.deleteJob(jobKey);
             if (!job.isEnabled() || job.cron() == null || job.cron().isBlank()) {
+                LOGGER.info("GRETL job {} has no active Quartz schedule.", job.id());
                 continue;
             }
             JobDataMap data = new JobDataMap();

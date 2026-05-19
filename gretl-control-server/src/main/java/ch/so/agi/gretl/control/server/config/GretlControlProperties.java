@@ -11,6 +11,7 @@ public class GretlControlProperties {
     private Path logDirectory = Path.of("build/gretl-control/logs");
     private String defaultTimezone = "Europe/Zurich";
     private Duration workerOfflineAfter = Duration.ofMinutes(2);
+    private final Manifest manifest = new Manifest();
     private final Security security = new Security();
     private final Secrets secrets = new Secrets();
 
@@ -46,12 +47,28 @@ public class GretlControlProperties {
         this.workerOfflineAfter = workerOfflineAfter;
     }
 
+    public Manifest getManifest() {
+        return manifest;
+    }
+
     public Security getSecurity() {
         return security;
     }
 
     public Secrets getSecrets() {
         return secrets;
+    }
+
+    public static class Manifest {
+        private boolean watchEnabled;
+
+        public boolean isWatchEnabled() {
+            return watchEnabled;
+        }
+
+        public void setWatchEnabled(boolean watchEnabled) {
+            this.watchEnabled = watchEnabled;
+        }
     }
 
     public static class Security {

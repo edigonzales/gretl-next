@@ -1,14 +1,14 @@
 jobs:
   - id: duckdb-postgis-analysis
     name: DuckDB PostGIS analysis
-    projectDir: docs/examples/duckdb-sql-executor/postgis-gpkg
+    projectDir: docs/examples/duckdb-sql-executor/gpkg-only
     tasks: [analyse]
     enabled: false
     cron: "0 0 2 * * ?"
     timezone: Europe/Zurich
     overlapPolicy: SKIP
     timeout: PT30M
-    workerLabels: [geo]
+    workerLabels: []
     jvm:
       maxHeap: 1g
       args: ["-Dorg.gradle.jvmargs=-Xmx1g"]

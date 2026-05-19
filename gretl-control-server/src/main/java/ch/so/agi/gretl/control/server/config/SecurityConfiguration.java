@@ -3,6 +3,7 @@ package ch.so.agi.gretl.control.server.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +25,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/", "/index.html", "/app.js", "/styles.css").permitAll()
                         .requestMatchers("/api/worker/**").permitAll()
                         .requestMatchers("/api/secrets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/manifest").hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/manifest/reload").hasRole("ADMIN")
                         .requestMatchers("/api/jobs/*/runs", "/api/runs/*/cancel", "/api/runs/*/retry").hasAnyRole("OPERATOR", "ADMIN")
                         .requestMatchers("/api/**").hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
                         .anyRequest().authenticated())

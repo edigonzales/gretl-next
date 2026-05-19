@@ -30,6 +30,7 @@ public class WorkerAgent {
     private final RunExecutor executor;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Map<String, Boolean> activeRuns = new ConcurrentHashMap<>();
+    private String lastNoClaimMessage;
 
     public WorkerAgent(WorkerProperties properties, ControlPlaneClient client, RunExecutor executor) {
         this.properties = properties;
@@ -58,10 +59,17 @@ public class WorkerAgent {
         int availableSlots = Math.max(0, properties.getCapacity() - activeRuns.size());
         while (availableSlots > 0) {
             RunClaimResponse response = client.claim(new RunClaimRequest(properties.getWorkerId(), labels(), availableSlots));
-            if (response == null || !response.hasRun()) {
+            if (response == null) {
+                return;
+            }
+            if (!response.hasRun()) {
+                if (shouldLogNoClaimMessage(response.message())) {
+                    LOGGER.info("No GRETL run claimed: {}", response.message());
+                }
                 return;
             }
             ClaimedRun run = response.run();
+            lastNoClaimMessage = null;
             activeRuns.put(run.runId(), Boolean.TRUE);
             executorService.submit(() -> {
                 try {
@@ -90,5 +98,16 @@ public class WorkerAgent {
         return properties.getDisplayName() == null || properties.getDisplayName().isBlank()
                 ? properties.getWorkerId()
                 : properties.getDisplayName();
+    }
+
+    boolean shouldLogNoClaimMessage(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
+        if (message.equals(lastNoClaimMessage)) {
+            return false;
+        }
+        lastNoClaimMessage = message;
+        return true;
     }
 }

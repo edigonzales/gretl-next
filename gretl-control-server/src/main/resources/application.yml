@@ -17,6 +17,8 @@ gretl:
     log-directory: build/gretl-control/logs
     default-timezone: Europe/Zurich
     worker-offline-after: 2m
+    manifest:
+      watch-enabled: false
     security:
       oidc-enabled: false
       worker-token: ${GRETL_CONTROL_WORKER_TOKEN:dev-worker-token}

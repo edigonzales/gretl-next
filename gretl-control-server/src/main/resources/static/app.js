@@ -2,10 +2,12 @@ const state = {
   jobs: [],
   runs: [],
   workers: [],
+  manifest: null,
   selectedRun: null
 };
 
 document.getElementById("refresh").addEventListener("click", refresh);
+document.getElementById("reload-manifest").addEventListener("click", reloadManifest);
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -21,17 +23,44 @@ async function api(path, options = {}) {
 }
 
 async function refresh() {
-  const [jobs, runs, workers] = await Promise.all([
+  const [jobs, runs, workers, manifest] = await Promise.all([
     api("/api/jobs"),
     api("/api/runs"),
-    api("/api/workers")
+    api("/api/workers"),
+    api("/api/admin/manifest")
   ]);
   state.jobs = jobs;
   state.runs = runs;
   state.workers = workers;
+  state.manifest = manifest;
+  renderManifestStatus();
   renderJobs();
   renderRuns();
   renderWorkers();
+}
+
+async function reloadManifest() {
+  const response = await api("/api/admin/manifest/reload", { method: "POST" });
+  await refresh();
+  const message = response.success
+    ? `Reloaded ${response.path}. Added: ${response.addedJobs.length}, removed: ${response.removedJobs.length}, updated: ${response.updatedJobs.length}, skipped queued runs: ${response.skippedQueuedRuns.length}.`
+    : `Reload failed for ${response.path}: ${response.error}`;
+  document.getElementById("details").className = "details";
+  document.getElementById("details").innerHTML = `<h2>Manifest</h2><p>${escapeHtml(message)}</p>`;
+  document.getElementById("logs").textContent = "";
+}
+
+function renderManifestStatus() {
+  const status = state.manifest;
+  const host = document.getElementById("manifest-status");
+  if (!status) {
+    host.textContent = "Manifest not loaded.";
+    return;
+  }
+  const loaded = status.loadedAt ? new Date(status.loadedAt).toLocaleString() : "not loaded";
+  const watch = status.watchEnabled ? "watch on" : "watch off";
+  const error = status.lastReloadError ? ` · last error: ${status.lastReloadError}` : "";
+  host.textContent = `${status.path} · loaded ${loaded} · ${watch}${error}`;
 }
 
 function renderJobs() {
@@ -66,6 +95,7 @@ function renderRuns() {
       </div>
       <div class="meta">${escapeHtml(run.id)}</div>
       <div class="meta">${escapeHtml(run.triggerType)} · ${escapeHtml(run.queuedAt || "")}</div>
+      ${run.message ? `<div class="meta">${escapeHtml(run.message)}</div>` : ""}
     `;
     item.addEventListener("click", () => showRun(run.id));
     host.appendChild(item);

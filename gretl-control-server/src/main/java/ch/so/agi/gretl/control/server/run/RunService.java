@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -102,11 +103,18 @@ public class RunService {
     @Transactional
     public synchronized RunClaimResponse claim(RunClaimRequest request) {
         if (request.availableSlots() <= 0) {
-            return new RunClaimResponse(null);
+            return new RunClaimResponse(null, "Worker '" + request.workerId() + "' has no available slots.");
         }
+        LabelMismatch labelMismatch = null;
         for (RunRecord queued : runRepository.findQueued()) {
             JobDefinition job = catalog.findJob(queued.jobId()).orElse(null);
-            if (job == null || !job.isEnabled() || !workerMatches(job, request.labels())) {
+            if (job == null || !job.isEnabled()) {
+                continue;
+            }
+            if (!workerMatches(job, request.labels())) {
+                if (labelMismatch == null) {
+                    labelMismatch = new LabelMismatch(queued, job);
+                }
                 continue;
             }
             if (runRepository.claim(queued.id(), request.workerId(), Instant.now())) {
@@ -125,6 +133,11 @@ public class RunService {
                 return new RunClaimResponse(claimedRun);
             }
         }
+        if (labelMismatch != null) {
+            String message = labelMismatchMessage(request.labels(), labelMismatch.job());
+            runRepository.updateQueuedMessage(labelMismatch.run().id(), message);
+            return new RunClaimResponse(null, message);
+        }
         return new RunClaimResponse(null);
     }
 
@@ -137,22 +150,39 @@ public class RunService {
         runRepository.updateStatus(runId, request.status(), request.exitCode(), request.message(), Instant.now());
         if (isTerminal(request.status())) {
             RunRecord completed = requireRun(runId);
-            JobDefinition job = requireJob(completed.jobId());
-            notificationService.notify(job, completed);
-            enqueueStatusTriggers(completed);
+            catalog.findJob(completed.jobId()).ifPresent(job -> {
+                notificationService.notify(job, completed);
+                enqueueStatusTriggers(completed);
+            });
         }
     }
 
     public void appendLog(String runId, RunLogAppendRequest request) {
         RunRecord run = requireRun(runId);
-        JobDefinition job = requireJob(run.jobId());
-        List<String> secretValues = secretService.resolve(job.secretRefs()).values().stream().toList();
+        List<String> secretValues = catalog.findJob(run.jobId())
+                .map(job -> secretService.resolve(job.secretRefs()).values().stream().toList())
+                .orElse(List.of());
         logService.append(runId, request.stream(), request.line(), secretValues);
     }
 
     public String readLog(String runId) {
         requireRun(runId);
         return logService.read(runId);
+    }
+
+    @Transactional
+    public List<String> skipQueuedRunsWithoutRunnableJob(String message) {
+        Instant now = Instant.now();
+        List<String> skipped = new ArrayList<>();
+        for (RunRecord queued : runRepository.findQueued()) {
+            JobDefinition job = catalog.findJob(queued.jobId()).orElse(null);
+            if (job == null || !job.isEnabled()) {
+                if (runRepository.skipQueued(queued.id(), message, now)) {
+                    skipped.add(queued.id());
+                }
+            }
+        }
+        return skipped;
     }
 
     private RunRecord enqueue(JobDefinition job, Map<String, Object> parameters, RunTriggerType triggerType, String triggeredBy) {
@@ -170,7 +200,7 @@ public class RunService {
                 null,
                 false,
                 parameters,
-                null,
+                queuedMessage(job),
                 null);
         runRepository.insert(run);
         return run;
@@ -220,6 +250,27 @@ public class RunService {
         return workerLabels != null && workerLabels.containsAll(job.workerLabels());
     }
 
+    private String queuedMessage(JobDefinition job) {
+        if (job.workerLabels().isEmpty()) {
+            return null;
+        }
+        return "Waiting for worker labels " + job.workerLabels() + ".";
+    }
+
+    private String labelMismatchMessage(List<String> workerLabels, JobDefinition job) {
+        return "No queued run matches worker labels " + sortedLabels(workerLabels)
+                + "; run " + job.id() + " requires " + job.workerLabels() + ".";
+    }
+
+    private List<String> sortedLabels(List<String> labels) {
+        if (labels == null || labels.isEmpty()) {
+            return List.of();
+        }
+        List<String> sorted = new ArrayList<>(labels);
+        sorted.sort(String::compareTo);
+        return sorted;
+    }
+
     private boolean isTerminal(RunStatus status) {
         return status == RunStatus.SUCCEEDED
                 || status == RunStatus.FAILED
@@ -231,5 +282,8 @@ public class RunService {
     private JobDefinition requireJob(String jobId) {
         return catalog.findJob(jobId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job '" + jobId + "' not found."));
+    }
+
+    private record LabelMismatch(RunRecord run, JobDefinition job) {
     }
 }

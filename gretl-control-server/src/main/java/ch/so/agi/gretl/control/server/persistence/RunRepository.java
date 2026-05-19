@@ -99,6 +99,20 @@ public class RunRepository {
         jdbcTemplate.update("update runs set cancel_requested = true where id = ?", runId);
     }
 
+    public void updateQueuedMessage(String runId, String message) {
+        jdbcTemplate.update("update runs set message = ? where id = ? and status = ?",
+                message, runId, RunStatus.QUEUED.name());
+    }
+
+    public boolean skipQueued(String runId, String message, Instant now) {
+        return jdbcTemplate.update("""
+                        update runs
+                        set status = ?, message = ?, finished_at = ?
+                        where id = ? and status = ?
+                        """,
+                RunStatus.SKIPPED.name(), message, timestamp(now), runId, RunStatus.QUEUED.name()) == 1;
+    }
+
     public void setLogPath(String runId, String logPath) {
         jdbcTemplate.update("update runs set log_path = ? where id = ?", logPath, runId);
     }
