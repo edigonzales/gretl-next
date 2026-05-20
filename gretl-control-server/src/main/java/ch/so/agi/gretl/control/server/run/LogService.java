@@ -53,13 +53,20 @@ public class LogService {
     }
 
     public SseEmitter stream(String runId) {
+        return stream(runId, 0);
+    }
+
+    public SseEmitter stream(String runId, int startPosition) {
         SseEmitter emitter = new SseEmitter(30_000L);
         Thread thread = new Thread(() -> {
-            int position = 0;
+            int position = Math.max(0, startPosition);
             long deadline = System.currentTimeMillis() + 30_000L;
             try {
                 while (System.currentTimeMillis() < deadline) {
                     String content = read(runId);
+                    if (position > content.length()) {
+                        position = content.length();
+                    }
                     if (content.length() > position) {
                         String delta = content.substring(position);
                         position = content.length();

@@ -22,13 +22,17 @@ public class SecurityConfiguration {
     SecurityFilterChain oidcSecurityFilterChain(HttpSecurity http, GrantedAuthoritiesMapper authoritiesMapper) throws Exception {
         return http
                 .authorizeHttpRequests(registry -> registry
-                        .requestMatchers("/", "/index.html", "/app.js", "/styles.css").permitAll()
+                        .requestMatchers("/styles.css", "/webjars/**").permitAll()
                         .requestMatchers("/api/worker/**").permitAll()
                         .requestMatchers("/api/secrets/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/admin/manifest").hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/admin/manifest/reload").hasRole("ADMIN")
-                        .requestMatchers("/api/jobs/*/runs", "/api/runs/*/cancel", "/api/runs/*/retry").hasAnyRole("OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/jobs/*/runs", "/api/runs/*/cancel", "/api/runs/*/retry").hasAnyRole("OPERATOR", "ADMIN")
                         .requestMatchers("/api/**").hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/", "/jobs", "/jobs/*", "/runs/*/logs", "/admin", "/ui/fragments/**")
+                                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/jobs/*/runs").hasAnyRole("OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/admin/manifest/reload").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth.userInfoEndpoint(userInfo -> userInfo.userAuthoritiesMapper(authoritiesMapper)))
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))

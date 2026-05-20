@@ -52,6 +52,18 @@ public class RunRepository {
         return jdbcTemplate.query("select * from runs where job_id = ? order by queued_at desc limit ?", rowMapper, jobId, limit);
     }
 
+    public List<RunRecord> findActive() {
+        return jdbcTemplate.query("""
+                        select * from runs
+                        where status in (?, ?, ?)
+                        order by queued_at desc
+                        """,
+                rowMapper,
+                RunStatus.QUEUED.name(),
+                RunStatus.CLAIMED.name(),
+                RunStatus.RUNNING.name());
+    }
+
     public boolean hasActiveRun(String jobId) {
         Integer count = jdbcTemplate.queryForObject(
                 "select count(*) from runs where job_id = ? and status in (?, ?, ?)",
