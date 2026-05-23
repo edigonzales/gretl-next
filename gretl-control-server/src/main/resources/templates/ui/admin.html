@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{ui/layout :: head('GRETL Admin')}"></head>
+<body>
+  <header th:replace="~{ui/layout :: topbar}"></header>
+
+  <main class="page">
+    <section class="page-header">
+      <div>
+        <h2>Admin</h2>
+        <p>Worker state and catalog administration.</p>
+      </div>
+    </section>
+
+    <div class="admin-grid">
+      <section th:replace="~{ui/admin-fragments :: manifestPanel}"></section>
+      <section th:replace="~{ui/admin-fragments :: workerPanel}"></section>
+    </div>
+  </main>
+</body>
+</html>

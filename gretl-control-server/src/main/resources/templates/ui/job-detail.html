@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{ui/layout :: head(${job.name == null || job.name.isBlank() ? job.id : job.name})}"></head>
+<body>
+  <header th:replace="~{ui/layout :: topbar}"></header>
+
+  <main class="page">
+    <section class="page-header">
+      <div>
+        <a class="back-link" th:href="@{/jobs}">Back to jobs</a>
+        <h2 th:text="${job.name == null || job.name.isBlank() ? job.id : job.name}">Job</h2>
+        <p th:text="${job.id}">job-id</p>
+      </div>
+      <span class="badge" th:classappend="${job.enabled == false ? ' failed' : ' succeeded'}"
+            th:text="${job.enabled == false ? 'disabled' : 'enabled'}">enabled</span>
+    </section>
+
+    <div class="detail-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Definition</h3>
+        </div>
+        <dl class="definition-list">
+          <div>
+            <dt>Project</dt>
+            <dd th:text="${job.projectDir}">project</dd>
+          </div>
+          <div>
+            <dt>Tasks</dt>
+            <dd th:text="${#strings.listJoin(job.tasks, ' ')}">tasks</dd>
+          </div>
+          <div>
+            <dt>Schedule</dt>
+            <dd th:text="${job.cron == null || job.cron.isBlank() ? 'manual only' : job.cron}">manual only</dd>
+          </div>
+          <div>
+            <dt>Timeout</dt>
+            <dd th:text="${job.timeout == null || job.timeout.isBlank() ? 'default' : job.timeout}">default</dd>
+          </div>
+          <div>
+            <dt>Worker labels</dt>
+            <dd>
+              <span th:if="${#lists.isEmpty(job.workerLabels)}">any worker</span>
+              <span th:each="label : ${job.workerLabels}" class="pill" th:text="${label}">label</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Secrets</dt>
+            <dd>
+              <span th:if="${#lists.isEmpty(job.secretRefs)}">none</span>
+              <span th:each="secret : ${job.secretRefs}" class="pill muted" th:text="${secret}">secret</span>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Start job</h3>
+        </div>
+        <div class="panel-body" th:if="${!canOperate}">
+          <p class="meta">Operator permissions are required to start this job.</p>
+        </div>
+        <div class="panel-body" th:if="${canOperate && job.enabled == false}">
+          <p class="notice warning">This job is disabled and cannot be started.</p>
+        </div>
+        <form class="start-form"
+              th:if="${canOperate && job.enabled != false}"
+              th:attr="hx-post=@{/jobs/{jobId}/runs(jobId=${job.id})}"
+              hx-target="#start-result"
+              hx-swap="outerHTML"
+              method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <p class="meta" th:if="${#lists.isEmpty(job.parameters)}">This job has no parameters. It will start with manifest defaults.</p>
+          <div class="field" th:each="parameter : ${job.parameters}">
+            <label th:for="${'param-' + parameter.name}">
+              <span th:text="${parameter.name}">parameter</span>
+              <span class="required" th:if="${parameter.required == true}">required</span>
+            </label>
+            <input th:if="${parameter.type.name() == 'STRING'}"
+                   type="text"
+                   th:id="${'param-' + parameter.name}"
+                   th:name="${parameter.name}"
+                   th:value="${parameter.defaultValue}"
+                   th:required="${parameter.required == true}">
+            <input th:if="${parameter.type.name() == 'INTEGER'}"
+                   type="number"
+                   th:id="${'param-' + parameter.name}"
+                   th:name="${parameter.name}"
+                   th:value="${parameter.defaultValue}"
+                   th:required="${parameter.required == true}">
+            <select th:if="${parameter.type.name() == 'BOOLEAN'}"
+                    th:id="${'param-' + parameter.name}"
+                    th:name="${parameter.name}"
+                    th:required="${parameter.required == true}">
+              <option value="" th:selected="${parameter.defaultValue == null}">Use default</option>
+              <option value="true" th:selected="${parameter.defaultValue != null && parameter.defaultValue.toString() == 'true'}">true</option>
+              <option value="false" th:selected="${parameter.defaultValue != null && parameter.defaultValue.toString() == 'false'}">false</option>
+            </select>
+            <span class="meta" th:if="${parameter.defaultValue != null}" th:text="${'Default: ' + parameter.defaultValue}">Default</span>
+          </div>
+          <div class="actions">
+            <button type="submit">Start</button>
+          </div>
+        </form>
+        <div th:replace="~{ui/job-fragments :: startResult}"></div>
+      </section>
+    </div>
+
+    <section th:replace="~{ui/job-fragments :: runHistory}"></section>
+
+    <section id="log-panel" class="panel">
+      <div class="panel-header">
+        <h3>Logs</h3>
+      </div>
+      <div class="empty-state">Select a run to view its log.</div>
+    </section>
+  </main>
+</body>
+</html>

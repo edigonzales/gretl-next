@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+  <div id="start-result" th:fragment="startResult">
+    <p class="notice success" th:if="${startMessage != null}" th:text="${startMessage}">Queued run.</p>
+    <p class="notice error" th:if="${startError != null}" th:text="${startError}">Could not start run.</p>
+  </div>
+
+  <section id="run-history"
+           class="panel"
+           th:fragment="runHistory"
+           th:attr="hx-get=@{/ui/fragments/jobs/{jobId}/runs(jobId=${job.id})}"
+           hx-trigger="every 10s, runStarted from:body"
+           hx-swap="outerHTML">
+    <div class="panel-header">
+      <h3>Run history</h3>
+      <span class="counter" th:text="${#lists.size(runs)} + ' runs'">0 runs</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(runs)}">No runs have been recorded for this job.</div>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(runs)}">
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Run</th>
+            <th>Worker</th>
+            <th>Queued</th>
+            <th>Finished</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="runSummary : ${runs}">
+            <td>
+              <span th:class="${'badge ' + runSummary.statusClass}" th:text="${runSummary.run.status}">STATUS</span>
+              <div class="meta" th:if="${runSummary.run.message != null}" th:text="${runSummary.run.message}">message</div>
+            </td>
+            <td>
+              <span th:text="${runSummary.run.triggerType}">MANUAL</span>
+              <div class="meta" th:text="${runSummary.run.id}">run-id</div>
+            </td>
+            <td th:text="${runSummary.run.workerId == null ? '-' : runSummary.run.workerId}">worker</td>
+            <td th:text="${runSummary.run.queuedAt}">queued</td>
+            <td th:text="${runSummary.run.finishedAt == null ? '-' : runSummary.run.finishedAt}">finished</td>
+            <td>
+              <button type="button"
+                      class="secondary"
+                      th:attr="hx-get=@{/runs/{runId}/logs(runId=${runSummary.run.id})}"
+                      hx-target="#log-panel"
+                      hx-swap="outerHTML">Logs</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="log-panel" class="panel" th:fragment="runLog">
+    <div class="panel-header">
+      <div>
+        <h3 th:text="${'Log: ' + runSummary.run.jobId}">Log</h3>
+        <p th:text="${runSummary.run.id}">run-id</p>
+      </div>
+      <span th:class="${'badge ' + runSummary.statusClass}" th:text="${runSummary.run.status}">STATUS</span>
+    </div>
+    <pre id="run-log-content" class="logs" th:text="${log}"></pre>
+    <script th:inline="javascript">
+      (function () {
+        if (window.gretlLogStream) {
+          window.gretlLogStream.close();
+          window.gretlLogStream = null;
+        }
+        var streamLogs = /*[[${streamLogs}]]*/ false;
+        if (!streamLogs) {
+          return;
+        }
+        var runId = /*[[${runSummary.run.id}]]*/ "";
+        var output = document.getElementById("run-log-content");
+        if (!output) {
+          return;
+        }
+        function connect() {
+          if (document.getElementById("run-log-content") !== output) {
+            return;
+          }
+          var offset = output.textContent.length;
+          var source = new EventSource("/api/runs/" + encodeURIComponent(runId) + "/logs/stream?offset=" + offset);
+          window.gretlLogStream = source;
+          source.addEventListener("log", function (event) {
+            output.textContent += event.data;
+            output.scrollTop = output.scrollHeight;
+          });
+          source.onerror = function () {
+            source.close();
+            if (document.getElementById("run-log-content") === output) {
+              window.setTimeout(connect, 1500);
+            }
+          };
+        }
+        connect();
+      })();
+    </script>
+  </section>
+</body>
+</html>

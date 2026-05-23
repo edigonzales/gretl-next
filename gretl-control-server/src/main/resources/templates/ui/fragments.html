@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+  <section id="jobs-summary"
+           class="panel"
+           th:fragment="jobSummaryTable"
+           hx-get="/ui/fragments/jobs"
+           hx-trigger="every 10s"
+           hx-swap="outerHTML">
+    <div class="panel-header">
+      <h3>Job overview</h3>
+      <span class="counter" th:text="${#lists.size(jobSummaries)} + ' jobs'">0 jobs</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(jobSummaries)}">No jobs are loaded.</div>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(jobSummaries)}">
+      <table>
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Last state</th>
+            <th>Schedule</th>
+            <th>Worker labels</th>
+            <th>Last run</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="summary : ${jobSummaries}" th:classappend="${summary.disabled ? ' is-disabled' : ''}">
+            <td>
+              <a class="row-title" th:href="@{/jobs/{jobId}(jobId=${summary.job.id})}" th:text="${summary.title}">Job</a>
+              <div class="meta" th:text="${summary.job.id}">job-id</div>
+              <span class="badge muted" th:text="${summary.disabled ? 'disabled' : 'enabled'}">enabled</span>
+            </td>
+            <td>
+              <span th:class="${'badge ' + summary.statusClass}" th:text="${summary.statusLabel}">No runs</span>
+              <div class="meta" th:if="${summary.displayRun != null && summary.displayRun.run.message != null}"
+                   th:text="${summary.displayRun.run.message}">message</div>
+            </td>
+            <td>
+              <span th:text="${summary.job.cron == null || summary.job.cron.isBlank() ? 'manual only' : summary.job.cron}">manual only</span>
+              <div class="meta" th:if="${summary.job.timezone != null}" th:text="${summary.job.timezone}">timezone</div>
+            </td>
+            <td>
+              <span th:if="${#lists.isEmpty(summary.job.workerLabels)}" class="meta">any worker</span>
+              <span th:each="label : ${summary.job.workerLabels}" class="pill" th:text="${label}">label</span>
+            </td>
+            <td>
+              <span th:if="${summary.displayRun == null}" class="meta">No run yet</span>
+              <span th:if="${summary.displayRun != null}" th:text="${summary.displayRun.run.queuedAt}">queued</span>
+              <div class="meta" th:if="${summary.displayRun != null}" th:text="${summary.displayRun.run.id}">run-id</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+  <section id="manifest-panel"
+           class="panel"
+           th:fragment="manifestPanel"
+           hx-get="/ui/fragments/admin/manifest"
+           hx-trigger="every 10s, manifestReloaded from:body"
+           hx-swap="outerHTML">
+    <div class="panel-header">
+      <h3>Catalog</h3>
+      <span class="counter" th:text="${#lists.size(manifestStatus.jobIds)} + ' jobs'">0 jobs</span>
+    </div>
+    <div class="panel-body">
+      <dl class="definition-list">
+        <div>
+          <dt>Manifest</dt>
+          <dd th:text="${manifestStatus.path}">path</dd>
+        </div>
+        <div>
+          <dt>Loaded</dt>
+          <dd th:text="${manifestStatus.loadedAt == null ? 'not loaded' : manifestStatus.loadedAt}">loaded</dd>
+        </div>
+        <div>
+          <dt>Last reload attempt</dt>
+          <dd th:text="${manifestStatus.lastReloadAttemptAt == null ? '-' : manifestStatus.lastReloadAttemptAt}">attempt</dd>
+        </div>
+        <div>
+          <dt>Watch</dt>
+          <dd th:text="${manifestStatus.watchEnabled ? 'enabled' : 'disabled'}">disabled</dd>
+        </div>
+      </dl>
+
+      <p class="notice error" th:if="${manifestStatus.lastReloadError != null}" th:text="${manifestStatus.lastReloadError}">Reload error</p>
+      <div th:if="${manifestReload != null}">
+        <p class="notice success" th:if="${manifestReload.success}">Reload succeeded.</p>
+        <p class="notice error" th:if="${!manifestReload.success}" th:text="${manifestReload.error}">Reload failed.</p>
+        <div class="reload-stats">
+          <span class="pill" th:text="${#lists.size(manifestReload.addedJobs)} + ' added'">0 added</span>
+          <span class="pill" th:text="${#lists.size(manifestReload.removedJobs)} + ' removed'">0 removed</span>
+          <span class="pill" th:text="${#lists.size(manifestReload.updatedJobs)} + ' updated'">0 updated</span>
+          <span class="pill" th:text="${#lists.size(manifestReload.skippedQueuedRuns)} + ' skipped queued runs'">0 skipped</span>
+        </div>
+      </div>
+
+      <form th:if="${canAdmin}"
+            method="post"
+            th:attr="hx-post=@{/admin/manifest/reload}"
+            hx-target="#manifest-panel"
+            hx-swap="outerHTML">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="actions">
+          <button type="submit">Reload catalog</button>
+        </div>
+      </form>
+      <p class="meta" th:if="${!canAdmin}">Admin permissions are required to reload the catalog.</p>
+    </div>
+  </section>
+
+  <section id="worker-panel"
+           class="panel"
+           th:fragment="workerPanel"
+           hx-get="/ui/fragments/admin/workers"
+           hx-trigger="every 10s"
+           hx-swap="outerHTML">
+    <div class="panel-header">
+      <h3>Workers</h3>
+      <span class="counter" th:text="${#lists.size(workers)} + ' workers'">0 workers</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(workers)}">No workers have registered yet.</div>
+    <div class="worker-list" th:unless="${#lists.isEmpty(workers)}">
+      <article class="worker-card" th:each="summary : ${workers}">
+        <div class="worker-card-header">
+          <div>
+            <h4 th:text="${summary.worker.displayName}">Worker</h4>
+            <p th:text="${summary.worker.id}">worker-id</p>
+          </div>
+          <span th:class="${'badge ' + summary.worker.status.name().toLowerCase()}" th:text="${summary.worker.status}">ONLINE</span>
+        </div>
+        <dl class="definition-list compact">
+          <div>
+            <dt>Labels</dt>
+            <dd>
+              <span th:if="${#lists.isEmpty(summary.worker.labels)}">none</span>
+              <span th:each="label : ${summary.worker.labels}" class="pill" th:text="${label}">label</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Capacity</dt>
+            <dd th:text="${summary.worker.activeRuns + ' / ' + summary.worker.capacity}">0 / 1</dd>
+          </div>
+          <div>
+            <dt>Last heartbeat</dt>
+            <dd th:text="${summary.worker.lastHeartbeat}">heartbeat</dd>
+          </div>
+        </dl>
+        <div class="active-runs">
+          <h5>Active runs</h5>
+          <p class="meta" th:if="${#lists.isEmpty(summary.activeRuns)}">No active runs for this worker.</p>
+          <ul th:unless="${#lists.isEmpty(summary.activeRuns)}">
+            <li th:each="runSummary : ${summary.activeRuns}">
+              <a th:href="@{/jobs/{jobId}(jobId=${runSummary.run.jobId})}" th:text="${runSummary.run.jobId}">job</a>
+              <span th:class="${'badge ' + runSummary.statusClass}" th:text="${runSummary.run.status}">STATUS</span>
+              <span class="meta" th:text="${runSummary.run.id}">run-id</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+</body>
+</html>

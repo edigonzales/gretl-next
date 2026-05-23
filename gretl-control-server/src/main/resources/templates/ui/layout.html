@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title}">GRETL Control</title>
+  <link rel="stylesheet" th:href="@{/styles.css}">
+  <script defer th:src="@{/webjars/htmx.org/2.0.8/dist/htmx.min.js}"></script>
+</head>
+<body>
+  <header class="topbar" th:fragment="topbar">
+    <div>
+      <h1>GRETL Control</h1>
+      <p>Jobs, runs, workers and logs</p>
+    </div>
+    <nav class="nav">
+      <a th:href="@{/jobs}" th:classappend="${activePage == 'jobs' ? ' active' : ''}">Jobs</a>
+      <a th:href="@{/admin}" th:classappend="${activePage == 'admin' ? ' active' : ''}">Admin</a>
+    </nav>
+  </header>
+</body>
+</html>

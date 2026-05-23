@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{ui/layout :: head('GRETL Jobs')}"></head>
+<body>
+  <header th:replace="~{ui/layout :: topbar}"></header>
+
+  <main class="page">
+    <section class="page-header">
+      <div>
+        <h2>Jobs</h2>
+        <p>All jobs from the active GRETL catalog. Manual starts are available on the job detail page.</p>
+      </div>
+    </section>
+
+    <section th:replace="~{ui/fragments :: jobSummaryTable}"></section>
+  </main>
+</body>
+</html>
