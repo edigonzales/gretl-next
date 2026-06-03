@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?><TRANSFER xmlns="http://www.interlis.ch/INTERLIS2.2">
+<HEADERSECTION SENDER="ili2duckdb-5.2.2-ac0902af2871467a7cc561755c119862520db298" VERSION="2.2"><ALIAS></ALIAS></HEADERSECTION>
+<DATASECTION>
+<GB2AV.Vollzugsgegenstaende BID="x2">
+<GB2AV.Vollzugsgegenstaende.Vollzugsgegenstand TID="x3"><Status>Eintrag</Status><GrundbuchEintrag>2018-01-05</GrundbuchEintrag><TagebuchEintrag>2017-12-06</TagebuchEintrag><TagebuchBeleg>006-2017/2145/0</TagebuchBeleg><Mutationsnummer><GB2AV.MutationsNummer><Nummer>1531</Nummer><NBIdent>SO0200002401</NBIdent></GB2AV.MutationsNummer></Mutationsnummer></GB2AV.Vollzugsgegenstaende.Vollzugsgegenstand>
+</GB2AV.Vollzugsgegenstaende>
+</DATASECTION>
+</TRANSFER>

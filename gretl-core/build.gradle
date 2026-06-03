@@ -24,6 +24,21 @@ dependencies {
 
     implementation "commons-io:commons-io:${commonsIoVersion}"
     implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
+    implementation "ch.interlis:ili2c-core:${ili2cCoreVersion}"
+    implementation "ch.interlis:ili2c-tool:${ili2cToolVersion}"
+    implementation "ch.interlis:ili2duckdb:${ili2duckdbVersion}"
+    implementation "ch.interlis:ilivalidator:${ilivalidatorVersion}"
+    implementation "ch.interlis:iox-ili:${ioxIliVersion}"
+    implementation("ch.interlis:iox-wkf:${ioxWkfVersion}") {
+        // This slice only uses the lightweight CSV/WKF classes. The GeoTools EPSG
+        // database runtime is unnecessary here and pulls an awkward HSQLDB variant
+        // into the plugin-under-test classpath.
+        exclude group: 'org.geotools', module: 'gt-epsg-hsql'
+    }
+    implementation "io.github.sogis:ilivalidator-custom-functions:${ilivalidatorCustomFunctionsVersion}"
+    implementation "io.github.sogis:ilivalidator-custom-functions-geometries:${ilivalidatorCustomFunctionsGeometriesVersion}"
+    implementation "ch.geowerkstatt.ilivalidator.extensions.functions:geow-interlis-functions:${geowCustomFunctionsVersion}"
+    implementation "ch.geowerkstatt.ilivalidator.extensions.functions:interlis-functions-ngk-so:${geowNgkFunctionsVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
 
     runtimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"

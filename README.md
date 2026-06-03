@@ -54,6 +54,34 @@ be built with:
 The default image tag is `sogis/gretl-modular:test`; override it with
 `-PgretlDockerImage=registry/name:tag`.
 
+## Publishing Snapshots
+
+Snapshot publications target
+`https://jars.interlis.guru/snapshots`.
+
+Provide credentials either as Gradle properties in `~/.gradle/gradle.properties`
+or via environment variables:
+
+```properties
+gretlPublishUsername=...
+gretlPublishPassword=...
+```
+
+```bash
+export GRETL_PUBLISH_USERNAME=...
+export GRETL_PUBLISH_PASSWORD=...
+```
+
+Publish all configured GRETL artifacts with:
+
+```bash
+./gradlew publishSnapshots
+```
+
+This includes the Gradle plugin publications and plugin marker artifacts for
+`gretl-core` and `gretl-geotools`, plus the additional library and Spring Boot
+artifacts from the other published modules.
+
 ## Core Usage Example
 
 ```groovy

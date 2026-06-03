@@ -4,12 +4,27 @@ plugins {
 }
 
 group = 'ch.so.agi'
-version = '0.1.0-SNAPSHOT'
+version = '5.0.0-SNAPSHOT'
+
+def publishUsername = providers.gradleProperty('gretlPublishUsername')
+        .orElse(providers.environmentVariable('GRETL_PUBLISH_USERNAME'))
+def publishPassword = providers.gradleProperty('gretlPublishPassword')
+        .orElse(providers.environmentVariable('GRETL_PUBLISH_PASSWORD'))
 
 ext {
     commonsIoVersion = '2.6'
     ehiSqlgenVersion = '1.16.3'
     geotoolsVersion = '34.2'
+    geowCustomFunctionsVersion = '0.2.1'
+    geowNgkFunctionsVersion = '1.0.3'
+    ili2duckdbVersion = '5.5.1'
+    ili2cCoreVersion = '5.6.8'
+    ili2cToolVersion = '5.6.8'
+    ilivalidatorCustomFunctionsGeometriesVersion = '0.0.8'
+    ilivalidatorCustomFunctionsVersion = '1.1.50'
+    ilivalidatorVersion = '1.15.0'
+    ioxIliVersion = '1.24.4'
+    ioxWkfVersion = '2.0.1-SNAPSHOT'
     jacksonVersion = '2.17.2'
     junitVersion = '5.10.3'
     saxonVersion = '11.4'
@@ -28,6 +43,9 @@ subprojects {
     configurations.configureEach {
         exclude group: 'xml-apis', module: 'xml-apis'
         exclude group: 'xml-apis', module: 'xml-apis-ext'
+        // Keep one DuckDB JDBC baseline across the modular plugin classpath,
+        // including ili2duckdb 5.5.1 and the native DuckDbSqlExecutor tasks.
+        resolutionStrategy.force("org.duckdb:duckdb_jdbc:${duckdbVersion}")
     }
 
     plugins.withId('maven-publish') {
@@ -36,6 +54,14 @@ subprojects {
                 maven {
                     name = 'runtimeImage'
                     url = rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile.toURI()
+                }
+                maven {
+                    name = 'interlisSnapshots'
+                    url = uri('https://jars.interlis.guru/snapshots')
+                    credentials {
+                        username = publishUsername.orNull
+                        password = publishPassword.orNull
+                    }
                 }
             }
         }
@@ -81,10 +107,19 @@ tasks.register('cleanRuntimeImageRepository', Delete) {
     delete runtimeImageRepoDir
 }
 
+tasks.register('publishSnapshots') {
+    group = 'publishing'
+    description = 'Publishes all GRETL snapshot publications to the interlisSnapshots repository.'
+}
+
 subprojects {
     plugins.withId('maven-publish') {
         tasks.matching { it.name.endsWith('ToRuntimeImageRepository') }.configureEach {
             dependsOn rootProject.tasks.named('cleanRuntimeImageRepository')
+        }
+
+        rootProject.tasks.named('publishSnapshots').configure {
+            dependsOn tasks.named('publishAllPublicationsToInterlisSnapshotsRepository')
         }
     }
 }

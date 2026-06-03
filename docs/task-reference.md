@@ -75,6 +75,106 @@ Semantics and defaults:
 - PostgreSQL passwords are `@Internal` and not normal Gradle task inputs.
 - SQL parameters and parameter sets behave like `SqlExecutor`.
 
+## Ili2duckdbImportSchema
+
+Purpose: import an INTERLIS schema into a DuckDB database with `ili2duckdb`.
+
+DSL methods:
+
+- `databaseFile(Object path)`
+- `modelNames(String... names)`
+- `modelDirectories(String... entries)`
+- `schema(String name)`
+- `iliFile(Object path)`
+- `iliMetaAttrsFile(Object path)`
+- `logFile(Object path)`
+
+Required:
+
+- `databaseFile(...)`
+- at least one of `modelNames(...)` or `iliFile(...)`
+
+Semantics and defaults:
+
+- DuckDB JDBC stays on the modular repo baseline classpath; the task does not
+  bring its own second DuckDB driver.
+- `strokeArcs` is enabled internally for the DuckDB flavour and is not exposed
+  as a public toggle.
+- Common ili2db options are lazy Gradle properties on the task, for example
+  `createBasketCol`, `createDatasetCol`, `coalesceJson`, `createFk`,
+  `createGeomIdx` or `defaultSrsCode`.
+- `pluginFolder` and PostgreSQL-specific flags such as `setupPgExt` are not
+  part of this slice.
+
+## Ili2duckdbImport
+
+Purpose: import INTERLIS transfer files or `ilidata:` repository ids into a
+DuckDB database with `ili2duckdb`.
+
+DSL methods:
+
+- `databaseFile(Object path)`
+- `modelNames(String... names)`
+- `modelDirectories(String... entries)`
+- `schema(String name)`
+- `transferFiles(Object... paths)`
+- `repositoryDataIds(String... ids)`
+- `datasetNames(String... names)`
+- `datasetNamesFromTransferFiles()`
+- `datasetNamesFromFiles(Object... paths)`
+- `datasetNameSlice(int start)`
+- `datasetNameSlice(int start, int endExclusive)`
+- `logFile(Object path)`
+
+Required:
+
+- `databaseFile(...)`
+- local `transferFiles(...)` or `repositoryDataIds(...)`
+
+Semantics and defaults:
+
+- Use either local `transferFiles(...)` or `repositoryDataIds(...)`, not both.
+- Dataset naming is explicit:
+  `datasetNames(...)`, `datasetNamesFromTransferFiles()` or
+  `datasetNamesFromFiles(...)`.
+- `datasetNameSlice(...)` applies only to derived dataset names.
+- `failOnException = false` stops the task successfully after the first handled
+  `Ili2dbException` and does not continue with later transfer files.
+- For import, one shared text log file is aggregated across multi-file runs when
+  `logFile(...)` is configured.
+
+## Ili2duckdbExport
+
+Purpose: export INTERLIS transfer files from a DuckDB database with
+`ili2duckdb`.
+
+DSL methods:
+
+- `databaseFile(Object path)`
+- `modelNames(String... names)`
+- `modelDirectories(String... entries)`
+- `schema(String name)`
+- `transferFiles(Object... paths)`
+- `datasetNames(String... names)`
+- `datasetNamesFromTransferFiles()`
+- `datasetNamesFromFiles(Object... paths)`
+- `datasetNameSlice(int start)`
+- `datasetNameSlice(int start, int endExclusive)`
+- `logFile(Object path)`
+- `exportModels(String... names)`
+
+Required:
+
+- `databaseFile(...)`
+- local `transferFiles(...)`
+
+Semantics and defaults:
+
+- `repositoryDataIds(...)` are not supported for export.
+- `export3 = false` by default.
+- `exportModels(...)` limits the export to specific INTERLIS models.
+- Dataset naming rules are the same as in `Ili2duckdbImport`.
+
 ## Db2Db
 
 Purpose: copy rows selected from a source database into a target table.
@@ -128,6 +228,68 @@ Semantics and defaults:
 
 - The output parent directory is created when needed.
 - There are no task-specific defaults.
+
+## IliValidator
+
+Purpose: validate INTERLIS transfer files with `ilivalidator`.
+
+DSL methods:
+
+- `dataFiles(Object... paths)`
+- `modelNames(String... names)`
+- `modelDirectories(String... entries)`
+- `configFile(Object path)`
+- `configRepositoryId(String id)`
+- `metaConfigFile(Object path)`
+- `metaConfigRepositoryId(String id)`
+- `logFile(Object path)`
+- `xtfLogFile(Object path)`
+
+Required:
+
+- at least one file via `dataFiles(...)`
+
+Semantics and defaults:
+
+- An empty resolved `dataFiles(...)` set is a no-op, matching the legacy task
+  behavior.
+- Use either `configFile(...)` or `configRepositoryId(...)`, not both.
+- Use either `metaConfigFile(...)` or `metaConfigRepositoryId(...)`, not both.
+- Built-in SOGIS and Geowerkstatt/NGK custom functions are registered
+  automatically; no public `pluginFolder` is used in this slice.
+- `failOnError = true` by default.
+- `validationOk` remains available as an execution result when
+  `failOnError = false`.
+
+## CsvValidator
+
+Purpose: validate one CSV file with `ilivalidator` and the GRETL CSV reader
+adapter.
+
+DSL methods:
+
+- `dataFiles(Object... paths)`
+- `modelNames(String... names)`
+- `modelDirectories(String... entries)`
+- `configFile(Object path)`
+- `configRepositoryId(String id)`
+- `metaConfigFile(Object path)`
+- `metaConfigRepositoryId(String id)`
+- `logFile(Object path)`
+- `xtfLogFile(Object path)`
+
+Required:
+
+- exactly one file via `dataFiles(...)`
+
+Semantics and defaults:
+
+- `firstLineIsHeader = true` by default.
+- `valueSeparator`, `valueDelimiter` and `encoding` are lazy Gradle properties
+  on the task.
+- Multiple CSV input files are rejected explicitly instead of being processed
+  ambiguously.
+- `validationOk` behaves like in `IliValidator`.
 
 ## XslTransformer
 
