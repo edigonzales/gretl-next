@@ -19,6 +19,12 @@ configurations {
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
+configurations.configureEach {
+    // gretl-core must stay free of GeoTools. Geospatial processing belongs in gretl-geotools.
+    exclude group: 'org.geotools'
+    exclude group: 'org.geotools.ogc'
+}
+
 dependencies {
     compileOnly project(':gretl-doclet')
 
@@ -29,12 +35,9 @@ dependencies {
     implementation "ch.interlis:ili2duckdb:${ili2duckdbVersion}"
     implementation "ch.interlis:ilivalidator:${ilivalidatorVersion}"
     implementation "ch.interlis:iox-ili:${ioxIliVersion}"
-    implementation("ch.interlis:iox-wkf:${ioxWkfVersion}") {
-        // This slice only uses the lightweight CSV/WKF classes. The GeoTools EPSG
-        // database runtime is unnecessary here and pulls an awkward HSQLDB variant
-        // into the plugin-under-test classpath.
-        exclude group: 'org.geotools', module: 'gt-epsg-hsql'
-    }
+    // gretl-core only uses the lightweight CSV/WKF configuration path from iox-wkf.
+    // Shape and other GeoTools-backed features from that artifact are intentionally blocked here.
+    implementation "ch.interlis:iox-wkf:${ioxWkfVersion}"
     implementation "io.github.sogis:ilivalidator-custom-functions:${ilivalidatorCustomFunctionsVersion}"
     implementation "io.github.sogis:ilivalidator-custom-functions-geometries:${ilivalidatorCustomFunctionsGeometriesVersion}"
     implementation "ch.geowerkstatt.ilivalidator.extensions.functions:geow-interlis-functions:${geowCustomFunctionsVersion}"
@@ -76,4 +79,53 @@ tasks.register('integrationTest', Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
     shouldRunAfter tasks.named('test')
     useJUnitPlatform()
+}
+
+def geoToolsGuardedConfigurationNames = [
+        'compileClasspath',
+        'runtimeClasspath',
+        'testCompileClasspath',
+        'testRuntimeClasspath',
+        'integrationTestCompileClasspath',
+        'integrationTestRuntimeClasspath'
+]
+
+tasks.register('assertNoGeoToolsDependencies') {
+    group = 'verification'
+    description = 'Fails if any gretl-core classpath resolves GeoTools modules.'
+
+    doLast {
+        Map<String, List<String>> blockedModulesByConfiguration = [:]
+
+        geoToolsGuardedConfigurationNames.each { configurationName ->
+            def blockedModules = configurations.getByName(configurationName)
+                    .incoming
+                    .resolutionResult
+                    .allComponents
+                    .collect { it.id }
+                    .findAll { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+                    .findAll { it.group == 'org.geotools' || it.group.startsWith('org.geotools.') }
+                    .collect { "${it.group}:${it.module}:${it.version}" }
+                    .unique()
+                    .sort()
+
+            if (!blockedModules.isEmpty()) {
+                blockedModulesByConfiguration[configurationName] = blockedModules
+            }
+        }
+
+        if (!blockedModulesByConfiguration.isEmpty()) {
+            def details = blockedModulesByConfiguration.collect { configurationName, blockedModules ->
+                "${configurationName}: ${blockedModules.join(', ')}"
+            }.join(System.lineSeparator())
+
+            throw new GradleException(
+                    "gretl-core must not resolve GeoTools dependencies.${System.lineSeparator()}${details}"
+            )
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('assertNoGeoToolsDependencies')
 }
