@@ -56,7 +56,7 @@ subprojects {
                     url = rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile.toURI()
                 }
                 maven {
-                    name = 'interlisSnapshots'
+                    name = 'interlisGuruSnapshots'
                     url = uri('https://jars.interlis.guru/snapshots')
                     credentials {
                         username = publishUsername.orNull
@@ -109,7 +109,7 @@ tasks.register('cleanRuntimeImageRepository', Delete) {
 
 tasks.register('publishSnapshots') {
     group = 'publishing'
-    description = 'Publishes all GRETL snapshot publications to the interlisSnapshots repository.'
+    description = 'Publishes all GRETL snapshot publications to the interlisGuruSnapshots repository.'
 }
 
 subprojects {
@@ -119,7 +119,7 @@ subprojects {
         }
 
         rootProject.tasks.named('publishSnapshots').configure {
-            dependsOn tasks.named('publishAllPublicationsToInterlisSnapshotsRepository')
+            dependsOn tasks.named('publishAllPublicationsToInterlisGuruSnapshotsRepository')
         }
     }
 }
