@@ -98,6 +98,106 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
+    void supportsCsvSourceWithDeterministicOptionsAndParquetExport() throws Exception {
+        writeSettings();
+        Files.createDirectories(projectDir.resolve("data"));
+        Files.writeString(projectDir.resolve("data/input.csv"), """
+                id;name
+                1;red
+                2;blue
+                """, StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("transform.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.records AS
+                SELECT id::INTEGER AS id, upper(name) AS name
+                FROM input.records
+                ORDER BY id;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('csvToParquet', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+
+                    sources {
+                        csv('input') {
+                            file file('data/input.csv')
+                            table = 'records'
+                            delimiter = ';'
+                            header = true
+                        }
+                    }
+
+                    sqlFiles 'transform.sql'
+
+                    exports {
+                        parquet('records') {
+                            query = 'SELECT * FROM result.records'
+                            file file('build/records.parquet')
+                            overwrite = true
+                        }
+                    }
+                }
+                """));
+
+        run("csvToParquet");
+
+        assertEquals(2, duckdbInt("SELECT count(*) FROM read_parquet('%s')"
+                .formatted(projectDir.resolve("build/records.parquet").toAbsolutePath())));
+        assertEquals("RED,BLUE", duckdbString("SELECT string_agg(name, ',' ORDER BY id) FROM read_parquet('%s')"
+                .formatted(projectDir.resolve("build/records.parquet").toAbsolutePath())));
+    }
+
+    @Test
+    void supportsCsvSourceAndXlsxExport() throws Exception {
+        writeSettings();
+        Files.createDirectories(projectDir.resolve("data"));
+        Files.writeString(projectDir.resolve("data/input.csv"), """
+                id;name
+                1;red
+                2;blue
+                """, StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("transform.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.records AS
+                SELECT id::INTEGER AS id, upper(name) AS name
+                FROM input.records
+                ORDER BY id;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('csvToXlsx', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    sources {
+                        csv('input') {
+                            file file('data/input.csv')
+                            table = 'records'
+                            delimiter = ';'
+                            header = true
+                        }
+                    }
+
+                    sqlFiles 'transform.sql'
+
+                    exports {
+                        xlsx('records') {
+                            query = 'SELECT * FROM result.records'
+                            file file('build/records.xlsx')
+                            sheet = 'Records'
+                            overwrite = true
+                        }
+                    }
+                }
+                """));
+
+        run("csvToXlsx");
+
+        assertTrue(Files.exists(projectDir.resolve("build/records.xlsx")));
+        assertEquals(2, duckdbIntWithExcel(
+                "SELECT count(*) FROM read_xlsx('%s', header = true, sheet = 'Records')"
+                        .formatted(projectDir.resolve("build/records.xlsx").toAbsolutePath())));
+    }
+
+    @Test
     void supportsSqlParameterSets() throws Exception {
         writeSettings();
         Files.writeString(projectDir.resolve("insert.sql"), """
@@ -151,6 +251,62 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
+    void cleansPreparedXlsxTempExportWhenLaterExportFails() throws Exception {
+        writeSettings();
+        Files.createDirectories(projectDir.resolve("data"));
+        Files.writeString(projectDir.resolve("data/input.csv"), """
+                id;name
+                1;red
+                2;blue
+                """, StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("transform.sql"), """
+                CREATE SCHEMA IF NOT EXISTS result;
+                CREATE TABLE result.records AS
+                SELECT id::INTEGER AS id, upper(name) AS name
+                FROM input.records;
+                """, StandardCharsets.UTF_8);
+        writeBuild(duckDbBuild("""
+                tasks.register('failAfterXlsx', DuckDbSqlExecutor) {
+                    inMemoryDatabase()
+                    installExtensions true
+
+                    sources {
+                        csv('input') {
+                            file file('data/input.csv')
+                            table = 'records'
+                            delimiter = ';'
+                            header = true
+                        }
+                    }
+
+                    sqlFiles 'transform.sql'
+
+                    exports {
+                        xlsx('records') {
+                            query = 'SELECT * FROM result.records'
+                            file file('build/records.xlsx')
+                            overwrite = true
+                        }
+                        parquet('broken') {
+                            query = 'SELECT * FROM result.missing'
+                            file file('build/broken.parquet')
+                            overwrite = true
+                        }
+                    }
+                }
+                """));
+
+        runAndFail("failAfterXlsx");
+
+        assertFalse(Files.exists(projectDir.resolve("build/records.xlsx")));
+        if (Files.isDirectory(projectDir.resolve("build"))) {
+            try (Stream<Path> files = Files.list(projectDir.resolve("build"))) {
+                assertEquals(0, files.filter(path -> path.getFileName().toString().contains(".tmp.xlsx")).count());
+            }
+        }
+    }
+
+    @Test
     void runsDocumentedGpkgOnlyExample() throws Exception {
         copyTree(examplePath("gpkg-only"), projectDir);
 
@@ -160,6 +316,21 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
         assertTrue(Files.exists(projectDir.resolve("build/analyse.parquet")));
         assertEquals(5, duckdbInt("SELECT count(*) FROM read_parquet('%s')"
                 .formatted(projectDir.resolve("build/analyse.parquet").toAbsolutePath())));
+    }
+
+    @Test
+    void runsDocumentedCsvXlsxParquetExample() throws Exception {
+        copyTree(examplePath("csv-xlsx-parquet"), projectDir);
+
+        run("convert");
+
+        assertTrue(Files.exists(projectDir.resolve("build/analyse.parquet")));
+        assertTrue(Files.exists(projectDir.resolve("build/analyse.xlsx")));
+        assertEquals(3, duckdbInt("SELECT count(*) FROM read_parquet('%s')"
+                .formatted(projectDir.resolve("build/analyse.parquet").toAbsolutePath())));
+        assertEquals(3, duckdbIntWithExcel(
+                "SELECT count(*) FROM read_xlsx('%s', header = true, sheet = 'Analyse')"
+                        .formatted(projectDir.resolve("build/analyse.xlsx").toAbsolutePath())));
     }
 
     private String duckDbBuild(String taskDefinition) {
@@ -205,12 +376,34 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
         }
     }
 
+    private String duckdbString(String sql) throws Exception {
+        Class.forName("org.duckdb.DuckDBDriver");
+        try (Connection connection = DriverManager.getConnection("jdbc:duckdb:");
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            assertTrue(resultSet.next());
+            return resultSet.getString(1);
+        }
+    }
+
     private String duckdbString(Path database, String sql) throws Exception {
         try (Connection connection = DriverManager.getConnection("jdbc:duckdb:" + database.toAbsolutePath());
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
             assertTrue(resultSet.next());
             return resultSet.getString(1);
+        }
+    }
+
+    private int duckdbIntWithExcel(String sql) throws Exception {
+        Class.forName("org.duckdb.DuckDBDriver");
+        try (Connection connection = DriverManager.getConnection("jdbc:duckdb:");
+             Statement statement = connection.createStatement()) {
+            statement.execute("LOAD excel");
+            try (ResultSet resultSet = statement.executeQuery(sql)) {
+                assertTrue(resultSet.next());
+                return resultSet.getInt(1);
+            }
         }
     }
 

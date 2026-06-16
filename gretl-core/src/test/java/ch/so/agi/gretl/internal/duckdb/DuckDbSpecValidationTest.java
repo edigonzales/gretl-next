@@ -82,6 +82,54 @@ class DuckDbSpecValidationTest {
     }
 
     @Test
+    void rejectsCsvSourceWithoutFile() {
+        assertThrows(IllegalArgumentException.class, () -> new CsvSourceSpec(
+                "csv",
+                null,
+                "data",
+                "view",
+                null,
+                null,
+                false));
+    }
+
+    @Test
+    void rejectsCsvSourceWithInvalidTable() {
+        assertThrows(IllegalArgumentException.class, () -> new CsvSourceSpec(
+                "csv",
+                Path.of("data/input.csv"),
+                "not-valid",
+                "view",
+                null,
+                null,
+                false));
+    }
+
+    @Test
+    void rejectsXlsxExportWithoutFile() {
+        assertThrows(IllegalArgumentException.class, () -> new XlsxExportSpec(
+                "out",
+                "SELECT 1 AS id",
+                null,
+                "Sheet1",
+                true,
+                1_048_576,
+                false));
+    }
+
+    @Test
+    void rejectsXlsxExportWithoutQuery() {
+        assertThrows(IllegalArgumentException.class, () -> new XlsxExportSpec(
+                "out",
+                " ",
+                Path.of("build/out.xlsx"),
+                "Sheet1",
+                true,
+                1_048_576,
+                false));
+    }
+
+    @Test
     void rejectsPostgresExportWithoutMode() {
         assertThrows(IllegalArgumentException.class, () -> new PostgresExportSpec(
                 "out",

@@ -8,6 +8,7 @@ import ch.so.agi.gretl.internal.duckdb.DuckDbFileExportSpec;
 import ch.so.agi.gretl.internal.duckdb.DuckDbFederationEngine;
 import ch.so.agi.gretl.internal.duckdb.DuckDbSourceSpec;
 import ch.so.agi.gretl.internal.duckdb.DuckDbTargetSpec;
+import ch.so.agi.gretl.internal.duckdb.CsvSourceSpec;
 import ch.so.agi.gretl.internal.duckdb.GeometryOverrideSpec;
 import ch.so.agi.gretl.internal.duckdb.GpkgExportSpec;
 import ch.so.agi.gretl.internal.duckdb.GpkgLayerSpec;
@@ -19,6 +20,7 @@ import ch.so.agi.gretl.internal.duckdb.PostgresTableSpec;
 import ch.so.agi.gretl.internal.duckdb.PostgresTargetSpec;
 import ch.so.agi.gretl.internal.duckdb.PostgresWriteMode;
 import ch.so.agi.gretl.internal.duckdb.PostgresWritePath;
+import ch.so.agi.gretl.internal.duckdb.XlsxExportSpec;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
@@ -234,6 +236,8 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         sources.add(source);
         if (source instanceof GpkgSourceSpec gpkg) {
             sourceFiles.from(gpkg.file().toFile());
+        } else if (source instanceof CsvSourceSpec csv) {
+            sourceFiles.from(csv.file().toFile());
         }
     }
 
@@ -315,6 +319,18 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
 
         public void gpkg(String alias, Closure<?> closure) {
             GpkgConfig config = new GpkgConfig(task.getProject(), alias);
+            task.getProject().configure(config, closure);
+            task.addSource(config.toSpec());
+        }
+
+        public void csv(String alias, Action<CsvConfig> action) {
+            CsvConfig config = new CsvConfig(task.getProject(), alias);
+            action.execute(config);
+            task.addSource(config.toSpec());
+        }
+
+        public void csv(String alias, Closure<?> closure) {
+            CsvConfig config = new CsvConfig(task.getProject(), alias);
             task.getProject().configure(config, closure);
             task.addSource(config.toSpec());
         }
@@ -609,6 +625,67 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         }
     }
 
+    public static final class CsvConfig {
+        private final Project project;
+        private final String alias;
+        private Path file;
+        private String table = "data";
+        private String mode = "view";
+        private Boolean header;
+        private String delimiter;
+        private boolean allVarchar;
+
+        private CsvConfig(Project project, String alias) {
+            this.project = project;
+            this.alias = alias;
+        }
+
+        public File file(Object file) {
+            File resolved = project.file(file);
+            this.file = resolved.toPath();
+            return resolved;
+        }
+
+        public void setFile(Object file) {
+            file(file);
+        }
+
+        public void table(String table) {
+            this.table = table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public void setHeader(Boolean header) {
+            this.header = header;
+        }
+
+        public void delimiter(String delimiter) {
+            this.delimiter = delimiter;
+        }
+
+        public void setDelimiter(String delimiter) {
+            this.delimiter = delimiter;
+        }
+
+        public void setAllVarchar(boolean allVarchar) {
+            this.allVarchar = allVarchar;
+        }
+
+        private CsvSourceSpec toSpec() {
+            if (file == null) {
+                throw new IllegalArgumentException("csv source file is not configured");
+            }
+            return new CsvSourceSpec(alias, file, table, mode, header, delimiter, allVarchar);
+        }
+    }
+
     public static final class ExportsConfig {
         private final DuckDbSqlExecutor task;
 
@@ -636,6 +713,18 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
 
         public void parquet(String name, Closure<?> closure) {
             ParquetExportConfig config = new ParquetExportConfig(task.getProject(), name);
+            task.getProject().configure(config, closure);
+            task.addExport(config.toSpec());
+        }
+
+        public void xlsx(String name, Action<XlsxExportConfig> action) {
+            XlsxExportConfig config = new XlsxExportConfig(task.getProject(), name);
+            action.execute(config);
+            task.addExport(config.toSpec());
+        }
+
+        public void xlsx(String name, Closure<?> closure) {
+            XlsxExportConfig config = new XlsxExportConfig(task.getProject(), name);
             task.getProject().configure(config, closure);
             task.addExport(config.toSpec());
         }
@@ -722,6 +811,35 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
                 throw new IllegalArgumentException("parquet export file is not configured");
             }
             return new ParquetExportSpec(name, query, file, overwrite);
+        }
+    }
+
+    public static final class XlsxExportConfig extends BaseExportConfig {
+        private String sheet = "Sheet1";
+        private boolean header = true;
+        private int sheetRowLimit = 1_048_576;
+
+        private XlsxExportConfig(Project project, String name) {
+            super(project, name);
+        }
+
+        public void setSheet(String sheet) {
+            this.sheet = sheet;
+        }
+
+        public void setHeader(boolean header) {
+            this.header = header;
+        }
+
+        public void setSheetRowLimit(int sheetRowLimit) {
+            this.sheetRowLimit = sheetRowLimit;
+        }
+
+        private XlsxExportSpec toSpec() {
+            if (file == null) {
+                throw new IllegalArgumentException("xlsx export file is not configured");
+            }
+            return new XlsxExportSpec(name, query, file, sheet, header, sheetRowLimit, overwrite);
         }
     }
 

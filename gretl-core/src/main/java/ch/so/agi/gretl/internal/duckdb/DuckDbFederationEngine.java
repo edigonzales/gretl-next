@@ -73,7 +73,7 @@ public class DuckDbFederationEngine {
                 if (hasNativePostgresExports(request.exports())) {
                     connection.commit();
                 }
-                pendingExports = exportFiles(connection, request.exports());
+                exportFiles(connection, request.exports(), pendingExports);
                 builder.cleanup(connection, artifacts);
                 connection.commit();
                 commitPostgresTargets(openPostgresTargets);
@@ -265,11 +265,11 @@ public class DuckDbFederationEngine {
         }
     }
 
-    private List<PendingExport> exportFiles(Connection connection, List<DuckDbExportSpec> exports) throws SQLException, IOException {
-        List<PendingExport> pending = new ArrayList<>();
+    private void exportFiles(Connection connection, List<DuckDbExportSpec> exports, List<PendingExport> pending)
+            throws SQLException, IOException {
         boolean hasFileExports = exports.stream().anyMatch(DuckDbFileExportSpec.class::isInstance);
         if (!hasFileExports) {
-            return pending;
+            return;
         }
         execute(connection, "CREATE SCHEMA IF NOT EXISTS \"__gretl_export\"");
         for (DuckDbExportSpec export : exports) {
@@ -281,6 +281,10 @@ public class DuckDbFederationEngine {
                 Path temp = tempExportPath(parquet.file());
                 pending.add(new PendingExport(temp, parquet.file(), parquet.overwrite()));
                 exportParquet(connection, parquet, temp);
+            } else if (export instanceof XlsxExportSpec xlsx) {
+                Path temp = tempExportPath(xlsx.file());
+                pending.add(new PendingExport(temp, xlsx.file(), xlsx.overwrite()));
+                exportXlsx(connection, xlsx, temp);
             } else if (export instanceof PostgresExportSpec) {
                 // PostgreSQL exports are handled before file exports.
             } else {
@@ -288,7 +292,6 @@ public class DuckDbFederationEngine {
             }
         }
         execute(connection, "DROP SCHEMA IF EXISTS \"__gretl_export\" CASCADE");
-        return pending;
     }
 
     private void exportGpkg(Connection connection, GpkgExportSpec export, Path tempFile) throws SQLException {
@@ -314,6 +317,17 @@ public class DuckDbFederationEngine {
         execute(connection, "COPY (" + DuckDbSql.stripTrailingSemicolon(export.query()) + ") TO "
                 + DuckDbSql.quoteLiteral(tempFile.toAbsolutePath().toString())
                 + " WITH (FORMAT PARQUET)");
+    }
+
+    private void exportXlsx(Connection connection, XlsxExportSpec export, Path tempFile) throws SQLException {
+        List<String> options = new ArrayList<>();
+        options.add("FORMAT XLSX");
+        options.add("HEADER " + export.header());
+        options.add("SHEET " + DuckDbSql.quoteLiteral(export.sheet()));
+        options.add("SHEET_ROW_LIMIT " + export.sheetRowLimit());
+        execute(connection, "COPY (" + DuckDbSql.stripTrailingSemicolon(export.query()) + ") TO "
+                + DuckDbSql.quoteLiteral(tempFile.toAbsolutePath().toString())
+                + " WITH (" + String.join(", ", options) + ")");
     }
 
     private Path tempExportPath(Path finalFile) throws IOException {

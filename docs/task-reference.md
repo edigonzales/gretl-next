@@ -40,9 +40,9 @@ DSL methods:
 - `database(Object file)`
 - `inMemoryDatabase()`
 - `installExtensions(boolean value)`
-- `sources { postgres(alias) { ... }; gpkg(alias) { ... } }`
+- `sources { postgres(alias) { ... }; gpkg(alias) { ... }; csv(alias) { ... } }`
 - `targets { postgres(alias) { ... } }`
-- `exports { gpkg(name) { ... }; parquet(name) { ... }; postgres(name) { ... } }`
+- `exports { gpkg(name) { ... }; parquet(name) { ... }; xlsx(name) { ... }; postgres(name) { ... } }`
 - `sqlFiles(Object... paths)`
 - `sqlParameters(Map<String, ?> parameters)`
 - `sqlParameterSets(Map<String, ?>... parameterSets)`
@@ -58,6 +58,8 @@ Semantics and defaults:
 - `mode = "materialize"` copies the configured table/layer into DuckDB before
   user SQL runs.
 - PostgreSQL sources are attached read-only.
+- CSV sources expose one logical object `<alias>.<table>` backed by DuckDB
+  `read_csv(...)`.
 - PostgreSQL targets are writable and are exposed under their target alias.
 - PostgreSQL exports require `mode = "append"`, `mode = "truncate"` or
   `mode = "replace"`.
@@ -71,6 +73,8 @@ Semantics and defaults:
   preinstall DuckDB extensions.
 - GeoPackage and Parquet exports write to temporary files first and then move
   them to the configured target path.
+- XLSX exports also write to temporary files first and then move them to the
+  configured target path.
 - `overwrite = false` by default for exports.
 - PostgreSQL passwords are `@Internal` and not normal Gradle task inputs.
 - SQL parameters and parameter sets behave like `SqlExecutor`.
