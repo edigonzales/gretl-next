@@ -23,8 +23,10 @@ dependencies {
     compileOnly project(':gretl-doclet')
 
     implementation "commons-io:commons-io:${commonsIoVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
     implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
     runtimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
     runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
@@ -33,6 +35,7 @@ dependencies {
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.mockftpserver:MockFtpServer:${mockFtpServerVersion}"
     testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
     testRuntimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
 

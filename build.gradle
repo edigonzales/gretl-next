@@ -9,6 +9,7 @@ version = '0.1.0-SNAPSHOT'
 ext {
     commonsIoVersion = '2.6'
     ehiSqlgenVersion = '1.16.3'
+    commonsNetVersion = '3.6'
     geotoolsVersion = '34.2'
     jacksonVersion = '2.17.2'
     junitVersion = '5.10.3'
@@ -18,6 +19,8 @@ ext {
     duckdbVersion = '1.5.2.0'
     testcontainersVersion = '1.21.4'
     springBootVersion = '3.5.14'
+    awsSdkVersion = '2.15.64'
+    mockFtpServerVersion = '2.7.1'
     quartzVersion = '2.3.2'
 }
 
