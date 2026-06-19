@@ -25,6 +25,21 @@ dependencies {
     implementation "commons-io:commons-io:${commonsIoVersion}"
     implementation "commons-net:commons-net:${commonsNetVersion}"
     implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
+    implementation("ch.interlis:ili2pg:${ili2pgVersion}") {
+        exclude group: 'ch.ehi', module: 'ehisqlgen'
+    }
+    implementation("ch.interlis:ili2gpkg:${ili2gpkgVersion}") {
+        exclude group: 'ch.ehi', module: 'ehisqlgen'
+    }
+    implementation("ch.interlis:ili2duckdb:${ili2duckdbVersion}") {
+        exclude group: 'ch.ehi', module: 'ehisqlgen'
+    }
+    implementation "ch.interlis:iox-ili:${ioxIliVersion}"
+    implementation "ch.interlis:ilivalidator:${ilivalidatorVersion}"
+    implementation "io.github.sogis:ilivalidator-custom-functions:${ilivalidatorCustomFunctionsVersion}"
+    implementation "io.github.sogis:ilivalidator-custom-functions-geometries:${ilivalidatorCustomFunctionsGeometriesVersion}"
+    implementation "ch.geowerkstatt.ilivalidator.extensions.functions:geow-interlis-functions:${geowCustomFunctionsVersion}"
+    implementation "ch.geowerkstatt.ilivalidator.extensions.functions:interlis-functions-ngk-so:${geowNgkFunctionsVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
@@ -34,8 +49,8 @@ dependencies {
 
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testImplementation "org.mockftpserver:MockFtpServer:${mockFtpServerVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
     testRuntimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
 
