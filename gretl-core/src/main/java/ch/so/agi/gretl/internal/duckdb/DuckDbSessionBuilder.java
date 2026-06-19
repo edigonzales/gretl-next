@@ -39,6 +39,8 @@ public class DuckDbSessionBuilder {
                 rawAttachments.add(bootstrapPostgres(duckdb, postgres, supportsGeometryCrs));
             } else if (source instanceof GpkgSourceSpec gpkg) {
                 bootstrapGpkg(duckdb, gpkg);
+            } else if (source instanceof CsvSourceSpec csv) {
+                bootstrapCsv(duckdb, csv);
             } else {
                 throw new IllegalArgumentException("Unsupported DuckDB source: " + source);
             }
@@ -118,6 +120,34 @@ public class DuckDbSessionBuilder {
                     + ", layer = " + DuckDbSql.quoteLiteral(layer.layer()) + ")";
             createLogicalObject(duckdb, objectName, sourceSql, mode);
         }
+    }
+
+    private void bootstrapCsv(Connection duckdb, CsvSourceSpec source) throws SQLException {
+        if (!Files.isReadable(source.file())) {
+            throw new IllegalArgumentException("CSV source file is not readable: " + source.file());
+        }
+        execute(duckdb, "CREATE SCHEMA IF NOT EXISTS " + DuckDbSql.quoteIdentifier(source.alias()));
+        String objectName = DuckDbSql.quoteIdentifier(source.alias()) + "." + DuckDbSql.quoteIdentifier(source.table());
+        dropLogicalObject(duckdb, objectName);
+
+        List<String> options = new ArrayList<>();
+        if (source.header() != null) {
+            options.add("header = " + source.header());
+        }
+        if (source.delimiter() != null) {
+            options.add("delim = " + DuckDbSql.quoteLiteral(source.delimiter()));
+        }
+        if (source.allVarchar()) {
+            options.add("all_varchar = true");
+        }
+
+        String sourceSql = "SELECT * FROM read_csv("
+                + DuckDbSql.quoteLiteral(source.file().toAbsolutePath().toString());
+        if (!options.isEmpty()) {
+            sourceSql += ", " + String.join(", ", options);
+        }
+        sourceSql += ")";
+        createLogicalObject(duckdb, objectName, sourceSql, DuckDbMode.parse(source.mode()));
     }
 
     private void createPostgresLogicalObject(Connection duckdb, PostgresSourceSpec source, PostgresTableSpec table,

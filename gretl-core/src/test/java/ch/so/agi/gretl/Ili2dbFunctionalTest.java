@@ -27,16 +27,16 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
         writeBuild(ili2dbBuild("""
                 tasks.register('validateOk', IliValidator) {
                     dataFiles(files('Beispiel2a.xtf', 'Beispiel2b.xtf'))
-                    models 'Beispiel2'
-                    modeldir projectDir.toString()
+                    modelNames 'Beispiel2'
+                    modelDirectories projectDir.toString()
                     logFile layout.buildDirectory.file('valid.log').get().asFile
                 }
 
                 tasks.register('validateInvalid', IliValidator) {
                     dataFiles(files('Beispiel2-invalid.xtf'))
-                    models 'Beispiel2'
-                    modeldir projectDir.toString()
-                    failOnError false
+                    modelNames 'Beispiel2'
+                    modelDirectories projectDir.toString()
+                    failOnError.set(false)
                     logFile layout.buildDirectory.file('invalid.log').get().asFile
                     doLast {
                         layout.buildDirectory.file('validation-result.txt').get().asFile.text = validationOk.toString()
@@ -82,30 +82,30 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
                 def duckdb = layout.buildDirectory.file('Beispiel2.duckdb').get().asFile
 
                 tasks.register('schema', Ili2duckdbImportSchema) {
-                    dbfile duckdb
-                    models 'Beispiel2'
-                    modeldir projectDir.toString()
-                    dbschema 'ili'
-                    defaultSrsCode '2056'
-                    createBasketCol = true
+                    databaseFile duckdb
+                    modelNames 'Beispiel2'
+                    modelDirectories projectDir.toString()
+                    schema 'ili'
+                    defaultSrsCode.set('2056')
+                    createBasketCol.set(true)
                 }
 
                 tasks.register('importDuck', Ili2duckdbImport) {
                     dependsOn 'schema'
-                    dbfile duckdb
-                    models 'Beispiel2'
-                    modeldir projectDir.toString()
-                    dbschema 'ili'
-                    dataFile(files('Beispiel2a.xtf'))
+                    databaseFile duckdb
+                    modelNames 'Beispiel2'
+                    modelDirectories projectDir.toString()
+                    schema 'ili'
+                    transferFiles 'Beispiel2a.xtf'
                 }
 
                 tasks.register('exportDuck', Ili2duckdbExport) {
                     dependsOn 'importDuck'
-                    dbfile duckdb
-                    models 'Beispiel2'
-                    modeldir projectDir.toString()
-                    dbschema 'ili'
-                    dataFile layout.buildDirectory.file('export.xtf').get().asFile
+                    databaseFile duckdb
+                    modelNames 'Beispiel2'
+                    modelDirectories projectDir.toString()
+                    schema 'ili'
+                    transferFiles layout.buildDirectory.file('export.xtf').get().asFile
                 }
                 """));
 

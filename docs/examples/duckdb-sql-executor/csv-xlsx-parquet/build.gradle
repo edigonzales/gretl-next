@@ -1,0 +1,36 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.DuckDbSqlExecutor
+
+tasks.register('convert', DuckDbSqlExecutor) {
+    inMemoryDatabase()
+    installExtensions true
+
+    sources {
+        csv('input') {
+            file file('data/input.csv')
+            table = 'records'
+            delimiter = ';'
+            header = true
+        }
+    }
+
+    sqlFiles 'sql/010_transform.sql'
+
+    exports {
+        parquet('analyse_parquet') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.parquet')
+            overwrite = true
+        }
+
+        xlsx('analyse_xlsx') {
+            query = 'SELECT * FROM result.analyse'
+            file file('build/analyse.xlsx')
+            sheet = 'Analyse'
+            overwrite = true
+        }
+    }
+}

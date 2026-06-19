@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'org.springframework.boot'
+    id 'maven-publish'
 }
 
 base {
@@ -33,4 +34,15 @@ dependencies {
 
 bootJar {
     mainClass = 'ch.so.agi.gretl.control.server.GretlControlServerApplication'
+}
+
+publishing {
+    publications {
+        bootJava(MavenPublication) {
+            artifactId = base.archivesName.get()
+            artifact tasks.named('bootJar')
+            artifact tasks.named('sourcesJar')
+            artifact tasks.named('javadocJar')
+        }
+    }
 }

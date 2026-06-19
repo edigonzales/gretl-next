@@ -1,15 +1,15 @@
 # DuckDbSqlExecutor
 
 `DuckDbSqlExecutor` runs SQL files in a DuckDB session that GRETL prepares from
-configured sources, writable targets and exports. The MVP focuses on live
-federation: PostgreSQL and GeoPackage sources stay external and are exposed as
-logical DuckDB schemas.
+configured sources, writable targets and exports. The current slice supports
+federated PostgreSQL and GeoPackage sources plus CSV files exposed as logical
+DuckDB schemas.
 
 ## Requirements
 
 - GRETL uses `org.duckdb:duckdb_jdbc:1.5.2.0`.
-- Production Docker images must preinstall the DuckDB `postgres` and `spatial`
-  extensions for the Gradle user.
+- Production Docker images must preinstall the DuckDB `postgres`, `spatial` and
+  `excel` extensions for the Gradle user.
 - Local development examples may set `installExtensions true`; production jobs
   should leave the default `false`.
 
@@ -109,14 +109,41 @@ postgres('pub') {
 
 The mode can also be set per table or layer.
 
+## CSV Sources
+
+CSV sources expose one logical DuckDB object under `<alias>.<table>`. The file
+is read through DuckDB `read_csv(...)`.
+
+```groovy
+sources {
+    csv('input') {
+        file file('data/input.csv')
+        table = 'records'
+        delimiter = ';'
+        header = true
+    }
+}
+```
+
+User SQL can then query `input.records`.
+
+Optional CSV settings in this slice:
+
+- `table`: logical object name, default `data`.
+- `mode`: `view` or `materialize`, default `view`.
+- `header`: optional; when omitted DuckDB auto-detects it.
+- `delimiter`: optional single-character delimiter.
+- `allVarchar`: optional, default `false`.
+
 ## Outputs
 
 `database file(...)` creates a DuckDB database file and models it as a Gradle
 output. `inMemoryDatabase()` runs without a DuckDB output file and is useful when
 all relevant results are exported.
 
-GeoPackage and Parquet exports are written through temporary files first. The
-final target is replaced only after the DuckDB SQL and export steps complete.
+GeoPackage, Parquet and XLSX exports are written through temporary files first.
+The final target is replaced only after the DuckDB SQL and export steps
+complete.
 
 ## PostgreSQL/PostGIS Targets
 
@@ -192,5 +219,6 @@ still rollbacked on the PostgreSQL connection if a later task step fails.
 ## Runnable Examples
 
 - [GeoPackage only](examples/duckdb-sql-executor/gpkg-only/README.md)
+- [CSV to Parquet and XLSX](examples/duckdb-sql-executor/csv-xlsx-parquet/README.md)
 - [PostGIS and GeoPackage](examples/duckdb-sql-executor/postgis-gpkg/README.md)
 - [PostGIS target export](examples/duckdb-sql-executor/postgis-target/README.md)

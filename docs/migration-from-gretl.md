@@ -141,6 +141,137 @@ tasks.register('compressXml', Gzip) {
 
 The task creates the output parent directory when needed.
 
+## Ili2duckdb
+
+Before:
+
+```groovy
+tasks.register('ili2duckdbschemaimport', Ili2duckdbImportSchema) {
+    dbfile = file('my_gb2av.duckdb')
+    models = 'GB2AV'
+    modeldir = rootProject.projectDir.toString() + ';http://models.interlis.ch'
+    dbschema = 'gb2av'
+    coalesceJson = true
+    createBasketCol = true
+}
+```
+
+After:
+
+```groovy
+tasks.register('schemaImport', Ili2duckdbImportSchema) {
+    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+    modelNames 'GB2AV'
+    modelDirectories projectDir.toString(), 'http://models.interlis.ch'
+    schema 'gb2av'
+    coalesceJson.set(true)
+    createBasketCol.set(true)
+}
+```
+
+For data import:
+
+```groovy
+tasks.register('importData', Ili2duckdbImport) {
+    dependsOn 'schemaImport'
+    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+    modelNames 'GB2AV'
+    modelDirectories projectDir.toString(), 'http://models.interlis.ch'
+    schema 'gb2av'
+    transferFiles 'data/VOLLZUG.xml'
+    datasetNamesFromTransferFiles()
+    datasetNameSlice 8
+}
+```
+
+Key changes:
+
+- `dbfile`, `models`, `modeldir` and `dbschema` are replaced by the explicit
+  helper methods `databaseFile(...)`, `modelNames(...)`, `modelDirectories(...)`
+  and `schema(...)`.
+- The old overloaded `dataset` / `datasetSubstring` API is gone. Dataset naming
+  is now explicit with `datasetNames(...)`, `datasetNamesFromTransferFiles()`,
+  `datasetNamesFromFiles(...)` and `datasetNameSlice(...)`.
+- `repositoryDataIds(...)` replaces passing `ilidata:` strings through the old
+  generic `dataFile` property.
+- DuckDB-specific `strokeArcs` is enabled internally. It is not a public task
+  option.
+
+## IliValidator
+
+Before:
+
+```groovy
+task validate(type: IliValidator) {
+    dataFiles = files('Beispiel2a.xtf')
+    logFile = file('ilivalidator.log')
+}
+```
+
+After:
+
+```groovy
+tasks.register('validate', IliValidator) {
+    dataFiles 'Beispiel2a.xtf'
+    modelDirectories projectDir.toString()
+    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+}
+```
+
+For repository-backed or local validator config files:
+
+```groovy
+tasks.register('validateNgk', IliValidator) {
+    dataFiles 'NGK_SO_Testbeddata.xtf'
+    modelDirectories projectDir.toString(), 'http://models.interlis.ch'
+    metaConfigFile 'SO_AFU_Naturgefahren_20240515-gretl-meta.ini'
+    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+}
+```
+
+Key changes:
+
+- `dataFiles` is now a helper method instead of assigning a `FileCollection`.
+- Validator config is split into explicit local-vs-repository methods:
+  `configFile(...)` / `configRepositoryId(...)` and
+  `metaConfigFile(...)` / `metaConfigRepositoryId(...)`.
+- The built-in custom functions are registered internally; `pluginFolder` is no
+  longer public DSL in this slice.
+
+## CsvValidator
+
+Before:
+
+```groovy
+task validate(type: CsvValidator) {
+    models = 'CsvModel'
+    firstLineIsHeader = false
+    dataFiles = files('data1.csv')
+    logFile = file('csvvalidator.log')
+}
+```
+
+After:
+
+```groovy
+tasks.register('validateCsv', CsvValidator) {
+    dataFiles 'data1.csv'
+    modelNames 'CsvModel'
+    modelDirectories projectDir.toString()
+    firstLineIsHeader.set(false)
+    logFile layout.buildDirectory.file('logs/csvvalidator.log').get().asFile
+}
+```
+
+Key changes:
+
+- `models` becomes `modelNames(...)`.
+- `dataFiles` becomes an explicit helper method.
+- CSV-specific settings such as `firstLineIsHeader`, `valueSeparator`,
+  `valueDelimiter` and `encoding` are lazy Gradle properties.
+- Multiple CSV input files are rejected explicitly instead of being interpreted
+  implicitly.
+
 ## XslTransformer
 
 Before:
