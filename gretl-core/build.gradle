@@ -23,6 +23,8 @@ configurations.configureEach {
     // gretl-core must stay free of GeoTools. Geospatial processing belongs in gretl-geotools.
     exclude group: 'org.geotools'
     exclude group: 'org.geotools.ogc'
+    resolutionStrategy.force "ch.interlis:ili2pg:${ili2pgVersion}"
+    resolutionStrategy.force "ch.interlis:ili2gpkg:${ili2gpkgVersion}"
 }
 
 dependencies {
@@ -33,16 +35,26 @@ dependencies {
     implementation "ch.ehi:ehisqlgen:${ehiSqlgenVersion}"
     implementation "ch.interlis:ili2c-core:${ili2cCoreVersion}"
     implementation "ch.interlis:ili2c-tool:${ili2cToolVersion}"
+    implementation("ch.interlis:ili2pg:${ili2pgVersion}") {
+        exclude group: 'ch.ehi', module: 'ehisqlgen'
+    }
+    implementation("ch.interlis:ili2gpkg:${ili2gpkgVersion}") {
+        exclude group: 'ch.ehi', module: 'ehisqlgen'
+    }
     implementation "ch.interlis:ili2duckdb:${ili2duckdbVersion}"
     implementation "ch.interlis:ilivalidator:${ilivalidatorVersion}"
     implementation "ch.interlis:iox-ili:${ioxIliVersion}"
     // gretl-core only uses the lightweight CSV/WKF configuration path from iox-wkf.
     // Shape and other GeoTools-backed features from that artifact are intentionally blocked here.
-    implementation "ch.interlis:iox-wkf:${ioxWkfVersion}"
+    implementation("ch.interlis:iox-wkf:${ioxWkfVersion}") {
+        exclude group: 'ch.interlis', module: 'ili2pg'
+        exclude group: 'ch.interlis', module: 'ili2gpkg'
+    }
     implementation "io.github.sogis:ilivalidator-custom-functions:${ilivalidatorCustomFunctionsVersion}"
     implementation "io.github.sogis:ilivalidator-custom-functions-geometries:${ilivalidatorCustomFunctionsGeometriesVersion}"
     implementation "ch.geowerkstatt.ilivalidator.extensions.functions:geow-interlis-functions:${geowCustomFunctionsVersion}"
     implementation "ch.geowerkstatt.ilivalidator.extensions.functions:interlis-functions-ngk-so:${geowNgkFunctionsVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
@@ -59,6 +71,7 @@ dependencies {
 
     integrationTestImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     integrationTestImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    integrationTestImplementation "io.floci:testcontainers-floci:${testcontainersFlociVersion}"
     integrationTestRuntimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
 }
 

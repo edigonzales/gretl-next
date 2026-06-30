@@ -26,18 +26,18 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
         Files.writeString(projectDir.resolve("Beispiel2-invalid.xtf"), invalid, StandardCharsets.UTF_8);
         writeBuild(ili2dbBuild("""
                 tasks.register('validateOk', IliValidator) {
-                    dataFiles(files('Beispiel2a.xtf', 'Beispiel2b.xtf'))
+                    dataFiles 'Beispiel2a.xtf', 'Beispiel2b.xtf'
                     modelNames 'Beispiel2'
                     modelDirectories projectDir.toString()
-                    logFile layout.buildDirectory.file('valid.log').get().asFile
+                    logFile layout.buildDirectory.file('valid.log')
                 }
 
                 tasks.register('validateInvalid', IliValidator) {
-                    dataFiles(files('Beispiel2-invalid.xtf'))
+                    dataFiles 'Beispiel2-invalid.xtf'
                     modelNames 'Beispiel2'
                     modelDirectories projectDir.toString()
                     failOnError.set(false)
-                    logFile layout.buildDirectory.file('invalid.log').get().asFile
+                    logFile layout.buildDirectory.file('invalid.log')
                     doLast {
                         layout.buildDirectory.file('validation-result.txt').get().asFile.text = validationOk.toString()
                     }
@@ -60,9 +60,9 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
                     models 'Beispiel2'
                     modeldir projectDir.toString()
                     defaultSrsCode '2056'
-                    dataFile(fileTree(projectDir) { include 'Beispiel2*.xtf' })
+                    transferFiles(fileTree(projectDir) { include 'Beispiel2*.xtf' })
                     dataset(['DatasetA', 'DatasetB'])
-                    dbfile layout.buildDirectory.file('Beispiel2.gpkg').get().asFile
+                    dbfile layout.buildDirectory.file('Beispiel2.gpkg')
                 }
                 """));
 
@@ -75,11 +75,31 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
+    void importsOriginalGretlAdministrativeGeoPackageFixture() throws Exception {
+        writeSettings();
+        copyResourceTree("original-gretl/interlis/ili2gpkg/import", projectDir);
+        writeBuild(ili2dbBuild("""
+                tasks.register('importGpkg', Ili2gpkgImport) {
+                    models 'SO_AGI_AV_GB_Administrative_Einteilungen_20180613'
+                    modeldir "${projectDir};https://models.interlis.ch;https://models.geo.admin.ch"
+                    transferFiles 'ch.so.agi.av_gb_admin_einteilung_edit_2020-08-20.xtf'
+                    dbfile layout.buildDirectory.file('ch.so.agi.av_gb_admin_einteilung_edit_2020-08-20.gpkg')
+                }
+                """));
+
+        run("importGpkg");
+
+        Path gpkg = projectDir.resolve("build/ch.so.agi.av_gb_admin_einteilung_edit_2020-08-20.gpkg");
+        assertTrue(sqliteInt(gpkg, "SELECT count(*) FROM t_ili2db_model") > 0);
+        assertTrue(sqliteInt(gpkg, "SELECT count(*) FROM grundbuchkreis") > 0);
+    }
+
+    @Test
     void importsAndExportsDuckDb() throws Exception {
         writeSettings();
         copyBeispiel2Resources();
         writeBuild(ili2dbBuild("""
-                def duckdb = layout.buildDirectory.file('Beispiel2.duckdb').get().asFile
+                def duckdb = layout.buildDirectory.file('Beispiel2.duckdb')
 
                 tasks.register('schema', Ili2duckdbImportSchema) {
                     databaseFile duckdb
@@ -105,7 +125,7 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
                     modelNames 'Beispiel2'
                     modelDirectories projectDir.toString()
                     schema 'ili'
-                    transferFiles layout.buildDirectory.file('export.xtf').get().asFile
+                    dataFiles layout.buildDirectory.file('export.xtf')
                 }
                 """));
 

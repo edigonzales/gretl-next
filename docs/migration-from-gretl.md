@@ -135,7 +135,7 @@ After:
 ```groovy
 tasks.register('compressXml', Gzip) {
     dataFile 'data/input.xml'
-    gzipFile layout.buildDirectory.file('out/input.xml.gz').get().asFile
+    gzipFile layout.buildDirectory.file('out/input.xml.gz')
 }
 ```
 
@@ -160,7 +160,7 @@ After:
 
 ```groovy
 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
     modelNames 'GB2AV'
     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
     schema 'gb2av'
@@ -174,7 +174,7 @@ For data import:
 ```groovy
 tasks.register('importData', Ili2duckdbImport) {
     dependsOn 'schemaImport'
-    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
     modelNames 'GB2AV'
     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
     schema 'gb2av'
@@ -214,7 +214,7 @@ After:
 tasks.register('validate', IliValidator) {
     dataFiles 'Beispiel2a.xtf'
     modelDirectories projectDir.toString()
-    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+    logFile layout.buildDirectory.file('logs/ilivalidator.log')
 }
 ```
 
@@ -225,7 +225,7 @@ tasks.register('validateNgk', IliValidator) {
     dataFiles 'NGK_SO_Testbeddata.xtf'
     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
     metaConfigFile 'SO_AFU_Naturgefahren_20240515-gretl-meta.ini'
-    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+    logFile layout.buildDirectory.file('logs/ilivalidator.log')
 }
 ```
 
@@ -259,7 +259,7 @@ tasks.register('validateCsv', CsvValidator) {
     modelNames 'CsvModel'
     modelDirectories projectDir.toString()
     firstLineIsHeader.set(false)
-    logFile layout.buildDirectory.file('logs/csvvalidator.log').get().asFile
+    logFile layout.buildDirectory.file('logs/csvvalidator.log')
 }
 ```
 
@@ -290,7 +290,7 @@ After:
 tasks.register('transformXml', XslTransformer) {
     xmlFiles 'data/input.xml', 'data/other.xml'
     xslFile 'xsl/transform.xsl'
-    outDirectory layout.buildDirectory.dir('out').get().asFile
+    outDirectory layout.buildDirectory.dir('out')
     fileExtension 'xml'
 }
 ```
@@ -301,7 +301,7 @@ For bundled resources:
 tasks.register('transformWithResource', XslTransformer) {
     xmlFiles 'data/input.xml'
     xslResource 'xslt/eCH0132_to_SO_AGI_SGV_Meldungen_20221109.xsl'
-    outDirectory layout.buildDirectory.dir('out').get().asFile
+    outDirectory layout.buildDirectory.dir('out')
 }
 ```
 

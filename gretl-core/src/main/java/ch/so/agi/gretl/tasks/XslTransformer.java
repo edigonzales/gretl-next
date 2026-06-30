@@ -61,7 +61,7 @@ public abstract class XslTransformer extends AbstractCoreGretlTask {
 
     @GretlDslMethod(required = true, description = "Configures a stylesheet file. Use either xslFile(...) or xslResource(...).")
     public void xslFile(Object path) {
-        getXslFile().set(getProject().file(path));
+        setRegularFile(getXslFile(), path);
     }
 
     @GretlDslMethod(required = true, description = "Configures a classpath stylesheet resource. Use either xslFile(...) or xslResource(...).")
@@ -76,7 +76,7 @@ public abstract class XslTransformer extends AbstractCoreGretlTask {
 
     @GretlDslMethod(required = true, description = "Configures the output directory.")
     public void outDirectory(Object path) {
-        getOutDirectory().set(getProject().file(path));
+        setDirectory(getOutDirectory(), path);
     }
 
     @GretlDslMethod(defaultValue = "xtf", description = "Sets the output file extension without leading dot.")

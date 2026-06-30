@@ -7,7 +7,9 @@ import ch.interlis.iox_j.validator.InterlisFunction;
 import ch.interlis.ioxwkf.dbtools.IoxWkfConfig;
 import ch.so.agi.gretl.tasks.AbstractInterlisValidatorTask;
 import ch.so.agi.gretl.tasks.CsvValidator;
+import ch.so.agi.gretl.tasks.GpkgValidator;
 import ch.so.agi.gretl.tasks.IliValidator;
+import ch.so.agi.gretl.tasks.JsonValidator;
 import org.gradle.api.GradleException;
 import org.interlis2.validator.Validator;
 
@@ -56,6 +58,30 @@ public final class ValidatorExecutionSupport {
         }
 
         return new CsvValidatorImpl().validate(toPaths(task.getDataFiles().getFiles()), settings);
+    }
+
+    public boolean validate(JsonValidator task) {
+        if (task.getDataFiles().isEmpty()) {
+            return true;
+        }
+
+        Settings settings = createSettings(task);
+        settings.setTransientObject(ch.interlis.iox_j.validator.Validator.CONFIG_CUSTOM_FUNCTIONS, createCustomFunctions());
+        return new JsonValidatorImpl().validate(toPaths(task.getDataFiles().getFiles()), settings);
+    }
+
+    public boolean validate(GpkgValidator task) {
+        if (task.getDataFiles().isEmpty()) {
+            return true;
+        }
+        if (!task.getTableName().isPresent() || task.getTableName().get().isBlank()) {
+            throw new GradleException("tableName must not be null or blank");
+        }
+
+        Settings settings = createSettings(task);
+        settings.setValue(IoxWkfConfig.SETTING_GPKGTABLE, task.getTableName().get());
+        settings.setTransientObject(ch.interlis.iox_j.validator.Validator.CONFIG_CUSTOM_FUNCTIONS, createCustomFunctions());
+        return new GpkgValidatorImpl().validate(toPaths(task.getDataFiles().getFiles()), settings);
     }
 
     private Settings createSettings(AbstractInterlisValidatorTask task) {

@@ -51,7 +51,7 @@ class FtpFunctionalTest extends CoreFunctionalTestSupport {
                         password 'password'
                         remoteDir '/remote'
                         remoteFile '*.txt'
-                        localDir layout.buildDirectory.dir('download-pattern').get().asFile
+                        localDir layout.buildDirectory.dir('download-pattern')
                         fileType 'BINARY'
                     }
 
@@ -62,7 +62,7 @@ class FtpFunctionalTest extends CoreFunctionalTestSupport {
                         password 'password'
                         remoteDir '/remote'
                         remoteFile 'keep.txt'
-                        localDir layout.buildDirectory.dir('download-single').get().asFile
+                        localDir layout.buildDirectory.dir('download-single')
                         fileType 'BINARY'
                     }
 
@@ -73,7 +73,7 @@ class FtpFunctionalTest extends CoreFunctionalTestSupport {
                         password 'password'
                         remoteDir '/remote'
                         remoteFile(['old-one.txt', 'keep.txt'])
-                        localDir layout.buildDirectory.dir('download-list').get().asFile
+                        localDir layout.buildDirectory.dir('download-list')
                         fileType 'BINARY'
                     }
 
@@ -83,7 +83,7 @@ class FtpFunctionalTest extends CoreFunctionalTestSupport {
                         user 'user'
                         password 'password'
                         remoteDir '/remote'
-                        localDir layout.buildDirectory.dir('download-all').get().asFile
+                        localDir layout.buildDirectory.dir('download-all')
                         fileType 'BINARY'
                     }
 

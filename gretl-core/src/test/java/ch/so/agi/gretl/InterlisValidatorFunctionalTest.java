@@ -22,7 +22,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('validate', IliValidator) {
                     dataFiles 'Beispiel2a.xtf'
                     modelDirectories projectDir.toString()
-                    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/ilivalidator.log')
                 }
                 """);
 
@@ -44,7 +44,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('validate', IliValidator) {
                     dataFiles 'Beispiel2a.xtf'
                     modelDirectories projectDir.toString()
-                    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/ilivalidator.log')
                 }
                 """);
 
@@ -63,7 +63,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                 def validateProvider = tasks.register('validate', IliValidator) {
                     dataFiles 'Beispiel2a.xtf'
                     modelDirectories projectDir.toString()
-                    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/ilivalidator.log')
                     failOnError.set(false)
                 }
 
@@ -97,7 +97,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                     dataFiles 'NGK_SO_Testbeddata.xtf'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     metaConfigFile 'SO_AFU_Naturgefahren_20240515-gretl-meta.ini'
-                    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/ilivalidator.log')
                 }
                 """);
 
@@ -123,7 +123,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                     modelNames 'CsvModel'
                     modelDirectories projectDir.toString()
                     firstLineIsHeader.set(false)
-                    logFile layout.buildDirectory.file('logs/csvvalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/csvvalidator.log')
                 }
                 """);
 
@@ -146,7 +146,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                     modelNames 'CsvModel'
                     modelDirectories projectDir.toString()
                     firstLineIsHeader.set(false)
-                    logFile layout.buildDirectory.file('logs/csvvalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/csvvalidator.log')
                 }
                 """);
 
@@ -192,7 +192,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('validate', IliValidator) {
                     dataFiles 'Beispiel2a.xtf', 'Beispiel2b.xtf'
                     modelDirectories projectDir.toString()
-                    logFile layout.buildDirectory.file('logs/ilivalidator.log').get().asFile
+                    logFile layout.buildDirectory.file('logs/ilivalidator.log')
                 }
                 """);
 

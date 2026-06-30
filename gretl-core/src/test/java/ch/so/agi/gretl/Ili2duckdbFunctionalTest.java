@@ -29,7 +29,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
         copyResource("original-gretl/interlis/ili2duckdb/importSchema/KS3-20060703.ili", "KS3-20060703.ili");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -69,7 +69,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
                 "VOLLZUG_SO0200002401_1531_20180105113131.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -79,7 +79,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -105,7 +105,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
         copyResourceTree("original-gretl/interlis/ili2duckdb/import", projectDir);
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -115,7 +115,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -124,11 +124,11 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('exportData', Ili2duckdbExport) {
                     dependsOn 'importData'
-                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
-                    transferFiles layout.buildDirectory.file('out/export.xml').get().asFile
+                    dataFiles layout.buildDirectory.file('out/export.xml')
                 }
                 """));
 
@@ -145,7 +145,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
                 "src/prefix_alpha.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/datasets.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/datasets.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -156,7 +156,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/datasets.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/datasets.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -182,7 +182,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
         Files.writeString(projectDir.resolve("names/id_beta.ref"), "beta");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/datasets.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/datasets.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -193,7 +193,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/datasets.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/datasets.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -217,7 +217,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
                 "data.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/conflict.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/conflict.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -225,7 +225,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/conflict.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/conflict.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -243,7 +243,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
         copyResourceTree("original-gretl/interlis/ili2duckdb/import", projectDir);
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
-                    databaseFile layout.buildDirectory.file('db/mismatch.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/mismatch.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'
@@ -252,7 +252,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('importData', Ili2duckdbImport) {
                     dependsOn 'schemaImport'
-                    databaseFile layout.buildDirectory.file('db/mismatch.duckdb').get().asFile
+                    databaseFile layout.buildDirectory.file('db/mismatch.duckdb')
                     modelNames 'GB2AV'
                     modelDirectories projectDir.toString(), 'http://models.interlis.ch'
                     schema 'gb2av'

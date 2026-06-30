@@ -8,8 +8,8 @@ import ch.so.agi.gretl.tasks.AbstractIli2DbTask;
 
 final class Ili2DbOptionApplier {
 
-    void apply(AbstractIli2DbTask task, Config settings, int function) {
-        settings.setFunction(function);
+    void apply(AbstractIli2DbTask task, Config settings, Ili2DbOperation operation) {
+        settings.setFunction(operation.function());
         EhiLogger.getInstance().setTraceFilter(!task.getTrace().get());
 
         if (task.getProxy().isPresent()) {
@@ -51,7 +51,7 @@ final class Ili2DbOptionApplier {
         if (task.getDeleteData().get()) {
             settings.setDeleteMode(Config.DELETE_DATA);
         }
-        if (function != Config.FC_IMPORT && task.getLogFile().isPresent()) {
+        if (!operation.usesExternalFileLogger() && task.getLogFile().isPresent()) {
             settings.setLogfile(task.getLogFile().get().getAsFile().getAbsolutePath());
         }
         if (task.getValidConfigFile().isPresent()) {
@@ -65,6 +65,9 @@ final class Ili2DbOptionApplier {
         }
         if (task.getForceTypeValidation().get()) {
             settings.setOnlyMultiplicityReduction(true);
+        }
+        if (task.getStrokeArcs().get()) {
+            settings.setStrokeArcs(Config.STROKE_ARCS_ENABLE);
         }
         if (task.getSkipPolygonBuilding().get()) {
             Ili2db.setSkipPolygonBuilding(settings);

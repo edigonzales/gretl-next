@@ -35,7 +35,7 @@ public abstract class FtpUpload extends FtpTask {
     }
 
     private void configureLocalFile(Object localFile) {
-        getLocalFile().set(getProject().file(localFile));
+        setRegularFile(getLocalFile(), localFile);
     }
 
     @GretlDslMethod(required = true, description = "Configures the local file to upload.")

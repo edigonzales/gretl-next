@@ -83,7 +83,7 @@ class CurlFunctionalTest extends CoreFunctionalTestSupport {
                     tasks.register('download', Curl) {
                         serverUrl '%s/download'
                         expectedStatusCode 200
-                        outputFile layout.buildDirectory.file('out/download.txt').get().asFile
+                        outputFile layout.buildDirectory.file('out/download.txt')
                     }
                     """.formatted(endpoint, endpoint, endpoint, endpoint));
 

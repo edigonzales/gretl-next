@@ -131,7 +131,7 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
 
     @GretlDslMethod(required = true, description = "Configures the DuckDB database file.")
     public void database(Object file) {
-        getDatabaseFile().fileValue(getProject().file(file));
+        setRegularFile(getDatabaseFile(), file);
     }
 
     @GretlDslMethod(description = "Uses an in-memory DuckDB database instead of a database file.")

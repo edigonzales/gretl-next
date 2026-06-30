@@ -37,7 +37,7 @@ public abstract class S3Download extends S3Task {
     }
 
     private void configureDownloadDir(Object downloadDir) {
-        getDownloadDir().set(getProject().file(downloadDir));
+        setDirectory(getDownloadDir(), downloadDir);
     }
 
     @GretlDslMethod(required = true, description = "Configures the local download directory.")

@@ -10,11 +10,20 @@ final class Ili2DbSchemaOptionApplier {
         if (task.getOneGeomPerTable().get()) {
             settings.setOneGeomPerTable(true);
         }
+        if (task.getSetupPgExt().get()) {
+            settings.setSetupPgExt(true);
+        }
         if (task.getDropScript().isPresent()) {
             settings.setDropscript(task.getDropScript().get().getAsFile().getAbsolutePath());
         }
         if (task.getCreateScript().isPresent()) {
             settings.setCreatescript(task.getCreateScript().get().getAsFile().getAbsolutePath());
+        }
+        if (task.getMetaConfig().isPresent()) {
+            String value = task.getMetaConfig().get();
+            settings.setMetaConfigFile(value.startsWith("ilidata:")
+                    ? value
+                    : task.getProject().file(value).getAbsolutePath());
         }
         if (task.getDefaultSrsAuth().isPresent()) {
             String auth = task.getDefaultSrsAuth().get();
@@ -24,16 +33,16 @@ final class Ili2DbSchemaOptionApplier {
             settings.setDefaultSrsCode(task.getDefaultSrsCode().get());
         }
         if (task.getCreateSingleEnumTab().get()) {
-            settings.setCreateEnumDefs(settings.CREATE_ENUM_DEFS_SINGLE);
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_SINGLE);
         }
         if (task.getCreateEnumTabs().get()) {
-            settings.setCreateEnumDefs(settings.CREATE_ENUM_DEFS_MULTI);
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI);
         }
         if (task.getCreateEnumTxtCol().get()) {
-            settings.setCreateEnumCols(settings.CREATE_ENUM_TXT_COL);
+            settings.setCreateEnumCols(Config.CREATE_ENUM_TXT_COL);
         }
         if (task.getCreateEnumColAsItfCode().get()) {
-            settings.setCreateEnumColAsItfCode(settings.CREATE_ENUMCOL_AS_ITFCODE_YES);
+            settings.setCreateEnumColAsItfCode(Config.CREATE_ENUMCOL_AS_ITFCODE_YES);
         }
         if (task.getCreateEnumTabsWithId().get()) {
             settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI_WITH_ID);
@@ -42,43 +51,46 @@ final class Ili2DbSchemaOptionApplier {
             settings.setCreateImportTabs(true);
         }
         if (task.getBeautifyEnumDispName().get()) {
-            settings.setBeautifyEnumDispName(settings.BEAUTIFY_ENUM_DISPNAME_UNDERSCORE);
+            settings.setBeautifyEnumDispName(Config.BEAUTIFY_ENUM_DISPNAME_UNDERSCORE);
         }
         if (task.getNoSmartMapping().get()) {
             Ili2db.setNoSmartMapping(settings);
         }
         if (task.getSmart1Inheritance().get()) {
-            settings.setInheritanceTrafo(settings.INHERITANCE_TRAFO_SMART1);
+            settings.setInheritanceTrafo(Config.INHERITANCE_TRAFO_SMART1);
         }
         if (task.getSmart2Inheritance().get()) {
-            settings.setInheritanceTrafo(settings.INHERITANCE_TRAFO_SMART2);
+            settings.setInheritanceTrafo(Config.INHERITANCE_TRAFO_SMART2);
         }
         if (task.getCoalesceCatalogueRef().get()) {
-            settings.setCatalogueRefTrafo(settings.CATALOGUE_REF_TRAFO_COALESCE);
+            settings.setCatalogueRefTrafo(Config.CATALOGUE_REF_TRAFO_COALESCE);
         }
         if (task.getCoalesceMultiSurface().get()) {
-            settings.setMultiSurfaceTrafo(settings.MULTISURFACE_TRAFO_COALESCE);
+            settings.setMultiSurfaceTrafo(Config.MULTISURFACE_TRAFO_COALESCE);
         }
         if (task.getCoalesceMultiLine().get()) {
-            settings.setMultiLineTrafo(settings.MULTILINE_TRAFO_COALESCE);
+            settings.setMultiLineTrafo(Config.MULTILINE_TRAFO_COALESCE);
         }
         if (task.getExpandMultilingual().get()) {
-            settings.setMultilingualTrafo(settings.MULTILINGUAL_TRAFO_EXPAND);
+            settings.setMultilingualTrafo(Config.MULTILINGUAL_TRAFO_EXPAND);
+        }
+        if (task.getExpandStruct().get()) {
+            settings.setStructTrafo(Config.STRUCT_TRAFO_EXPAND);
         }
         if (task.getCoalesceJson().get()) {
-            settings.setJsonTrafo(settings.JSON_TRAFO_COALESCE);
+            settings.setJsonTrafo(Config.JSON_TRAFO_COALESCE);
         }
         if (task.getCoalesceArray().get()) {
-            settings.setArrayTrafo(settings.ARRAY_TRAFO_COALESCE);
+            settings.setArrayTrafo(Config.ARRAY_TRAFO_COALESCE);
         }
         if (task.getCreateTypeConstraint().get()) {
             settings.setCreateTypeConstraint(true);
         }
         if (task.getCreateFk().get()) {
-            settings.setCreateFk(settings.CREATE_FK_YES);
+            settings.setCreateFk(Config.CREATE_FK_YES);
         }
         if (task.getCreateFkIdx().get()) {
-            settings.setCreateFkIdx(settings.CREATE_FKIDX_YES);
+            settings.setCreateFkIdx(Config.CREATE_FKIDX_YES);
         }
         if (task.getCreateUnique().get()) {
             settings.setCreateUniqueConstraints(true);
@@ -93,7 +105,7 @@ final class Ili2DbSchemaOptionApplier {
             settings.setCreateDateTimeChecks(true);
         }
         if (task.getCreateStdCols().get()) {
-            settings.setCreateStdCols(settings.CREATE_STD_COLS_ALL);
+            settings.setCreateStdCols(Config.CREATE_STD_COLS_ALL);
         }
         if (task.getTidColumnName().isPresent()) {
             settings.setColT_ID(task.getTidColumnName().get());
@@ -105,40 +117,40 @@ final class Ili2DbSchemaOptionApplier {
             settings.setMaxIdSeqValue(task.getIdSeqMax().get());
         }
         if (task.getCreateTypeDiscriminator().get()) {
-            settings.setCreateTypeDiscriminator(settings.CREATE_TYPE_DISCRIMINATOR_ALWAYS);
+            settings.setCreateTypeDiscriminator(Config.CREATE_TYPE_DISCRIMINATOR_ALWAYS);
         }
         if (task.getCreateGeomIdx().get()) {
             settings.setValue(Config.CREATE_GEOM_INDEX, Config.TRUE);
         }
         if (task.getDisableNameOptimization().get()) {
-            settings.setNameOptimization(settings.NAME_OPTIMIZATION_DISABLE);
+            settings.setNameOptimization(Config.NAME_OPTIMIZATION_DISABLE);
         }
         if (task.getNameByTopic().get()) {
-            settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
+            settings.setNameOptimization(Config.NAME_OPTIMIZATION_TOPIC);
         }
         if (task.getMaxNameLength().isPresent()) {
             settings.setMaxSqlNameLength(task.getMaxNameLength().get().toString());
         }
         if (task.getSqlEnableNull().get()) {
-            settings.setSqlNull(settings.SQL_NULL_ENABLE);
+            settings.setSqlNull(Config.SQL_NULL_ENABLE);
         }
         if (task.getSqlColsAsText().get()) {
-            settings.setSqlColsAsText(settings.SQL_COLS_AS_TEXT_ENABLE);
+            settings.setSqlColsAsText(Config.SQL_COLS_AS_TEXT_ENABLE);
         }
         if (task.getSqlExtRefCols().get()) {
-            settings.setSqlExtRefCols(settings.SQL_EXTREF_ENABLE);
+            settings.setSqlExtRefCols(Config.SQL_EXTREF_ENABLE);
         }
         if (task.getKeepAreaRef().get()) {
-            settings.setAreaRef(settings.AREA_REF_KEEP);
+            settings.setAreaRef(Config.AREA_REF_KEEP);
         }
         if (task.getCreateTidCol().get()) {
-            settings.setTidHandling(settings.TID_HANDLING_PROPERTY);
+            settings.setTidHandling(Config.TID_HANDLING_PROPERTY);
         }
         if (task.getCreateBasketCol().get()) {
-            settings.setBasketHandling(settings.BASKET_HANDLING_READWRITE);
+            settings.setBasketHandling(Config.BASKET_HANDLING_READWRITE);
         }
         if (task.getCreateDatasetCol().get()) {
-            settings.setCreateDatasetCols(settings.CREATE_DATASET_COL);
+            settings.setCreateDatasetCols(Config.CREATE_DATASET_COL);
         }
         if (task.getTranslation().isPresent()) {
             settings.setIli1Translation(task.getTranslation().get());

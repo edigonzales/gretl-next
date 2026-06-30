@@ -110,14 +110,32 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
         getModelNames().addAll(AbstractIli2DbTask.requireNonBlank("modelNames", names));
     }
 
+    @GretlDslMethod(description = "Alias for configuring validator models.")
+    public void models(String value) {
+        getModelNames().set(java.util.List.of(value));
+    }
+
+    public void setModels(String value) {
+        models(value);
+    }
+
     @GretlDslMethod(description = "Adds model directory or repository entries.")
     public void modelDirectories(String... entries) {
         getModelDirectories().addAll(AbstractIli2DbTask.requireNonBlank("modelDirectories", entries));
     }
 
+    @GretlDslMethod(description = "Alias for configuring the validator modeldir option.")
+    public void modeldir(String value) {
+        getModelDirectories().set(java.util.List.of(value));
+    }
+
+    public void setModeldir(String value) {
+        modeldir(value);
+    }
+
     @GretlDslMethod(description = "Uses a local validation config file.")
     public void configFile(Object path) {
-        getConfigFile().fileValue(getProject().file(path));
+        setRegularFile(getConfigFile(), path);
     }
 
     @GretlDslMethod(description = "Uses a validation config from an ilidata repository id.")
@@ -128,7 +146,7 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
 
     @GretlDslMethod(description = "Uses a local meta config file.")
     public void metaConfigFile(Object path) {
-        getMetaConfigFile().fileValue(getProject().file(path));
+        setRegularFile(getMetaConfigFile(), path);
     }
 
     @GretlDslMethod(description = "Uses a meta config from an ilidata repository id.")
@@ -139,12 +157,12 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
 
     @GretlDslMethod(description = "Writes validator text logs to a file.")
     public void logFile(Object path) {
-        getLogFile().fileValue(getProject().file(path));
+        setRegularFile(getLogFile(), path);
     }
 
     @GretlDslMethod(description = "Writes validator IliVErrors logs to a file.")
     public void xtfLogFile(Object path) {
-        getXtfLogFile().fileValue(getProject().file(path));
+        setRegularFile(getXtfLogFile(), path);
     }
 
     @Internal

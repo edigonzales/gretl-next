@@ -24,7 +24,7 @@ class GzipFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('compressFile', Gzip) {
                     dataFile 'input/planregister.xml'
-                    gzipFile layout.buildDirectory.file('nested/out/planregister.xml.gz').get().asFile
+                    gzipFile layout.buildDirectory.file('nested/out/planregister.xml.gz')
                 }
                 """);
 
@@ -48,7 +48,7 @@ class GzipFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('compressFile', Gzip) {
                     dataFile 'missing.xml'
-                    gzipFile layout.buildDirectory.file('out/missing.xml.gz').get().asFile
+                    gzipFile layout.buildDirectory.file('out/missing.xml.gz')
                 }
                 """);
 
@@ -68,7 +68,7 @@ class GzipFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register<Gzip>("compressFile") {
                     dataFile("input/planregister.xml")
-                    gzipFile(layout.buildDirectory.file("nested/out/planregister.xml.gz").get().asFile)
+                    gzipFile(layout.buildDirectory.file("nested/out/planregister.xml.gz"))
                 }
                 """);
 

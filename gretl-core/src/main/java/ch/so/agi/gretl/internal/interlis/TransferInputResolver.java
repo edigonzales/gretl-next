@@ -1,15 +1,18 @@
 package ch.so.agi.gretl.internal.interlis;
 
+import ch.so.agi.gretl.tasks.AbstractIli2DbFileTask;
 import ch.so.agi.gretl.tasks.AbstractIli2DbTransferTask;
 import org.gradle.api.GradleException;
 
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 
-final class TransferInputResolver {
+public final class TransferInputResolver {
 
-    TransferInputs resolve(AbstractIli2DbTransferTask task, boolean allowRepositoryIds) {
+    public TransferInputs resolve(AbstractIli2DbTransferTask task, boolean allowRepositoryIds) {
         List<String> localFiles = task.getTransferFilesCollection().getFiles().stream()
+                .sorted(Comparator.comparing(File::getPath))
                 .map(File::getAbsolutePath)
                 .toList();
         List<String> repositoryIds = task.getRepositoryDataIds().get();
@@ -23,16 +26,24 @@ final class TransferInputResolver {
         return new TransferInputs(localFiles, repositoryIds);
     }
 
-    record TransferInputs(List<String> localFiles, List<String> repositoryIds) {
-        boolean isEmpty() {
+    public TransferInputs resolveLocal(AbstractIli2DbFileTask task) {
+        List<String> localFiles = task.getTransferFilesCollection().getFiles().stream()
+                .sorted(Comparator.comparing(File::getPath))
+                .map(File::getAbsolutePath)
+                .toList();
+        return new TransferInputs(localFiles, List.of());
+    }
+
+    public record TransferInputs(List<String> localFiles, List<String> repositoryIds) {
+        public boolean isEmpty() {
             return localFiles.isEmpty() && repositoryIds.isEmpty();
         }
 
-        boolean usesLocalFiles() {
+        public boolean usesLocalFiles() {
             return !localFiles.isEmpty();
         }
 
-        List<String> executionInputs() {
+        public List<String> executionInputs() {
             return usesLocalFiles() ? localFiles : repositoryIds;
         }
     }

@@ -30,7 +30,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('transformXml', XslTransformer) {
                     xslFile 'transform.xsl'
                     xmlFiles 'one.xml', 'two.xml'
-                    outDirectory layout.buildDirectory.dir('xsl').get().asFile
+                    outDirectory layout.buildDirectory.dir('xsl')
                     fileExtension 'txt'
                 }
                 """);
@@ -53,7 +53,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('transformXml', XslTransformer) {
                     xslFile 'eCH0132_to_SO_AGI_SGV_Meldungen_20221109.xsl'
                     xmlFiles 'MeldungAnGeometer_G-0098981_20230214_104054_Koordinaten.xml'
-                    outDirectory layout.buildDirectory.dir('xsl').get().asFile
+                    outDirectory layout.buildDirectory.dir('xsl')
                 }
                 """);
 
@@ -83,7 +83,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register<XslTransformer>("transformXml") {
                     xslFile("transform.xsl")
                     xmlFiles("input.xml")
-                    outDirectory(layout.buildDirectory.dir("xsl").get().asFile)
+                    outDirectory(layout.buildDirectory.dir("xsl"))
                     fileExtension("txt")
                 }
                 """);
@@ -106,7 +106,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('transformXml', XslTransformer) {
                     xslResource 'eCH0132_to_SO_AGI_SGV_Meldungen_20221109.xsl'
                     xmlFiles 'input.xml'
-                    outDirectory layout.buildDirectory.dir('resource-xsl').get().asFile
+                    outDirectory layout.buildDirectory.dir('resource-xsl')
                 }
                 """);
 
@@ -128,7 +128,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
                 tasks.register('transformXml', XslTransformer) {
                     xslFile 'eCH0132_to_SO_AGI_SGV_Meldungen_20221109.xsl'
                     xmlFiles fileTree('.').matching { include '*.xml' }
-                    outDirectory layout.buildDirectory.dir('xsl-set').get().asFile
+                    outDirectory layout.buildDirectory.dir('xsl-set')
                     fileExtension 'out'
                 }
                 """);
@@ -152,7 +152,7 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
 
                 tasks.register('transformXml', XslTransformer) {
                     xslFile 'transform.xsl'
-                    outDirectory layout.buildDirectory.dir('xsl').get().asFile
+                    outDirectory layout.buildDirectory.dir('xsl')
                 }
                 """);
 

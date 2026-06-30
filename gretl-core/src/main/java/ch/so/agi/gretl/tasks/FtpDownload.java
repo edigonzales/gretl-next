@@ -52,7 +52,7 @@ public abstract class FtpDownload extends FtpTask {
     }
 
     private void configureLocalDir(Object localDir) {
-        getLocalDir().set(getProject().file(localDir));
+        setDirectory(getLocalDir(), localDir);
     }
 
     @GretlDslMethod(required = true, description = "Configures the local download directory.")

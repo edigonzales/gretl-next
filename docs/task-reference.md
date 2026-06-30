@@ -158,7 +158,7 @@ DSL methods:
 - `modelNames(String... names)`
 - `modelDirectories(String... entries)`
 - `schema(String name)`
-- `transferFiles(Object... paths)`
+- `dataFiles(Object... paths)`
 - `datasetNames(String... names)`
 - `datasetNamesFromTransferFiles()`
 - `datasetNamesFromFiles(Object... paths)`
@@ -170,7 +170,7 @@ DSL methods:
 Required:
 
 - `databaseFile(...)`
-- local `transferFiles(...)`
+- local `dataFiles(...)`
 
 Semantics and defaults:
 

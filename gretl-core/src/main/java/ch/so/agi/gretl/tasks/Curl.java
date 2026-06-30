@@ -194,7 +194,7 @@ public abstract class Curl extends AbstractCoreGretlTask {
     }
 
     private void configureDataBinary(Object dataBinary) {
-        getDataBinary().set(getProject().file(dataBinary));
+        setRegularFile(getDataBinary(), dataBinary);
     }
 
     @GretlDslMethod(description = "Configures a binary request body file.")
@@ -203,7 +203,7 @@ public abstract class Curl extends AbstractCoreGretlTask {
     }
 
     private void configureOutputFile(Object outputFile) {
-        getOutputFile().set(getProject().file(outputFile));
+        setRegularFile(getOutputFile(), outputFile);
     }
 
     @GretlDslMethod(description = "Configures the file receiving the response body.")

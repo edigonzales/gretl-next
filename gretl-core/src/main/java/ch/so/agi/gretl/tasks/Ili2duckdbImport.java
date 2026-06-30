@@ -2,6 +2,8 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.internal.interlis.Ili2DbExecutionSupport;
+import ch.so.agi.gretl.internal.interlis.Ili2DbFlavor;
+import ch.so.agi.gretl.internal.interlis.Ili2DbOperation;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.InputFiles;
@@ -26,6 +28,6 @@ public abstract class Ili2duckdbImport extends AbstractIli2DbTransferTask {
 
     @TaskAction
     public void importData() {
-        new Ili2DbExecutionSupport().executeImport(this);
+        new Ili2DbExecutionSupport().executeImport(this, Ili2DbFlavor.DUCKDB, Ili2DbOperation.IMPORT);
     }
 }

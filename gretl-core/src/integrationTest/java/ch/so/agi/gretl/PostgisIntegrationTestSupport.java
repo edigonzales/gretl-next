@@ -89,6 +89,7 @@ abstract class PostgisIntegrationTestSupport {
     void createOrReplaceSchema(String schemaName) throws SQLException {
         try (Connection connection = pg(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE EXTENSION IF NOT EXISTS postgis");
+            statement.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"");
             statement.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
             statement.execute("CREATE SCHEMA " + schemaName);
         }

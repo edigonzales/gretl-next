@@ -75,7 +75,7 @@ public abstract class S3Upload extends S3Task {
     }
 
     private void configureSourceDir(Object sourceDir) {
-        getSourceDir().set(getProject().file(sourceDir));
+        setDirectory(getSourceDir(), sourceDir);
     }
 
     @GretlDslMethod(description = "Configures a directory whose direct files are uploaded.")
@@ -84,7 +84,7 @@ public abstract class S3Upload extends S3Task {
     }
 
     private void configureSourceFile(Object sourceFile) {
-        getSourceFile().set(getProject().file(sourceFile));
+        setRegularFile(getSourceFile(), sourceFile);
     }
 
     @GretlDslMethod(description = "Configures one file to upload.")

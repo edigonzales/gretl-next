@@ -4,13 +4,16 @@ Kotlin builds need explicit imports for GRETL task types. Use `mapOf("key" to
 value)` for SQL parameters and normal Kotlin varargs for helper methods such as
 `sqlFiles(...)`, `geometryColumns(...)`, `cellValues(...)` and `breaks(...)`.
 
-For output files and directories, pass a `File` object when using
-`layout.buildDirectory`, for example:
+Core GRETL file and directory helpers accept `layout.buildDirectory` providers
+directly, for example:
 
 ```kotlin
-layout.buildDirectory.file("out/result.gpkg").get().asFile
-layout.buildDirectory.dir("out").get().asFile
+layout.buildDirectory.file("out/result.gpkg")
+layout.buildDirectory.dir("out")
 ```
+
+GeoTools examples still pass `File` objects until that module is aligned with
+the same provider-friendly helpers.
 
 ## SqlExecutor
 
@@ -98,7 +101,7 @@ plugins {
 
 tasks.register<Gzip>("compressXml") {
     dataFile("data/input.xml")
-    gzipFile(layout.buildDirectory.file("out/input.xml.gz").get().asFile)
+    gzipFile(layout.buildDirectory.file("out/input.xml.gz"))
 }
 ```
 
@@ -114,7 +117,7 @@ plugins {
 tasks.register<XslTransformer>("transformXml") {
     xslFile("xsl/transform.xsl")
     xmlFiles("data/input.xml", "data/other.xml")
-    outDirectory(layout.buildDirectory.dir("transformed").get().asFile)
+    outDirectory(layout.buildDirectory.dir("transformed"))
     fileExtension("xml")
 }
 ```
@@ -131,7 +134,7 @@ plugins {
 tasks.register<XslTransformer>("transformWithResource") {
     xslResource("xslt/eCH0132_to_SO_AGI_SGV_Meldungen_20221109.xsl")
     xmlFiles("data/input.xml")
-    outDirectory(layout.buildDirectory.dir("transformed").get().asFile)
+    outDirectory(layout.buildDirectory.dir("transformed"))
 }
 ```
 

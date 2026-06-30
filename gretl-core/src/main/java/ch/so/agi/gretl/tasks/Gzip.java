@@ -28,12 +28,12 @@ public abstract class Gzip extends AbstractCoreGretlTask {
 
     @GretlDslMethod(required = true, description = "Configures the input file to compress.")
     public void dataFile(Object path) {
-        getDataFile().set(getProject().file(path));
+        setRegularFile(getDataFile(), path);
     }
 
     @GretlDslMethod(required = true, description = "Configures the gzip output file.")
     public void gzipFile(Object path) {
-        getGzipFile().set(getProject().file(path));
+        setRegularFile(getGzipFile(), path);
     }
 
     @TaskAction
