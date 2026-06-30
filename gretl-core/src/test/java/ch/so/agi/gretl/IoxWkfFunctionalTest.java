@@ -19,7 +19,7 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsCsvToExcelWorkbook() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/Csv2Excel", projectDir);
+        copyResourceTree("fixtures/iox-wkf/Csv2Excel", projectDir);
         writeBuild(ioxWkfBuild("""
                 tasks.register('convertData', Csv2Excel) {
                     csvFile file('20230124_sap_Gebaeude.csv')
@@ -43,7 +43,7 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsEmptyCsvToExcelWorkbook() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/Csv2ExcelEmptyFile", projectDir);
+        copyResourceTree("fixtures/iox-wkf/Csv2ExcelEmptyFile", projectDir);
         writeBuild(ioxWkfBuild("""
                 tasks.register('convertData', Csv2Excel) {
                     csvFile file('superflous_publication_formats.csv')
@@ -63,12 +63,12 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void validatesCsvJsonAndGeoPackageInputs() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/CsvValidator", projectDir);
-        copyResource("original-gretl/iox-wkf/CsvValidatorFail/dataFail.csv", "dataFail.csv");
-        copyResourceTree("original-gretl/iox-wkf/JsonValidatorOk", projectDir.resolve("json-ok"));
-        copyResourceTree("original-gretl/iox-wkf/JsonValidatorFail", projectDir.resolve("json-fail"));
-        copyResourceTree("original-gretl/iox-wkf/GpkgValidator", projectDir.resolve("gpkg-ok"));
-        copyResourceTree("original-gretl/iox-wkf/GpkgValidatorFail", projectDir.resolve("gpkg-fail"));
+        copyResourceTree("fixtures/iox-wkf/CsvValidator", projectDir);
+        copyResource("fixtures/iox-wkf/CsvValidatorFail/dataFail.csv", "dataFail.csv");
+        copyResourceTree("fixtures/iox-wkf/JsonValidatorOk", projectDir.resolve("json-ok"));
+        copyResourceTree("fixtures/iox-wkf/JsonValidatorFail", projectDir.resolve("json-fail"));
+        copyResourceTree("fixtures/iox-wkf/GpkgValidator", projectDir.resolve("gpkg-ok"));
+        copyResourceTree("fixtures/iox-wkf/GpkgValidatorFail", projectDir.resolve("gpkg-fail"));
         writeBuild(ioxWkfBuild("""
                 tasks.register('validateCsvOk', CsvValidator) {
                     models = 'CsvModel'

@@ -63,7 +63,7 @@ class SqlExecutionEngineTest {
 
     @Test
     void rejectsSqlFileWithBom() throws Exception {
-        Path file = resourcePath("original-gretl/sql/query_with_bom.sql");
+        Path file = resourcePath("fixtures/sql/query_with_bom.sql");
 
         GretlException exception = assertThrows(GretlException.class,
                 () -> new SqlExecutionEngine().execute(request(file)));

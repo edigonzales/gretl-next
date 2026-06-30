@@ -13,7 +13,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void validatesInterlisTransferSuccessfully() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ilivalidator/basic", projectDir);
+        copyResourceTree("fixtures/interlis/ilivalidator/basic", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -35,7 +35,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void failsInterlisValidation() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ilivalidator/fail", projectDir);
+        copyResourceTree("fixtures/interlis/ilivalidator/fail", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -54,7 +54,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void exposesValidationOkWhenFailOnErrorIsDisabled() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ilivalidator/fail", projectDir);
+        copyResourceTree("fixtures/interlis/ilivalidator/fail", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -81,7 +81,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void loadsMetaConfigAndCustomFunctionsForNgkFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ilivalidator/ngk", projectDir);
+        copyResourceTree("fixtures/interlis/ilivalidator/ngk", projectDir);
         Files.writeString(projectDir.resolve("SO_AFU_Naturgefahren_20240515-gretl-meta.ini"), """
                 [ch.ehi.ilivalidator]
                 models=SO_AFU_Naturgefahren_20240515
@@ -112,7 +112,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void validatesCsvSuccessfully() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/csvvalidator/ok", projectDir);
+        copyResourceTree("fixtures/interlis/csvvalidator/ok", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -135,7 +135,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void failsCsvValidationAndWritesDetailedLog() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/csvvalidator/fail", projectDir);
+        copyResourceTree("fixtures/interlis/csvvalidator/fail", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -160,7 +160,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void rejectsMultipleCsvInputFiles() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/csvvalidator/ok", projectDir);
+        copyResourceTree("fixtures/interlis/csvvalidator/ok", projectDir);
         Files.writeString(projectDir.resolve("data2.csv"), Files.readString(projectDir.resolve("data1.csv")));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
@@ -183,7 +183,7 @@ class InterlisValidatorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void acceptsInterlisFileSets() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ilivalidator/fileset", projectDir);
+        copyResourceTree("fixtures/interlis/ilivalidator/fileset", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 

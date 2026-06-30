@@ -36,7 +36,7 @@ class VectorizeEngineTest {
 
     @Test
     void vectorizesRasterCellsIntoMultipolygon() throws Exception {
-        Path raster = Path.of("src/test/resources/original-gretl-gt/vectorize/reclass.tif");
+        Path raster = Path.of("src/test/resources/fixtures/vectorize/reclass.tif");
         Path geopackage = tempDir.resolve("vectorized.gpkg");
         double cellValue = 55d;
 
@@ -68,7 +68,7 @@ class VectorizeEngineTest {
 
     @Test
     void vectorizesMultipleCellValuesIntoSeparateFeatures() throws Exception {
-        Path raster = Path.of("src/test/resources/original-gretl-gt/vectorize/reclass.tif");
+        Path raster = Path.of("src/test/resources/fixtures/vectorize/reclass.tif");
         Path geopackage = tempDir.resolve("vectorized-multi.gpkg");
         List<Double> cellValues = List.of(55d, 60d, 99d);
 

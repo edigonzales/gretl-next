@@ -13,7 +13,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalFetchSizeFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createOrReplaceSchema("db2dbtaskfetchsize");
         try (var connection = pg(); var statement = connection.createStatement()) {
             statement.execute("""
@@ -57,7 +57,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalTaskChainFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createOrReplaceSchema("db2dbtaskchain");
         int expectedRows = prepareDb2DbChainTables("db2dbtaskchain");
         writeBuild(db2DbBuild("""
@@ -78,7 +78,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalRelativePathFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createOrReplaceSchema("relativepath");
         int expectedRows = prepareDb2DbChainTables("relativepath");
         writeBuild(db2DbBuild("""
@@ -97,7 +97,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalDeleteAllRowsFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createOrReplaceSchema("deletedesttablecontent");
         int expectedRows = prepareDb2DbChainTables("deletedesttablecontent");
         insertAlbumRows("deletedesttablecontent", "dest", 3);
@@ -117,7 +117,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalParameterFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createParameterListTables();
         writeBuild(db2DbBuild("""
                 tasks.register('copyRows', Db2Db) {
@@ -136,7 +136,7 @@ class Db2DbPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalParameterListFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/db2db", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/db2db", projectDir.resolve("sql"));
         createParameterListTables();
         writeBuild(db2DbBuild("""
                 tasks.register('copyRows', Db2Db) {

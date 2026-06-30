@@ -75,9 +75,9 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void importsOriginalGretlAdministrativeGeoPackageFixture() throws Exception {
+    void importsAdministrativeGeoPackageFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ili2gpkg/import", projectDir);
+        copyResourceTree("fixtures/interlis/ili2gpkg/import", projectDir);
         writeBuild(ili2dbBuild("""
                 tasks.register('importGpkg', Ili2gpkgImport) {
                     models 'SO_AGI_AV_GB_Administrative_Einteilungen_20180613'
@@ -138,9 +138,9 @@ class Ili2dbFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     private void copyBeispiel2Resources() throws Exception {
-        copyResource("ili2db/Beispiel2.ili", "Beispiel2.ili");
-        copyResource("ili2db/Beispiel2a.xtf", "Beispiel2a.xtf");
-        copyResource("ili2db/Beispiel2b.xtf", "Beispiel2b.xtf");
+        copyResource("fixtures/interlis/ili2db/beispiel2/Beispiel2.ili", "Beispiel2.ili");
+        copyResource("fixtures/interlis/ili2db/beispiel2/Beispiel2a.xtf", "Beispiel2a.xtf");
+        copyResource("fixtures/interlis/ili2db/beispiel2/Beispiel2b.xtf", "Beispiel2b.xtf");
     }
 
     private String ili2dbBuild(String taskDefinition) {

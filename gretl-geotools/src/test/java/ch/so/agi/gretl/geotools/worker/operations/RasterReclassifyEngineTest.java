@@ -33,7 +33,7 @@ class RasterReclassifyEngineTest {
     @Test
     void reclassifyProducesOnlyConfiguredClassValues()
             throws IOException, NoSuchAuthorityCodeException, FactoryException {
-        Path input = Path.of("src/test/resources/original-gretl-gt/raster-reclassify/Beispiel_Rasterfile.asc");
+        Path input = Path.of("src/test/resources/fixtures/raster-reclassify/Beispiel_Rasterfile.asc");
         Path output = tempDir.resolve("reclass.tif");
 
         new RasterReclassifyEngine("test").execute(input, output);
@@ -53,7 +53,7 @@ class RasterReclassifyEngineTest {
     @Test
     void customBreaksAndNoDataAreApplied()
             throws IOException, NoSuchAuthorityCodeException, FactoryException {
-        Path input = Path.of("src/test/resources/original-gretl-gt/raster-reclassify/Beispiel_Rasterfile.asc");
+        Path input = Path.of("src/test/resources/fixtures/raster-reclassify/Beispiel_Rasterfile.asc");
         Path output = tempDir.resolve("custom-reclass.tif");
 
         new RasterReclassifyEngine("test").execute(input, output, new double[] {0, 40, 42, 45}, -5d);

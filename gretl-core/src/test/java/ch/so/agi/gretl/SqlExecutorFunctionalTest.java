@@ -140,9 +140,9 @@ class SqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void executesOriginalGretlDuckDbFixture() throws Exception {
+    void executesDuckDbFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/duckdb", projectDir);
+        copyResourceTree("fixtures/duckdb", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 

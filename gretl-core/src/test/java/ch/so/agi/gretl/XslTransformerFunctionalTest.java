@@ -42,9 +42,9 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void transformsOriginalGretlXmlWithFileXslFixture() throws Exception {
+    void transformsBuildingReportXmlWithFileXslFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/xsl", projectDir);
+        copyResourceTree("fixtures/xsl", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -94,9 +94,9 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void transformsOriginalGretlXmlWithResourceXslFixture() throws Exception {
+    void transformsBuildingReportXmlWithResourceXslFixture() throws Exception {
         writeSettings();
-        copyResource("original-gretl/xsl/MeldungAnGeometer_G-0098981_20230214_104054_Koordinaten.xml",
+        copyResource("fixtures/xsl/MeldungAnGeometer_G-0098981_20230214_104054_Koordinaten.xml",
                 "input.xml");
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
@@ -117,9 +117,9 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void transformsOriginalGretlXmlFileSetWithCustomExtension() throws Exception {
+    void transformsBuildingReportXmlFileSetWithCustomExtension() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/xsl", projectDir);
+        copyResourceTree("fixtures/xsl", projectDir);
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 

@@ -378,7 +378,7 @@ class Ili2pgPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     }
 
     private void copyBeispiel2Resources() throws Exception {
-        Path source = Path.of("src/test/resources/ili2db");
+        Path source = Path.of("src/test/resources/fixtures/interlis/ili2db/beispiel2");
         try (Stream<Path> stream = Files.walk(source)) {
             stream.filter(Files::isRegularFile).forEach(path -> {
                 try {
@@ -391,7 +391,7 @@ class Ili2pgPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     }
 
     private void copyFixture(String name) throws Exception {
-        copyResourceTree("original-gretl/interlis/ili2pg/" + name, projectDir.resolve(name));
+        copyResourceTree("fixtures/interlis/ili2pg/" + name, projectDir.resolve(name));
     }
 
     private int tableCount(String schemaName) throws Exception {

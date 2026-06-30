@@ -14,9 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GzipFunctionalTest extends CoreFunctionalTestSupport {
 
     @Test
-    void compressesOriginalGretlPlanregisterFixtureAndCreatesParentDirectory() throws Exception {
+    void compressesPlanregisterFixtureAndCreatesParentDirectory() throws Exception {
         writeSettings();
-        Path input = copyResource("original-gretl/gzip/planregister.xml", "input/planregister.xml");
+        Path input = copyResource("fixtures/gzip/planregister.xml", "input/planregister.xml");
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl' }
 
@@ -60,7 +60,7 @@ class GzipFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void supportsKotlinDsl() throws Exception {
         writeSettings();
-        Path input = copyResource("original-gretl/gzip/planregister.xml", "input/planregister.xml");
+        Path input = copyResource("fixtures/gzip/planregister.xml", "input/planregister.xml");
         writeKotlinBuild("""
                 import ch.so.agi.gretl.tasks.Gzip
 

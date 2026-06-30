@@ -19,7 +19,7 @@ class AvFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsSingleItfWithAv2ch() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/av/Av2ch", projectDir);
+        copyResourceTree("fixtures/av/Av2ch", projectDir);
         writeBuild(avBuild("""
                 tasks.register('transform', Av2ch) {
                     inputFiles '254900.itf'
@@ -39,7 +39,7 @@ class AvFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsItfFileTreeWithAv2chAndZip() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/av/Av2chFileSet", projectDir);
+        copyResourceTree("fixtures/av/Av2chFileSet", projectDir);
         writeBuild(avBuild("""
                 tasks.register('transform', Av2ch) {
                     inputFiles fileTree(projectDir) { include '*.itf' }
@@ -60,7 +60,7 @@ class AvFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void failsAv2chForInvalidInput() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/av/Av2chFail", projectDir);
+        copyResourceTree("fixtures/av/Av2chFail", projectDir);
         writeBuild(avBuild("""
                 tasks.register('transform', Av2ch) {
                     inputFiles 'fubar.itf'
@@ -76,7 +76,7 @@ class AvFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsSingleItfWithAv2geobau() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/av/Av2geobau", projectDir);
+        copyResourceTree("fixtures/av/Av2geobau", projectDir);
         writeBuild(avBuild("""
                 tasks.register('av2geobau', Av2geobau) {
                     itfFiles 'empty.itf'
@@ -99,7 +99,7 @@ class AvFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsItfFileTreeWithAv2geobauAndZip() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/av/Av2geobauFileSet", projectDir);
+        copyResourceTree("fixtures/av/Av2geobauFileSet", projectDir);
         writeBuild(avBuild("""
                 tasks.register('av2geobau', Av2geobau) {
                     itfFiles fileTree(projectDir) { include '*.itf' }

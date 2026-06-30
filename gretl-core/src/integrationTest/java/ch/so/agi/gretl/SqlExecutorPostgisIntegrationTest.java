@@ -15,7 +15,7 @@ class SqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalTaskChainFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/sqlexecutor", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/sqlexecutor", projectDir.resolve("sql"));
         createOrReplaceSchema("sqlexecutertaskchain");
         createSqlExecutorAlbumTables("sqlexecutertaskchain");
         writeBuild(sqlExecutorBuild("""
@@ -34,7 +34,7 @@ class SqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalRelativePathFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/sqlexecutor", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/sqlexecutor", projectDir.resolve("sql"));
         createOrReplaceSchema("sqlexecuterrelpath");
         createSqlExecutorAlbumTables("sqlexecuterrelpath");
         insertAlbumRows("sqlexecuterrelpath", "src", 1);
@@ -53,7 +53,7 @@ class SqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalSingleParameterFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/sqlexecutor", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/sqlexecutor", projectDir.resolve("sql"));
         createSqlexecTable();
         writeBuild(sqlExecutorBuild("""
                 tasks.register('runSql', SqlExecutor) {
@@ -71,7 +71,7 @@ class SqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void executesOriginalParameterListFixture() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/jobs/sqlexecutor", projectDir.resolve("sql"));
+        copyResourceTree("fixtures/jobs/sqlexecutor", projectDir.resolve("sql"));
         createSqlexecTable();
         writeBuild(sqlExecutorBuild("""
                 tasks.register('runSql', SqlExecutor) {

@@ -37,7 +37,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void readsShapefileThroughWorkerIsolation() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/shapefile", projectDir.resolve("data"));
+        copyResourceTree("fixtures/shapefile", projectDir.resolve("data"));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
@@ -56,7 +56,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void vectorizesRasterThroughWorkerIsolation() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/vectorize", projectDir.resolve("data"));
+        copyResourceTree("fixtures/vectorize", projectDir.resolve("data"));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
@@ -82,7 +82,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void reclassifiesRasterThroughWorkerIsolation() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/raster-reclassify", projectDir.resolve("data"));
+        copyResourceTree("fixtures/raster-reclassify", projectDir.resolve("data"));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
@@ -102,7 +102,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void rejectsEmptyVectorizeCellValues() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/vectorize", projectDir.resolve("data"));
+        copyResourceTree("fixtures/vectorize", projectDir.resolve("data"));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
@@ -123,7 +123,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void rejectsNonIncreasingRasterBreaks() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/raster-reclassify", projectDir.resolve("data"));
+        copyResourceTree("fixtures/raster-reclassify", projectDir.resolve("data"));
         writeBuild("""
                 plugins { id 'ch.so.agi.gretl.geotools' }
 
@@ -144,7 +144,7 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void supportsKotlinDslForReadShapefile() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/shapefile", projectDir.resolve("data"));
+        copyResourceTree("fixtures/shapefile", projectDir.resolve("data"));
         writeKotlinBuild("""
                 import ch.so.agi.gretl.geotools.tasks.ReadShapefile
 
@@ -164,8 +164,8 @@ class GeoToolsPluginFunctionalTest {
     @Test
     void supportsKotlinDslForRasterTasks() throws IOException, URISyntaxException {
         writeSettings();
-        copyResourceTree("data/vectorize", projectDir.resolve("vectorize-data"));
-        copyResourceTree("data/raster-reclassify", projectDir.resolve("raster-data"));
+        copyResourceTree("fixtures/vectorize", projectDir.resolve("vectorize-data"));
+        copyResourceTree("fixtures/raster-reclassify", projectDir.resolve("raster-data"));
         writeKotlinBuild("""
                 import ch.so.agi.gretl.geotools.tasks.RasterReclassify
                 import ch.so.agi.gretl.geotools.tasks.Vectorize

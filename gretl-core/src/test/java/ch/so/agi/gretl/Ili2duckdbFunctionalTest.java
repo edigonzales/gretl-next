@@ -26,7 +26,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void importsSchemaIntoDuckDb() throws Exception {
         writeSettings();
-        copyResource("original-gretl/interlis/ili2duckdb/importSchema/KS3-20060703.ili", "KS3-20060703.ili");
+        copyResource("fixtures/interlis/ili2duckdb/importSchema/KS3-20060703.ili", "KS3-20060703.ili");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
                     databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
@@ -64,8 +64,8 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void importsTransferFileAfterSchemaImport() throws Exception {
         writeSettings();
-        copyResource("original-gretl/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
-        copyResource("original-gretl/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
+        copyResource("fixtures/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
+        copyResource("fixtures/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
                 "VOLLZUG_SO0200002401_1531_20180105113131.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
@@ -102,7 +102,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void exportsTransferFileAfterImport() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ili2duckdb/import", projectDir);
+        copyResourceTree("fixtures/interlis/ili2duckdb/import", projectDir);
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
                     databaseFile layout.buildDirectory.file('db/my_gb2av.duckdb')
@@ -140,8 +140,8 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void derivesDatasetNameFromTransferFileAndSlice() throws Exception {
         writeSettings();
-        copyResource("original-gretl/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
-        copyResource("original-gretl/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
+        copyResource("fixtures/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
+        copyResource("fixtures/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
                 "src/prefix_alpha.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
@@ -175,8 +175,8 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void derivesDatasetNameFromSeparateFilesAndSlice() throws Exception {
         writeSettings();
-        copyResource("original-gretl/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
-        copyResource("original-gretl/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
+        copyResource("fixtures/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
+        copyResource("fixtures/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
                 "transfer/original.xml");
         Files.createDirectories(projectDir.resolve("names"));
         Files.writeString(projectDir.resolve("names/id_beta.ref"), "beta");
@@ -212,8 +212,8 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void rejectsTransferFilesAndRepositoryDataIdsTogether() throws Exception {
         writeSettings();
-        copyResource("original-gretl/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
-        copyResource("original-gretl/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
+        copyResource("fixtures/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
+        copyResource("fixtures/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
                 "data.xml");
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
@@ -240,7 +240,7 @@ class Ili2duckdbFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void rejectsDatasetNameCountMismatch() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/interlis/ili2duckdb/import", projectDir);
+        copyResourceTree("fixtures/interlis/ili2duckdb/import", projectDir);
         writeBuild(duckDbBuild("""
                 tasks.register('schemaImport', Ili2duckdbImportSchema) {
                     databaseFile layout.buildDirectory.file('db/mismatch.duckdb')

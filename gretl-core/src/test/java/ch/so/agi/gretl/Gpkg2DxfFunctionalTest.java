@@ -14,7 +14,7 @@ class Gpkg2DxfFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void convertsIli2gpkgTablesToDxfFiles() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/Gpkg2Dxf", projectDir);
+        copyResourceTree("fixtures/iox-wkf/Gpkg2Dxf", projectDir);
         writeBuild(gpkg2DxfBuild("""
                 tasks.register('gpkg2dxf', Gpkg2Dxf) {
                     dataFile 'ch.so.agi_av_gb_administrative_einteilungen_2020-08-20.gpkg'

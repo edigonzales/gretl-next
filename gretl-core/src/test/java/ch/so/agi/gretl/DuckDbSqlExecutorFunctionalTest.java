@@ -20,7 +20,7 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void executesGpkgSourceAndExportsGpkg() throws Exception {
         writeSettings();
-        copyResource("original-gretl/duckdb/data/ch.so.afu.abbaustellen.gpkg", "data/abbaustellen.gpkg");
+        copyResource("fixtures/duckdb/data/ch.so.afu.abbaustellen.gpkg", "data/abbaustellen.gpkg");
         Files.writeString(projectDir.resolve("analyse.sql"), """
                 CREATE SCHEMA IF NOT EXISTS result;
                 CREATE TABLE result.abbaustelle AS
@@ -60,7 +60,7 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void supportsInMemoryDatabaseAndParquetExport() throws Exception {
         writeSettings();
-        copyResource("original-gretl/duckdb/data/ch.so.afu.abbaustellen.gpkg", "data/abbaustellen.gpkg");
+        copyResource("fixtures/duckdb/data/ch.so.afu.abbaustellen.gpkg", "data/abbaustellen.gpkg");
         Files.writeString(projectDir.resolve("stats.sql"), """
                 CREATE SCHEMA IF NOT EXISTS result;
                 CREATE TABLE result.stats AS

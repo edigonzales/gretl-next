@@ -19,7 +19,7 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void importsAndExportsCsv() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/CsvImport", projectDir.resolve("CsvImport"));
+        copyResourceTree("fixtures/iox-wkf/CsvImport", projectDir.resolve("CsvImport"));
         createOrReplaceSchema("csvimport");
         createOrReplaceSchema("csvexport");
         try (Connection connection = pg(); Statement statement = connection.createStatement()) {
@@ -64,8 +64,8 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void importsJsonArrayAndObject() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/JsonImportArray", projectDir.resolve("JsonImportArray"));
-        copyResourceTree("original-gretl/iox-wkf/JsonImportObject", projectDir.resolve("JsonImportObject"));
+        copyResourceTree("fixtures/iox-wkf/JsonImportArray", projectDir.resolve("JsonImportArray"));
+        copyResourceTree("fixtures/iox-wkf/JsonImportObject", projectDir.resolve("JsonImportObject"));
         createOrReplaceSchema("jsonimport");
         try (Connection connection = pg(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE jsonimport.jsonarray(json_text_col text)");
@@ -97,7 +97,7 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     @Test
     void importsAndExportsGeoPackageTables() throws Exception {
         writeSettings();
-        copyResourceTree("original-gretl/iox-wkf/GpkgImport", projectDir.resolve("GpkgImport"));
+        copyResourceTree("fixtures/iox-wkf/GpkgImport", projectDir.resolve("GpkgImport"));
         createOrReplaceSchema("gpkgimport");
         createOrReplaceSchema("gpkgexport");
         try (Connection connection = pg(); Statement statement = connection.createStatement()) {

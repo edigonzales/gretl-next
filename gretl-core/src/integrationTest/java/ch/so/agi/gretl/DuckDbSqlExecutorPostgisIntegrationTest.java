@@ -422,7 +422,7 @@ class DuckDbSqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupp
     }
 
     private void copyTestDuckdbGpkg(String target) throws Exception {
-        Path source = Path.of("src/test/resources/original-gretl/duckdb/data/ch.so.afu.abbaustellen.gpkg");
+        Path source = Path.of("src/test/resources/fixtures/duckdb/data/ch.so.afu.abbaustellen.gpkg");
         Path destination = projectDir.resolve(target);
         Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
