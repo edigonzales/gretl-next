@@ -186,6 +186,29 @@ tasks.register('buildRuntimeImage', Exec) {
     commandLine 'docker', 'build', '-t', dockerImageName.get(), '.'
 }
 
+tasks.register('checkAgentSkillMetadata', Exec) {
+    group = 'verification'
+    description = 'Validates GRETL skill frontmatter and placeholder-free content.'
+    commandLine './scripts/check-agent-skills.sh'
+}
+
+tasks.register('checkAgentSkillAdapters', Exec) {
+    group = 'verification'
+    description = 'Validates GRETL skill adapters and OpenCode command targets.'
+    commandLine './scripts/check-agent-skill-adapters.sh'
+}
+
+tasks.register('checkAgentSkills') {
+    group = 'verification'
+    description = 'Validates cross-agent GRETL skill metadata and adapters.'
+    dependsOn tasks.named('checkAgentSkillMetadata')
+    dependsOn tasks.named('checkAgentSkillAdapters')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('checkAgentSkills')
+}
+
 tasks.register('generateTaskDocs', Javadoc) {
     group = 'documentation'
     description = 'Generates AsciiDoc task reference files from GRETL task DSL annotations.'
