@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.s3.S3DownloadRequest;
 import ch.so.agi.gretl.internal.s3.S3Engine;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -13,7 +14,8 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
-@GretlTaskDoc(name = "S3Download", description = "Downloads one object or a whole bucket from S3.")
+@GretlTaskDoc(name = "S3Download", description = "Downloads one object or a whole bucket from S3.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Lädt ein Objekt oder einen ganzen Bucket von S3 herunter.") })
 public abstract class S3Download extends S3Task {
     private final GretlLogger log = LogEnvironment.getLogger(S3Download.class);
     private String key;
@@ -31,7 +33,8 @@ public abstract class S3Download extends S3Task {
         this.key = key;
     }
 
-    @GretlDslMethod(description = "Configures the S3 object key. If omitted, all objects are downloaded.")
+    @GretlDslMethod(description = "Configures the S3 object key. If omitted, all objects are downloaded.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Objekt-Schlüssel. Wenn nicht angegeben, werden alle Objekte heruntergeladen.") })
     public void key(String key) {
         setKey(key);
     }
@@ -40,7 +43,8 @@ public abstract class S3Download extends S3Task {
         setDirectory(getDownloadDir(), downloadDir);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the local download directory.")
+    @GretlDslMethod(required = true, description = "Configures the local download directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt das lokale Download-Verzeichnis fest.") })
     public void downloadDir(Object downloadDir) {
         configureDownloadDir(downloadDir);
     }

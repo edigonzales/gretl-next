@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine.GpkgImportRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -16,7 +17,8 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-@GretlTaskDoc(name = "GpkgImport", description = "Imports one GeoPackage table into a database table.")
+@GretlTaskDoc(name = "GpkgImport", description = "Imports one GeoPackage table into a database table.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Importiert eine GeoPackage-Tabelle in eine Datenbank-Tabelle.") })
 public abstract class GpkgImport extends AbstractDatabaseTask {
     private final GretlLogger log = LogEnvironment.getLogger(GpkgImport.class);
 
@@ -42,7 +44,8 @@ public abstract class GpkgImport extends AbstractDatabaseTask {
     @Optional
     public abstract Property<Integer> getFetchSize();
 
-    @GretlDslMethod(required = true, description = "Sets the GeoPackage file to import.")
+    @GretlDslMethod(required = true, description = "Specifies the GeoPackage file to import.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die zu importierende GeoPackage-Datei fest.") })
     public void dataFile(Object path) {
         setRegularFile(getDataFile(), path);
     }

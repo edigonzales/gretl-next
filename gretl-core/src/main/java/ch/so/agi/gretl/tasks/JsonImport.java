@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine.JsonImportRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -17,7 +18,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "JsonImport", description = "Imports a JSON document into a database text column.")
+@GretlTaskDoc(name = "JsonImport", description = "Imports a JSON document into a database text column.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Importiert ein JSON-Dokument in eine Datenbank-Textspalte.") })
 public abstract class JsonImport extends AbstractDatabaseTask {
     private final GretlLogger log = LogEnvironment.getLogger(JsonImport.class);
 
@@ -39,7 +41,8 @@ public abstract class JsonImport extends AbstractDatabaseTask {
         getDeleteAllRows().convention(false);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the JSON file to import.")
+    @GretlDslMethod(required = true, description = "Specifies the JSON file to import.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die zu importierende JSON-Datei fest.") })
     public void jsonFile(Object path) {
         setRegularFile(getJsonFile(), path);
     }

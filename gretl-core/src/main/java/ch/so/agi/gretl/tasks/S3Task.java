@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.s3.S3ConnectionSpec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
@@ -44,7 +45,8 @@ abstract class S3Task extends AbstractCoreGretlTask {
         this.accessKey = accessKey;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 access key.")
+    @GretlDslMethod(required = true, description = "Configures the S3 access key.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Zugriffsschlüssel.") })
     public void accessKey(String accessKey) {
         setAccessKey(accessKey);
     }
@@ -53,7 +55,8 @@ abstract class S3Task extends AbstractCoreGretlTask {
         this.secretKey = secretKey;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 secret key.")
+    @GretlDslMethod(required = true, description = "Configures the S3 secret key.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den geheimen S3-Schlüssel.") })
     public void secretKey(String secretKey) {
         setSecretKey(secretKey);
     }
@@ -62,7 +65,8 @@ abstract class S3Task extends AbstractCoreGretlTask {
         this.bucketName = bucketName;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 bucket name.")
+    @GretlDslMethod(required = true, description = "Configures the S3 bucket name.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Bucket-Namen.") })
     public void bucketName(String bucketName) {
         setBucketName(bucketName);
     }
@@ -75,7 +79,8 @@ abstract class S3Task extends AbstractCoreGretlTask {
         setEndpoint(endpoint);
     }
 
-    @GretlDslMethod(description = "Configures the S3 endpoint.")
+    @GretlDslMethod(description = "Configures the S3 endpoint.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Endpunkt.") })
     public void endpoint(String endpoint) {
         setEndpoint(endpoint);
     }
@@ -88,7 +93,8 @@ abstract class S3Task extends AbstractCoreGretlTask {
         this.region = region;
     }
 
-    @GretlDslMethod(description = "Configures the S3 region.")
+    @GretlDslMethod(description = "Configures the S3 region.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die S3-Region.") })
     public void region(String region) {
         setRegion(region);
     }

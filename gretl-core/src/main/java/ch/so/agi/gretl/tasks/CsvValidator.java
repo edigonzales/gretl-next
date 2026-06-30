@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.interlis.ValidatorExecutionSupport;
 import org.gradle.api.GradleException;
 import org.gradle.api.provider.Property;
@@ -10,7 +11,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "CsvValidator", description = "Validates one CSV file with ilivalidator and the CSV reader adapter.")
+@GretlTaskDoc(name = "CsvValidator", description = "Validates one CSV file with ilivalidator and the CSV reader adapter.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Validiert eine CSV-Datei mit ilivalidator und dem CSV-Reader-Adapter.") })
 public abstract class CsvValidator extends AbstractInterlisValidatorTask {
 
     @Input

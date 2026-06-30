@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import org.gradle.api.GradleException;
 import org.gradle.api.provider.Property;
@@ -20,7 +21,8 @@ abstract class AbstractDatabaseTask extends AbstractCoreGretlTask {
     @Internal
     public abstract Property<String> getPassword();
 
-    @GretlDslMethod(required = true, description = "Configures the database connection with only a JDBC URL.")
+    @GretlDslMethod(required = true, description = "Configures the database connection using a JDBC URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Datenbankverbindung mit einer JDBC-URL.") })
     public void database(String jdbcUrl) {
         if (jdbcUrl == null || jdbcUrl.isBlank()) {
             throw new GradleException("database jdbcUrl must not be null or blank");
@@ -28,7 +30,8 @@ abstract class AbstractDatabaseTask extends AbstractCoreGretlTask {
         getJdbcUrl().set(jdbcUrl);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the database connection with JDBC URL, username and password.")
+    @GretlDslMethod(required = true, description = "Configures the database connection using a JDBC URL, username and password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.") })
     public void database(String jdbcUrl, String username, String password) {
         database(jdbcUrl);
         getUsername().set(username);

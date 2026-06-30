@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.s3.S3BucketCopyRequest;
 import ch.so.agi.gretl.internal.s3.S3Engine;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -15,7 +16,8 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@GretlTaskDoc(name = "S3Bucket2Bucket", description = "Copies all objects from one S3 bucket to another.")
+@GretlTaskDoc(name = "S3Bucket2Bucket", description = "Copies all objects from one S3 bucket to another.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Kopiert alle Objekte von einem S3-Bucket in einen anderen.") })
 public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(S3Bucket2Bucket.class);
 
@@ -75,7 +77,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.accessKey = accessKey;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 access key.")
+    @GretlDslMethod(required = true, description = "Configures the S3 access key.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Zugriffsschlüssel.") })
     public void accessKey(String accessKey) {
         setAccessKey(accessKey);
     }
@@ -84,7 +87,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.secretKey = secretKey;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 secret key.")
+    @GretlDslMethod(required = true, description = "Configures the S3 secret key.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den geheimen S3-Schlüssel.") })
     public void secretKey(String secretKey) {
         setSecretKey(secretKey);
     }
@@ -93,7 +97,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.sourceBucket = sourceBucket;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the source S3 bucket.")
+    @GretlDslMethod(required = true, description = "Configures the source S3 bucket.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den Quell-S3-Bucket.") })
     public void sourceBucket(String sourceBucket) {
         setSourceBucket(sourceBucket);
     }
@@ -102,7 +107,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.targetBucket = targetBucket;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the target S3 bucket.")
+    @GretlDslMethod(required = true, description = "Configures the target S3 bucket.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den Ziel-S3-Bucket.") })
     public void targetBucket(String targetBucket) {
         setTargetBucket(targetBucket);
     }
@@ -115,7 +121,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         setEndpoint(endpoint);
     }
 
-    @GretlDslMethod(description = "Configures the S3 endpoint.")
+    @GretlDslMethod(description = "Configures the S3 endpoint.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den S3-Endpunkt.") })
     public void endpoint(String endpoint) {
         setEndpoint(endpoint);
     }
@@ -128,7 +135,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.region = region;
     }
 
-    @GretlDslMethod(description = "Configures the S3 region.")
+    @GretlDslMethod(description = "Configures the S3 region.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die S3-Region.") })
     public void region(String region) {
         setRegion(region);
     }
@@ -137,7 +145,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         this.acl = acl;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 canned ACL.")
+    @GretlDslMethod(required = true, description = "Configures the S3 canned ACL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die S3-Canned-ACL.") })
     public void acl(String acl) {
         setAcl(acl);
     }
@@ -150,7 +159,8 @@ public abstract class S3Bucket2Bucket extends AbstractCoreGretlTask {
         setMetadata(metadata);
     }
 
-    @GretlDslMethod(description = "Configures replacement metadata for copied objects.")
+    @GretlDslMethod(description = "Configures replacement metadata for copied objects.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert Ersatz-Metadaten für kopierte Objekte.") })
     public void metadata(Map<String, String> metadata) {
         setMetadata(metadata);
     }

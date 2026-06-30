@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.http.CurlEngine;
 import ch.so.agi.gretl.internal.http.CurlMethod;
 import ch.so.agi.gretl.internal.http.CurlRequest;
@@ -21,7 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@GretlTaskDoc(name = "Curl", description = "Executes a small HTTP request and validates the response.")
+@GretlTaskDoc(name = "Curl", description = "Executes an HTTP request and validates the response.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Führt eine HTTP-Anfrage aus und validiert die Antwort.") })
 public abstract class Curl extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Curl.class);
 
@@ -116,7 +118,8 @@ public abstract class Curl extends AbstractCoreGretlTask {
         this.serverUrl = serverUrl;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the request URL.")
+    @GretlDslMethod(required = true, description = "Configures the request URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Anfrage-URL.") })
     public void serverUrl(String serverUrl) {
         setServerUrl(serverUrl);
     }
@@ -125,7 +128,8 @@ public abstract class Curl extends AbstractCoreGretlTask {
         this.method = method;
     }
 
-    @GretlDslMethod(description = "Configures the HTTP method.")
+    @GretlDslMethod(description = "Configures the HTTP method.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die HTTP-Methode.") })
     public void method(MethodType method) {
         setMethod(method);
     }
@@ -134,7 +138,8 @@ public abstract class Curl extends AbstractCoreGretlTask {
         this.expectedStatusCode = expectedStatusCode;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the expected HTTP response status.")
+    @GretlDslMethod(required = true, description = "Configures the expected HTTP status code.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den erwarteten HTTP-Statuscode.") })
     public void expectedStatusCode(int expectedStatusCode) {
         setExpectedStatusCode(expectedStatusCode);
     }
@@ -143,7 +148,8 @@ public abstract class Curl extends AbstractCoreGretlTask {
         this.expectedBody = expectedBody;
     }
 
-    @GretlDslMethod(description = "Configures text expected in the response body.")
+    @GretlDslMethod(description = "Configures text expected in the response body.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert einen im Antwort-Body erwarteten Text.") })
     public void expectedBody(String expectedBody) {
         setExpectedBody(expectedBody);
     }

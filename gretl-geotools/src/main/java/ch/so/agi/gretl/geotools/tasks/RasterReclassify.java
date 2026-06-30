@@ -2,6 +2,7 @@ package ch.so.agi.gretl.geotools.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.geotools.internal.operations.RasterReclassifyRequest;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -16,7 +17,8 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.List;
 import java.util.Objects;
 
-@GretlTaskDoc(name = "RasterReclassify", description = "Reclassifies raster values into a new raster.")
+@GretlTaskDoc(name = "RasterReclassify", description = "Reclassifies raster values into a new raster.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Reclassifiziert Rasterwerte in ein neues Raster.") })
 public abstract class RasterReclassify extends GeoToolsTask {
 
     private static final List<Double> DEFAULT_BREAKS = List.of(0d, 55d, 60d, 65d, 70d, 500d);
@@ -40,22 +42,26 @@ public abstract class RasterReclassify extends GeoToolsTask {
     @Input
     public abstract Property<Double> getNoData();
 
-    @GretlDslMethod(required = true, description = "Configures the input raster file.")
+    @GretlDslMethod(required = true, description = "Configures the input raster file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Eingabe-Rasterdatei.") })
     public void inputRaster(Object path) {
         getInputRaster().set(getProject().file(path));
     }
 
-    @GretlDslMethod(required = true, description = "Configures the output raster file.")
+    @GretlDslMethod(required = true, description = "Configures the output raster file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Ausgabe-Rasterdatei.") })
     public void outputRaster(Object path) {
         getOutputRaster().set(getProject().file(path));
     }
 
-    @GretlDslMethod(defaultValue = "0, 55, 60, 65, 70, 500", description = "Sets strictly increasing class break values.")
+    @GretlDslMethod(defaultValue = "0, 55, 60, 65, 70, 500", description = "Specifies strictly increasing class break values.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die streng monoton steigenden Klassenbruchwerte an.") })
     public void breaks(Number... values) {
         getBreaks().set(toDoubleList(values));
     }
 
-    @GretlDslMethod(defaultValue = "-100", description = "Sets the no-data value for the output raster.")
+    @GretlDslMethod(defaultValue = "-100", description = "Specifies the no-data value for the output raster.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt den No-Data-Wert für das Ausgabe-Raster fest.") })
     public void noData(Number value) {
         getNoData().set(value.doubleValue());
     }

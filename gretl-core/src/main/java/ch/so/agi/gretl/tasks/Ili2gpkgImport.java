@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.interlis.Ili2DbExecutionSupport;
 import ch.so.agi.gretl.internal.interlis.Ili2DbFlavor;
 import ch.so.agi.gretl.internal.interlis.Ili2DbOperation;
@@ -17,7 +18,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "Ili2gpkgImport", description = "Imports INTERLIS transfer files into a GeoPackage.")
+@GretlTaskDoc(name = "Ili2gpkgImport", description = "Imports INTERLIS transfer files into a GeoPackage.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Importiert INTERLIS-Transferdateien in ein GeoPackage.") })
 public abstract class Ili2gpkgImport extends AbstractIli2DbTransferTask {
 
     @Inject

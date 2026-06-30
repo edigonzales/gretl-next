@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ioxwkf.Gpkg2DxfEngine;
 import ch.so.agi.gretl.internal.ioxwkf.Gpkg2DxfEngine.Gpkg2DxfRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -15,7 +16,8 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-@GretlTaskDoc(name = "Gpkg2Dxf", description = "Converts ili2gpkg GeoPackage tables to DXF files.")
+@GretlTaskDoc(name = "Gpkg2Dxf", description = "Converts ili2gpkg GeoPackage tables to DXF files.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Konvertiert ili2gpkg-GeoPackage-Tabellen in DXF-Dateien.") })
 public abstract class Gpkg2Dxf extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Gpkg2Dxf.class);
 
@@ -26,12 +28,14 @@ public abstract class Gpkg2Dxf extends AbstractCoreGretlTask {
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
 
-    @GretlDslMethod(required = true, description = "Sets the GeoPackage file to convert.")
+    @GretlDslMethod(required = true, description = "Specifies the GeoPackage file to convert.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die zu konvertierende GeoPackage-Datei fest.") })
     public void dataFile(Object path) {
         setRegularFile(getDataFile(), path);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the DXF output directory.")
+    @GretlDslMethod(required = true, description = "Specifies the DXF output directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt das DXF-Ausgabeverzeichnis fest.") })
     public void outputDir(Object path) {
         setDirectory(getOutputDir(), path);
     }

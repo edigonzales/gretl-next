@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ftp.FtpEngine;
 import ch.so.agi.gretl.internal.ftp.FtpFileType;
 import ch.so.agi.gretl.internal.ftp.FtpUploadRequest;
@@ -14,7 +15,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
-@GretlTaskDoc(name = "FtpUpload", description = "Uploads one local file to an FTP server.")
+@GretlTaskDoc(name = "FtpUpload", description = "Uploads one local file to an FTP server.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Lädt eine lokale Datei auf einen FTP-Server hoch.") })
 public abstract class FtpUpload extends FtpTask {
     private final GretlLogger log = LogEnvironment.getLogger(FtpUpload.class);
     private String remoteDir;
@@ -38,7 +40,8 @@ public abstract class FtpUpload extends FtpTask {
         setRegularFile(getLocalFile(), localFile);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the local file to upload.")
+    @GretlDslMethod(required = true, description = "Configures the local file to upload.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die hochzuladende lokale Datei fest.") })
     public void localFile(Object localFile) {
         configureLocalFile(localFile);
     }
@@ -47,7 +50,8 @@ public abstract class FtpUpload extends FtpTask {
         this.remoteDir = remoteDir;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the target FTP directory.")
+    @GretlDslMethod(required = true, description = "Configures the target FTP directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt das FTP-Zielverzeichnis fest.") })
     public void remoteDir(String remoteDir) {
         setRemoteDir(remoteDir);
     }
@@ -56,7 +60,8 @@ public abstract class FtpUpload extends FtpTask {
         this.fileType = fileType;
     }
 
-    @GretlDslMethod(description = "Configures ASCII or BINARY file transfer mode.")
+    @GretlDslMethod(description = "Configures ASCII or BINARY file transfer mode.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den Dateitransfer-Modus (ASCII oder BINARY).") })
     public void fileType(String fileType) {
         setFileType(fileType);
     }

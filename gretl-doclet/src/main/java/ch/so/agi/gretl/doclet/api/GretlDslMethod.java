@@ -13,4 +13,6 @@ public @interface GretlDslMethod {
     String defaultValue() default "";
 
     String description() default "";
+
+    LocaleText[] descriptions() default {};
 }

@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.Input;
@@ -26,12 +27,14 @@ public abstract class AbstractIli2DbTransferTask extends AbstractIli2DbFileTask 
         return repositoryDataIds;
     }
 
-    @GretlDslMethod(required = true, description = "Adds local transfer files.")
+    @GretlDslMethod(required = true, description = "Specifies local transfer files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die lokalen Transferdateien an.") })
     public void transferFiles(Object... paths) {
         getTransferFilesCollection().from(paths);
     }
 
-    @GretlDslMethod(description = "Adds ilidata repository ids for import.")
+    @GretlDslMethod(description = "Specifies ilidata repository ids for import.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die ilidata-Repository-IDs für den Import an.") })
     public void repositoryDataIds(String... ids) {
         getRepositoryDataIds().addAll(requireNonBlank("repositoryDataIds", ids));
     }

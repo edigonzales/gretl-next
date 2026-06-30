@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.av.Av2chEngine;
 import ch.so.agi.gretl.internal.av.Av2chEngine.Av2chRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -20,7 +21,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "Av2ch", description = "Converts Swiss cadastral ITF files to the federal AV model.")
+@GretlTaskDoc(name = "Av2ch", description = "Converts Swiss cadastral ITF files to the federal AV model.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Konvertiert Schweizer AV-ITF-Dateien ins Bundes-AV-Modell.") })
 public abstract class Av2ch extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Av2ch.class);
     private final ConfigurableFileCollection inputFiles;
@@ -52,12 +54,14 @@ public abstract class Av2ch extends AbstractCoreGretlTask {
         return inputFiles;
     }
 
-    @GretlDslMethod(required = true, description = "Adds ITF files to convert.")
+    @GretlDslMethod(required = true, description = "Specifies ITF files to convert.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die zu konvertierenden ITF-Dateien an.") })
     public void inputFiles(Object... paths) {
         getInputFiles().from(paths);
     }
 
-    @GretlDslMethod(description = "Alias for adding ITF files to convert.")
+    @GretlDslMethod(description = "Alias for specifying ITF files to convert.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für die Angabe zu konvertierender ITF-Dateien.") })
     public void inputFile(Object... paths) {
         inputFiles(paths);
     }
@@ -66,7 +70,8 @@ public abstract class Av2ch extends AbstractCoreGretlTask {
         getInputFiles().setFrom(paths);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the output directory.")
+    @GretlDslMethod(required = true, description = "Specifies the output directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt das Ausgabeverzeichnis fest.") })
     public void outputDirectory(Object path) {
         setDirectory(getOutputDirectory(), path);
     }

@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -36,7 +37,8 @@ public abstract class AbstractIli2DbExportTask extends AbstractIli2DbFileTask {
         return exportModels;
     }
 
-    @GretlDslMethod(required = true, description = "Adds INTERLIS transfer output files.")
+    @GretlDslMethod(required = true, description = "Specifies INTERLIS transfer output files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die INTERLIS-Transfer-Ausgabedateien an.") })
     public void dataFiles(Object... paths) {
         getTransferFilesCollection().from(paths);
     }
@@ -45,7 +47,8 @@ public abstract class AbstractIli2DbExportTask extends AbstractIli2DbFileTask {
         getExport3().set(value);
     }
 
-    @GretlDslMethod(description = "Limits export to the specified INTERLIS models.")
+    @GretlDslMethod(description = "Limits the export to the specified INTERLIS models.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Beschränkt den Export auf die angegebenen INTERLIS-Modelle.") })
     public void exportModels(String... names) {
         getExportModels().addAll(requireNonBlank("exportModels", names));
     }

@@ -5,6 +5,7 @@ import ch.so.agi.gretl.internal.sql.SqlExecutionEngine;
 import ch.so.agi.gretl.internal.sql.SqlExecutionRequest;
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -30,7 +31,11 @@ import java.util.Map;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "SqlExecutor", description = "Executes one or more SQL files against one database.")
+@GretlTaskDoc(
+        name = "SqlExecutor",
+        description = "Executes one or more SQL files against a database.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Führt eine oder mehrere SQL-Dateien gegen eine Datenbank aus.") }
+)
 public abstract class SqlExecutor extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection sqlFiles;
     private final GretlLogger log;
@@ -88,7 +93,8 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Konfiguriert die Datenbank nur mit JDBC-URL.
      */
-    @GretlDslMethod(required = true, description = "Configures the database connection with only a JDBC URL.")
+    @GretlDslMethod(required = true, description = "Configures the database connection with a JDBC URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Datenbankverbindung mit einer JDBC-URL.") })
     public void database(String jdbcUrl) {
         getJdbcUrl().set(jdbcUrl);
     }
@@ -96,7 +102,8 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Konfiguriert die Datenbank mit JDBC-URL, Benutzer und Passwort.
      */
-    @GretlDslMethod(required = true, description = "Configures the database connection with JDBC URL, username and password.")
+    @GretlDslMethod(required = true, description = "Configures the database connection with JDBC URL, username and password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.") })
     public void database(String jdbcUrl, String username, String password) {
         getJdbcUrl().set(jdbcUrl);
         getUsername().set(username);
@@ -106,7 +113,8 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Fügt SQL-Dateien hinzu. Pfade werden relativ zum Gradle-Projekt aufgelöst.
      */
-    @GretlDslMethod(required = true, description = "Adds SQL files. Paths are resolved relative to the Gradle project.")
+    @GretlDslMethod(required = true, description = "Specifies SQL files. Paths are resolved relative to the Gradle project.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt SQL-Dateien an. Pfade werden relativ zum Gradle-Projekt aufgelöst.") })
     public void sqlFiles(Object... paths) {
         getSqlFiles().from(paths);
     }
@@ -114,7 +122,8 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Setzt ein einzelnes SQL-Parameter-Set.
      */
-    @GretlDslMethod(description = "Sets one SQL parameter map used for a single execution of all SQL files.")
+    @GretlDslMethod(description = "Specifies one SQL parameter map used for a single execution of all SQL files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller SQL-Dateien fest.") })
     public void sqlParameters(Map<String, ?> parameters) {
         getSqlParameters().set(toStringMap(parameters));
     }
@@ -122,7 +131,8 @@ public abstract class SqlExecutor extends AbstractCoreGretlTask {
     /**
      * Setzt mehrere SQL-Parameter-Sets. Pro Set werden alle SQL-Dateien in Reihenfolge ausgeführt.
      */
-    @GretlDslMethod(description = "Sets multiple SQL parameter maps. For each map, all SQL files are executed in order.")
+    @GretlDslMethod(description = "Specifies multiple SQL parameter maps. For each map, all SQL files are executed in order.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle SQL-Dateien in Reihenfolge ausgeführt.") })
     @SafeVarargs
     public final void sqlParameterSets(Map<String, ?>... parameterSets) {
         getSqlParameterSets().set(Stream.of(parameterSets)

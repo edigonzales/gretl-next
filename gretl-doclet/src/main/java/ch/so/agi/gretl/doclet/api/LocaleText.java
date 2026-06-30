@@ -6,11 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface GretlTaskDoc {
-    String name();
+@Target({})
+public @interface LocaleText {
+    String locale();
 
-    String description();
-
-    LocaleText[] descriptions() default {};
+    String value();
 }

@@ -15,23 +15,30 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class TaskDescriptorExtractor {
     private final AnnotationValues annotations;
     private final JavadocToAsciiDoc javadoc;
     private final TypeNameFormatter typeNames = new TypeNameFormatter();
+    private final Locale locale;
 
-    public TaskDescriptorExtractor(Elements elements, DocTrees docTrees) {
+    public TaskDescriptorExtractor(Elements elements, DocTrees docTrees, Locale locale) {
         this.annotations = new AnnotationValues(elements);
         this.javadoc = new JavadocToAsciiDoc(docTrees);
+        this.locale = locale;
     }
 
     public TaskDescriptor extract(TypeElement type) {
         Map<String, Object> taskDoc = annotations.find(type, GretlTaskDoc.class.getCanonicalName())
                 .orElseThrow(() -> new IllegalArgumentException(type + " is missing @GretlTaskDoc"));
+        Map<String, String> taskLocaleMap = annotations.localeMap(taskDoc, "descriptions");
         String name = firstNonBlank(AnnotationValues.string(taskDoc, "name"), type.getSimpleName().toString());
-        String description = firstNonBlank(AnnotationValues.string(taskDoc, "description"), javadoc.convert(type));
+        String description = resolveDescription(
+                AnnotationValues.string(taskDoc, "description"),
+                taskLocaleMap,
+                type);
         List<DslMethodDescriptor> methods = type.getEnclosedElements().stream()
                 .filter(element -> element.getKind() == ElementKind.METHOD)
                 .map(ExecutableElement.class::cast)
@@ -44,7 +51,7 @@ public final class TaskDescriptorExtractor {
                 name,
                 type.getQualifiedName().toString(),
                 packageName(type),
-                javadoc.convert(description),
+                description,
                 methods);
     }
 
@@ -55,7 +62,11 @@ public final class TaskDescriptorExtractor {
     private DslMethodDescriptor methodDescriptor(ExecutableElement method) {
         Map<String, Object> values = annotations.find(method, GretlDslMethod.class.getCanonicalName())
                 .orElseThrow();
-        String description = firstNonBlank(AnnotationValues.string(values, "description"), javadoc.convert(method));
+        Map<String, String> localeMap = annotations.localeMap(values, "descriptions");
+        String description = resolveDescription(
+                AnnotationValues.string(values, "description"),
+                localeMap,
+                method);
         List<ParameterDescriptor> parameters = new java.util.ArrayList<>();
         for (int i = 0; i < method.getParameters().size(); i++) {
             parameters.add(parameterDescriptor(method, method.getParameters().get(i), i));
@@ -66,7 +77,7 @@ public final class TaskDescriptorExtractor {
                 parameters,
                 AnnotationValues.bool(values, "required"),
                 AnnotationValues.string(values, "defaultValue"),
-                javadoc.convert(description));
+                description);
     }
 
     private ParameterDescriptor parameterDescriptor(ExecutableElement method, VariableElement parameter, int index) {
@@ -88,5 +99,25 @@ public final class TaskDescriptorExtractor {
 
     private static String firstNonBlank(String first, String second) {
         return first == null || first.isBlank() ? second : first;
+    }
+
+    private String resolveDescription(String defaultDescription, Map<String, String> localeMap, Element element) {
+        String localized = resolveLocalized(localeMap);
+        if (localized != null) {
+            return javadoc.convert(localized);
+        }
+        if (defaultDescription != null && !defaultDescription.isBlank()) {
+            return javadoc.convert(defaultDescription);
+        }
+        return javadoc.convert(element);
+    }
+
+    private String resolveLocalized(Map<String, String> localeMap) {
+        String result = localeMap.get(locale.toLanguageTag());
+        if (result != null) return result;
+        result = localeMap.get(locale.toString());
+        if (result != null) return result;
+        result = localeMap.get(locale.getLanguage());
+        return result;
     }
 }

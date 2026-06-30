@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ioxwkf.Csv2ExcelEngine;
 import ch.so.agi.gretl.internal.ioxwkf.Csv2ExcelEngine.Csv2ExcelRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -19,7 +20,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "Csv2Excel", description = "Converts a CSV file into an XLSX workbook.")
+@GretlTaskDoc(name = "Csv2Excel", description = "Converts a CSV file into an XLSX workbook.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Konvertiert eine CSV-Datei in eine XLSX-Arbeitsmappe.") })
 public abstract class Csv2Excel extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Csv2Excel.class);
 
@@ -58,12 +60,14 @@ public abstract class Csv2Excel extends AbstractCoreGretlTask {
         getFirstLineIsHeader().convention(true);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the CSV file to convert.")
+    @GretlDslMethod(required = true, description = "Specifies the CSV file to convert.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die zu konvertierende CSV-Datei fest.") })
     public void csvFile(Object path) {
         setRegularFile(getCsvFile(), path);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the XLSX output file.")
+    @GretlDslMethod(required = true, description = "Specifies the XLSX output file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die XLSX-Ausgabedatei fest.") })
     public void outputFile(Object path) {
         setRegularFile(getOutputFile(), path);
     }

@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.duckdb.DuckDbExecutionRequest;
 import ch.so.agi.gretl.internal.duckdb.DuckDbExportSpec;
 import ch.so.agi.gretl.internal.duckdb.DuckDbFileExportSpec;
@@ -54,7 +55,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@GretlTaskDoc(name = "DuckDbSqlExecutor", description = "Executes SQL in a prepared DuckDB federation session.")
+@GretlTaskDoc(
+        name = "DuckDbSqlExecutor",
+        description = "Executes SQL in a prepared DuckDB federation session.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Führt SQL in einer vorbereiteten DuckDB-Föderationssitzung aus.") }
+)
 public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection sqlFiles;
     private final ConfigurableFileCollection sourceFiles;
@@ -129,27 +134,32 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         getSqlParameterSets().convention(Collections.emptyList());
     }
 
-    @GretlDslMethod(required = true, description = "Configures the DuckDB database file.")
+    @GretlDslMethod(required = true, description = "Configures the DuckDB database file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die DuckDB-Datenbankdatei.") })
     public void database(Object file) {
         setRegularFile(getDatabaseFile(), file);
     }
 
-    @GretlDslMethod(description = "Uses an in-memory DuckDB database instead of a database file.")
+    @GretlDslMethod(description = "Uses an in-memory DuckDB database instead of a database file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine In-Memory-DuckDB-Datenbank anstelle einer Datenbankdatei.") })
     public void inMemoryDatabase() {
         getInMemory().set(true);
     }
 
-    @GretlDslMethod(description = "Installs required DuckDB extensions before loading them. Intended for local development.")
+    @GretlDslMethod(description = "Installs required DuckDB extensions before loading them. Intended for local development.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Installiert erforderliche DuckDB-Erweiterungen vor dem Laden. Für die lokale Entwicklung vorgesehen.") })
     public void installExtensions(boolean value) {
         getInstallExtensions().set(value);
     }
 
-    @GretlDslMethod(required = true, description = "Adds SQL files. Paths are resolved relative to the Gradle project.")
+    @GretlDslMethod(required = true, description = "Specifies SQL files. Paths are resolved relative to the Gradle project.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt SQL-Dateien an. Pfade werden relativ zum Gradle-Projekt aufgelöst.") })
     public void sqlFiles(Object... paths) {
         getSqlFiles().from(paths);
     }
 
-    @GretlDslMethod(required = true, description = "Configures federated sources.")
+    @GretlDslMethod(required = true, description = "Configures federated sources.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert föderierte Quellen.") })
     public void sources(Action<SourcesConfig> action) {
         SourcesConfig config = new SourcesConfig(this);
         action.execute(config);
@@ -159,7 +169,8 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         getProject().configure(new SourcesConfig(this), closure);
     }
 
-    @GretlDslMethod(description = "Configures writable targets for SQL and exports.")
+    @GretlDslMethod(description = "Configures writable targets for SQL and exports.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert beschreibbare Ziele für SQL und Exporte.") })
     public void targets(Action<TargetsConfig> action) {
         TargetsConfig config = new TargetsConfig(this);
         action.execute(config);
@@ -169,7 +180,8 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         getProject().configure(new TargetsConfig(this), closure);
     }
 
-    @GretlDslMethod(description = "Configures exports executed after the SQL files.")
+    @GretlDslMethod(description = "Configures exports executed after the SQL files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert Exporte, die nach den SQL-Dateien ausgeführt werden.") })
     public void exports(Action<ExportsConfig> action) {
         ExportsConfig config = new ExportsConfig(this);
         action.execute(config);
@@ -179,12 +191,14 @@ public abstract class DuckDbSqlExecutor extends AbstractCoreGretlTask {
         getProject().configure(new ExportsConfig(this), closure);
     }
 
-    @GretlDslMethod(description = "Sets one SQL parameter map used for a single execution of all SQL files.")
+    @GretlDslMethod(description = "Specifies one SQL parameter map used for a single execution of all SQL files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller SQL-Dateien fest.") })
     public void sqlParameters(Map<String, ?> parameters) {
         getSqlParameters().set(toStringMap(parameters));
     }
 
-    @GretlDslMethod(description = "Sets multiple SQL parameter maps. For each map, all SQL files are executed in order.")
+    @GretlDslMethod(description = "Specifies multiple SQL parameter maps. For each map, all SQL files are executed in order.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle SQL-Dateien in Reihenfolge ausgeführt.") })
     @SafeVarargs
     public final void sqlParameterSets(Map<String, ?>... parameterSets) {
         getSqlParameterSets().set(Stream.of(parameterSets)

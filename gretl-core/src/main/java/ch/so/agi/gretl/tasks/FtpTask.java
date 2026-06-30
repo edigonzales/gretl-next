@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ftp.FtpConnectionSpec;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.gradle.api.tasks.Input;
@@ -59,7 +60,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.server = server;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the FTP server host, optionally host:port.")
+    @GretlDslMethod(required = true, description = "Configures the FTP server host, optionally as host:port.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den FTP-Server-Host, optional host:port.") })
     public void server(String server) {
         setServer(server);
     }
@@ -68,7 +70,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.user = user;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the FTP username.")
+    @GretlDslMethod(required = true, description = "Configures the FTP username.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den FTP-Benutzernamen.") })
     public void user(String user) {
         setUser(user);
     }
@@ -77,7 +80,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.password = password;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the FTP password.")
+    @GretlDslMethod(required = true, description = "Configures the FTP password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert das FTP-Passwort.") })
     public void password(String password) {
         setPassword(password);
     }
@@ -86,7 +90,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.systemType = systemType;
     }
 
-    @GretlDslMethod(description = "Configures the FTP server system type.")
+    @GretlDslMethod(description = "Configures the FTP server system type.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den FTP-Server-Systemtyp.") })
     public void systemType(String systemType) {
         setSystemType(systemType);
     }
@@ -95,7 +100,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.fileSeparator = fileSeparator;
     }
 
-    @GretlDslMethod(description = "Configures the remote path separator.")
+    @GretlDslMethod(description = "Configures the path separator used on the FTP server.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert das Pfadtrennzeichen auf dem FTP-Server.") })
     public void fileSeparator(String fileSeparator) {
         setFileSeparator(fileSeparator);
     }
@@ -104,7 +110,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.passiveMode = passiveMode;
     }
 
-    @GretlDslMethod(description = "Configures passive FTP mode.")
+    @GretlDslMethod(description = "Configures passive FTP mode.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den passiven FTP-Modus.") })
     public void passiveMode(boolean passiveMode) {
         setPassiveMode(passiveMode);
     }
@@ -113,7 +120,8 @@ abstract class FtpTask extends AbstractCoreGretlTask {
         this.controlKeepAliveTimeout = controlKeepAliveTimeout;
     }
 
-    @GretlDslMethod(description = "Configures the FTP control keep-alive timeout in seconds.")
+    @GretlDslMethod(description = "Configures the FTP control keep-alive timeout in seconds.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert das FTP-Control-Keep-Alive-Timeout in Sekunden.") })
     public void controlKeepAliveTimeout(long controlKeepAliveTimeout) {
         setControlKeepAliveTimeout(controlKeepAliveTimeout);
     }

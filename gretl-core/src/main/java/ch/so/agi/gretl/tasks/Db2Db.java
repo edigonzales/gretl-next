@@ -6,6 +6,7 @@ import ch.so.agi.gretl.internal.db2db.DbTransferSpec;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -32,7 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@GretlTaskDoc(name = "Db2Db", description = "Copies rows selected from a source database into a target table.")
+@GretlTaskDoc(
+        name = "Db2Db",
+        description = "Copies selected rows from a source database into a target table.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Kopiert ausgewählte Zeilen aus einer Quell-Datenbank in eine Zieltabelle.") }
+)
 public abstract class Db2Db extends AbstractCoreGretlTask {
 
     private final List<DbTransferSpec> transfers;
@@ -97,31 +102,36 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
         getSqlParameterSets().convention(Collections.emptyList());
     }
 
-    @GretlDslMethod(required = true, description = "Configures the source database connection with only a JDBC URL.")
+    @GretlDslMethod(required = true, description = "Configures the source database connection with a JDBC URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Quell-Datenbankverbindung mit einer JDBC-URL.") })
     public void sourceDatabase(String jdbcUrl) {
         getSourceJdbcUrl().set(jdbcUrl);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the source database connection with JDBC URL, username and password.")
+    @GretlDslMethod(required = true, description = "Configures the source database connection with JDBC URL, username and password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Quell-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.") })
     public void sourceDatabase(String jdbcUrl, String username, String password) {
         getSourceJdbcUrl().set(jdbcUrl);
         getSourceUsername().set(username);
         getSourcePassword().set(password);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the target database connection with only a JDBC URL.")
+    @GretlDslMethod(required = true, description = "Configures the target database connection with a JDBC URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Ziel-Datenbankverbindung mit einer JDBC-URL.") })
     public void targetDatabase(String jdbcUrl) {
         getTargetJdbcUrl().set(jdbcUrl);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the target database connection with JDBC URL, username and password.")
+    @GretlDslMethod(required = true, description = "Configures the target database connection with JDBC URL, username and password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Ziel-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.") })
     public void targetDatabase(String jdbcUrl, String username, String password) {
         getTargetJdbcUrl().set(jdbcUrl);
         getTargetUsername().set(username);
         getTargetPassword().set(password);
     }
 
-    @GretlDslMethod(required = true, description = "Adds a transfer from a SQL file into a target table.")
+    @GretlDslMethod(required = true, description = "Specifies a transfer from a SQL file into a target table.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt einen Transfer aus einer SQL-Datei in eine Zieltabelle an.") })
     public void transfer(Object sqlFile, String targetTable, boolean deleteAllRows, String... geometryColumns) {
         addTransfer(new TransferConfig()
                 .sqlFile(sqlFile)
@@ -130,19 +140,22 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
                 .geometryColumns(geometryColumns));
     }
 
-    @GretlDslMethod(required = true, description = "Adds a transfer using nested configuration: sqlFile(...), targetTable(...), deleteAllRows(...) and geometryColumns(...).")
+    @GretlDslMethod(required = true, description = "Specifies a transfer using nested configuration: sqlFile(...), targetTable(...), deleteAllRows(...) and geometryColumns(...).",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt einen Transfer mit verschachtelter Konfiguration an: sqlFile(...), targetTable(...), deleteAllRows(...) und geometryColumns(...).") })
     public void transfer(Action<TransferConfig> action) {
         TransferConfig config = new TransferConfig();
         action.execute(config);
         addTransfer(config);
     }
 
-    @GretlDslMethod(description = "Sets one SQL parameter map used for a single execution of all transfers.")
+    @GretlDslMethod(description = "Specifies one SQL parameter map used for a single execution of all transfers.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller Transfers fest.") })
     public void sqlParameters(Map<String, ?> parameters) {
         getSqlParameters().set(toStringMap(parameters));
     }
 
-    @GretlDslMethod(description = "Sets multiple SQL parameter maps. For each map, all transfers are executed in order.")
+    @GretlDslMethod(description = "Specifies multiple SQL parameter maps. For each map, all transfers are executed in order.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle Transfers in Reihenfolge ausgeführt.") })
     @SafeVarargs
     public final void sqlParameterSets(Map<String, ?>... parameterSets) {
         getSqlParameterSets().set(Stream.of(parameterSets)
@@ -150,12 +163,14 @@ public abstract class Db2Db extends AbstractCoreGretlTask {
                 .toList());
     }
 
-    @GretlDslMethod(defaultValue = "5000", description = "Sets the JDBC batch size for target inserts.")
+    @GretlDslMethod(defaultValue = "5000", description = "Specifies the JDBC batch size for target inserts.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die JDBC-Batch-Grösse für Zieleinfügungen fest.") })
     public void batchSize(int value) {
         getBatchSize().set(value);
     }
 
-    @GretlDslMethod(defaultValue = "5000", description = "Sets the JDBC fetch size for source reads.")
+    @GretlDslMethod(defaultValue = "5000", description = "Specifies the JDBC fetch size for source reads.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die JDBC-Fetch-Grösse für Quell-Lesevorgänge fest.") })
     public void fetchSize(int value) {
         getFetchSize().set(value);
     }

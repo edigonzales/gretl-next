@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -100,17 +101,20 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
         getFailOnError().convention(true);
     }
 
-    @GretlDslMethod(required = true, description = "Adds data files to validate.")
+    @GretlDslMethod(required = true, description = "Specifies data files to validate.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die zu validierenden Datendateien an.") })
     public void dataFiles(Object... paths) {
         getDataFiles().from(paths);
     }
 
-    @GretlDslMethod(description = "Adds INTERLIS model names.")
+    @GretlDslMethod(description = "Specifies the INTERLIS model names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die INTERLIS-Modellnamen an.") })
     public void modelNames(String... names) {
         getModelNames().addAll(AbstractIli2DbTask.requireNonBlank("modelNames", names));
     }
 
-    @GretlDslMethod(description = "Alias for configuring validator models.")
+    @GretlDslMethod(description = "Alias for configuring the validator models.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für die Konfiguration der Validator-Modelle.") })
     public void models(String value) {
         getModelNames().set(java.util.List.of(value));
     }
@@ -119,12 +123,14 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
         models(value);
     }
 
-    @GretlDslMethod(description = "Adds model directory or repository entries.")
+    @GretlDslMethod(description = "Specifies model directory or repository entries.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die Modellverzeichnis- oder Repository-Einträge an.") })
     public void modelDirectories(String... entries) {
         getModelDirectories().addAll(AbstractIli2DbTask.requireNonBlank("modelDirectories", entries));
     }
 
-    @GretlDslMethod(description = "Alias for configuring the validator modeldir option.")
+    @GretlDslMethod(description = "Alias for configuring the validator modeldir option.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für die Konfiguration der Validator-Option modeldir.") })
     public void modeldir(String value) {
         getModelDirectories().set(java.util.List.of(value));
     }
@@ -133,34 +139,40 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
         modeldir(value);
     }
 
-    @GretlDslMethod(description = "Uses a local validation config file.")
+    @GretlDslMethod(description = "Uses a local validation configuration file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine lokale Validierungskonfigurationsdatei.") })
     public void configFile(Object path) {
         setRegularFile(getConfigFile(), path);
     }
 
-    @GretlDslMethod(description = "Uses a validation config from an ilidata repository id.")
+    @GretlDslMethod(description = "Uses a validation configuration from an ilidata repository id.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine Validierungskonfiguration aus einer ilidata-Repository-ID.") })
     public void configRepositoryId(String id) {
         AbstractIli2DbTask.requireNonBlank("configRepositoryId", id);
         getConfigRepositoryId().set(id);
     }
 
-    @GretlDslMethod(description = "Uses a local meta config file.")
+    @GretlDslMethod(description = "Uses a local meta configuration file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine lokale Metakonfigurationsdatei.") })
     public void metaConfigFile(Object path) {
         setRegularFile(getMetaConfigFile(), path);
     }
 
-    @GretlDslMethod(description = "Uses a meta config from an ilidata repository id.")
+    @GretlDslMethod(description = "Uses a meta configuration from an ilidata repository id.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine Metakonfiguration aus einer ilidata-Repository-ID.") })
     public void metaConfigRepositoryId(String id) {
         AbstractIli2DbTask.requireNonBlank("metaConfigRepositoryId", id);
         getMetaConfigRepositoryId().set(id);
     }
 
-    @GretlDslMethod(description = "Writes validator text logs to a file.")
+    @GretlDslMethod(description = "Writes validator log messages to a text file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Schreibt Validator-Protokollmeldungen in eine Textdatei.") })
     public void logFile(Object path) {
         setRegularFile(getLogFile(), path);
     }
 
-    @GretlDslMethod(description = "Writes validator IliVErrors logs to a file.")
+    @GretlDslMethod(description = "Writes IliVErrors log messages to a file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Schreibt IliVErrors-Protokollmeldungen in eine Datei.") })
     public void xtfLogFile(Object path) {
         setRegularFile(getXtfLogFile(), path);
     }

@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
@@ -63,28 +64,33 @@ public abstract class AbstractIli2DbFileTask extends AbstractIli2DbTask {
         return datasetNameFiles;
     }
 
-    @GretlDslMethod(description = "Sets explicit dataset names.")
+    @GretlDslMethod(description = "Specifies explicit dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die expliziten Dataset-Namen an.") })
     public void datasetNames(String... names) {
         getDatasetNames().set(requireNonBlank("datasetNames", names));
     }
 
-    @GretlDslMethod(description = "Derives dataset names from the configured transfer files.")
+    @GretlDslMethod(description = "Derives dataset names from the configured transfer files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Leitet Dataset-Namen aus den konfigurierten Transferdateien ab.") })
     public void datasetNamesFromTransferFiles() {
         getDatasetNamesFromTransferFiles().set(true);
     }
 
-    @GretlDslMethod(description = "Derives dataset names from the provided files.")
+    @GretlDslMethod(description = "Derives dataset names from the provided files.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Leitet Dataset-Namen aus den angegebenen Dateien ab.") })
     public void datasetNamesFromFiles(Object... paths) {
         getDatasetNameFilesCollection().from(paths);
     }
 
-    @GretlDslMethod(description = "Uses a substring starting at start for derived dataset names.")
+    @GretlDslMethod(description = "Uses a substring starting at the given index for derived dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet einen Substring ab start für abgeleitete Dataset-Namen.") })
     public void datasetNameSlice(int start) {
         getDatasetNameSliceStart().set(start);
         getDatasetNameSliceEndExclusive().set(-1);
     }
 
-    @GretlDslMethod(description = "Uses the substring [start, endExclusive) for derived dataset names.")
+    @GretlDslMethod(description = "Uses the substring [start, endExclusive) for derived dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet den Substring [start, endExclusive) für abgeleitete Dataset-Namen.") })
     public void datasetNameSlice(int start, int endExclusive) {
         if (endExclusive < start) {
             throw new IllegalArgumentException("datasetNameSlice endExclusive must be >= start");

@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -450,7 +451,8 @@ public abstract class AbstractIli2DbSchemaImportTask extends AbstractIli2DbTask 
         return createMetaInfo;
     }
 
-    @GretlDslMethod(description = "Uses a local INTERLIS model file or repository reference for schema import.")
+    @GretlDslMethod(description = "Uses a local INTERLIS model file or repository reference for the schema import.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine lokale INTERLIS-Modelldatei oder Repository-Referenz für den Schema-Import.") })
     public void iliFile(Object path) {
         setIliFile(path);
     }
@@ -463,7 +465,8 @@ public abstract class AbstractIli2DbSchemaImportTask extends AbstractIli2DbTask 
         }
     }
 
-    @GretlDslMethod(description = "Uses a local iliMetaAttrs file for schema import.")
+    @GretlDslMethod(description = "Uses a local iliMetaAttrs file for the schema import.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Verwendet eine lokale iliMetaAttrs-Datei für den Schema-Import.") })
     public void iliMetaAttrsFile(Object path) {
         setRegularFile(getIliMetaAttrsFile(), path);
     }

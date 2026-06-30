@@ -1,11 +1,13 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.interlis.Ili2DbExecutionSupport;
 import ch.so.agi.gretl.internal.interlis.Ili2DbFlavor;
 import org.gradle.api.tasks.TaskAction;
 
-@GretlTaskDoc(name = "Ili2pgImportSchema", description = "Imports an INTERLIS schema into a PostgreSQL/PostGIS database.")
+@GretlTaskDoc(name = "Ili2pgImportSchema", description = "Imports an INTERLIS schema into a PostgreSQL/PostGIS database.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Importiert ein INTERLIS-Schema in eine PostgreSQL/PostGIS-Datenbank.") })
 public abstract class Ili2pgImportSchema extends AbstractIli2DbSchemaImportTask {
 
     @TaskAction

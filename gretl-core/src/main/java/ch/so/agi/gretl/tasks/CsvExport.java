@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine;
 import ch.so.agi.gretl.internal.ioxwkf.IoxWkfDatabaseEngine.CsvExportRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -18,7 +19,8 @@ import org.gradle.api.tasks.TaskAction;
 import javax.inject.Inject;
 import java.util.Arrays;
 
-@GretlTaskDoc(name = "CsvExport", description = "Exports a database table into a CSV file.")
+@GretlTaskDoc(name = "CsvExport", description = "Exports a database table into a CSV file.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Exportiert eine Datenbank-Tabelle in eine CSV-Datei.") })
 public abstract class CsvExport extends AbstractDatabaseTask {
     private final GretlLogger log = LogEnvironment.getLogger(CsvExport.class);
 
@@ -57,7 +59,8 @@ public abstract class CsvExport extends AbstractDatabaseTask {
         getAttributes().convention(java.util.Collections.emptyList());
     }
 
-    @GretlDslMethod(required = true, description = "Sets the CSV output file.")
+    @GretlDslMethod(required = true, description = "Specifies the CSV output file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die CSV-Ausgabedatei fest.") })
     public void dataFile(Object path) {
         setRegularFile(getDataFile(), path);
     }

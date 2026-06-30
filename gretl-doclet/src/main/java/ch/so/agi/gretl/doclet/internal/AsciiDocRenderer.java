@@ -9,9 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public final class AsciiDocRenderer {
     private final MethodSignatureRenderer signatures = new MethodSignatureRenderer();
+    private final Messages messages;
+
+    public AsciiDocRenderer(Locale locale) {
+        this.messages = new Messages(locale);
+    }
 
     public void render(Path outputDirectory, List<TaskDescriptor> tasks) throws IOException {
         Files.createDirectories(outputDirectory);
@@ -33,10 +39,13 @@ public final class AsciiDocRenderer {
         }
         out.append("[cols=\"4,1,1,5\", options=\"header\"]\n");
         out.append("|===\n");
-        out.append("| DSL method | Required | Default | Description\n\n");
+        out.append("| ").append(messages.dslMethod())
+                .append(" | ").append(messages.required())
+                .append(" | ").append(messages.defaultColumn())
+                .append(" | ").append(messages.description()).append("\n\n");
         for (DslMethodDescriptor method : task.methods()) {
             out.append("| `").append(escapeInline(signatures.render(method))).append("`\n");
-            out.append("| ").append(method.required() ? "yes" : "no").append("\n");
+            out.append("| ").append(method.required() ? messages.yes() : messages.no()).append("\n");
             out.append("| ").append(method.defaultValue().isBlank() ? "" : escapeCell(method.defaultValue())).append("\n");
             out.append("| ").append(method.description().isBlank() ? "" : escapeCell(method.description())).append("\n\n");
         }
@@ -45,7 +54,7 @@ public final class AsciiDocRenderer {
     }
 
     private String renderIndex(List<TaskDescriptor> tasks) {
-        StringBuilder out = new StringBuilder("= Task Reference\n\n");
+        StringBuilder out = new StringBuilder("= ").append(messages.taskReference()).append("\n\n");
         for (TaskDescriptor task : tasks) {
             out.append("include::").append(fileName(task)).append("[]\n\n");
         }

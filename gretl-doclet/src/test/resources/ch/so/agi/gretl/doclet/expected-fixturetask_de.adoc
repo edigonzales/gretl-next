@@ -1,0 +1,30 @@
+[[task-fixturetask]]
+== FixtureTask
+
+Fixture-Beschreibung mit `Code`.
+
+[cols="4,1,1,5", options="header"]
+|===
+| DSL-Methode | Erforderlich | Standard | Beschreibung
+
+| `inputFile(Object path)`
+| ja
+| 
+| Konfiguriert den `input`-Pfad.
+
+| `count(int value)`
+| nein
+| 7
+| Setzt den Zaehlwert.
+
+| `fallback(String value)`
+| nein
+| 
+| Uses javadoc `fallback`.
+
+| `labels(String... values)`
+| ja
+| 
+| Setzt die Beschriftungen.
+
+|===

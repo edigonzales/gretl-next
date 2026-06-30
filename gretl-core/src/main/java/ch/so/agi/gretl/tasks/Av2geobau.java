@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.av.Av2geobauEngine;
 import ch.so.agi.gretl.internal.av.Av2geobauEngine.Av2geobauRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -22,7 +23,8 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 
-@GretlTaskDoc(name = "Av2geobau", description = "Converts cadastral ITF files to GeoBau DXF files.")
+@GretlTaskDoc(name = "Av2geobau", description = "Converts cadastral ITF files to GeoBau DXF files.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Konvertiert AV-ITF-Dateien in GeoBau-DXF-Dateien.") })
 public abstract class Av2geobau extends AbstractCoreGretlTask {
     private final GretlLogger log = LogEnvironment.getLogger(Av2geobau.class);
     private final ConfigurableFileCollection itfFiles;
@@ -62,7 +64,8 @@ public abstract class Av2geobau extends AbstractCoreGretlTask {
         return itfFiles;
     }
 
-    @GretlDslMethod(required = true, description = "Adds ITF files to convert.")
+    @GretlDslMethod(required = true, description = "Specifies ITF files to convert.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die zu konvertierenden ITF-Dateien an.") })
     public void itfFiles(Object... paths) {
         getItfFiles().from(paths);
     }
@@ -71,12 +74,14 @@ public abstract class Av2geobau extends AbstractCoreGretlTask {
         getItfFiles().setFrom(paths);
     }
 
-    @GretlDslMethod(required = true, description = "Sets the DXF output directory.")
+    @GretlDslMethod(required = true, description = "Specifies the DXF output directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt das DXF-Ausgabeverzeichnis fest.") })
     public void dxfDirectory(Object path) {
         setDirectory(getDxfDirectory(), path);
     }
 
-    @GretlDslMethod(description = "Sets the optional conversion log file.")
+    @GretlDslMethod(description = "Specifies the optional conversion log file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die optionale Konvertierungs-Protokolldatei fest.") })
     public void logFile(Object path) {
         setRegularFile(getLogFile(), path);
     }

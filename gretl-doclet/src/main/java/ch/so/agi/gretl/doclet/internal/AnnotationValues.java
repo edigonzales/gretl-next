@@ -6,7 +6,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.util.Elements;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 final class AnnotationValues {
@@ -40,5 +42,24 @@ final class AnnotationValues {
     static boolean bool(Map<String, Object> values, String name) {
         Object value = values.get(name);
         return value instanceof Boolean bool && bool;
+    }
+
+    Map<String, String> localeMap(Map<String, Object> values, String arrayKey) {
+        Object obj = values.get(arrayKey);
+        if (!(obj instanceof List<?> list)) {
+            return Map.of();
+        }
+        Map<String, String> result = new LinkedHashMap<>();
+        for (Object item : list) {
+            if (item instanceof AnnotationValue av && av.getValue() instanceof AnnotationMirror mirror) {
+                Map<String, Object> entry = valuesWithDefaults(mirror);
+                String locale = Objects.toString(entry.get("locale"), "");
+                String value = Objects.toString(entry.get("value"), "");
+                if (!locale.isBlank() && !value.isBlank()) {
+                    result.put(locale, value);
+                }
+            }
+        }
+        return result;
     }
 }

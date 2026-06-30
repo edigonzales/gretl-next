@@ -19,10 +19,12 @@ import java.util.Set;
 public final class GretlDoclet implements Doclet {
     private Reporter reporter;
     private Path outputDirectory;
+    private Locale locale = Locale.ENGLISH;
 
     @Override
     public void init(Locale locale, Reporter reporter) {
         this.reporter = reporter;
+        this.locale = locale;
     }
 
     @Override
@@ -34,6 +36,7 @@ public final class GretlDoclet implements Doclet {
     public Set<? extends Option> getSupportedOptions() {
         return Set.of(
                 new OutputDirectoryOption(),
+                new DocletLocaleOption(),
                 new IgnoredBooleanOption("-notimestamp", "Ignored Gradle Javadoc timestamp option."));
     }
 
@@ -52,11 +55,12 @@ public final class GretlDoclet implements Doclet {
         try {
             TaskDescriptorExtractor extractor = new TaskDescriptorExtractor(
                     environment.getElementUtils(),
-                    environment.getDocTrees());
+                    environment.getDocTrees(),
+                    locale);
             List<TaskDescriptor> tasks = new TaskClassCollector().collect(environment).stream()
                     .map(extractor::extract)
                     .toList();
-            new AsciiDocRenderer().render(outputDirectory, tasks);
+            new AsciiDocRenderer(locale).render(outputDirectory, tasks);
             return true;
         } catch (IOException | RuntimeException e) {
             error("Could not generate GRETL task documentation: " + e.getMessage());
@@ -99,6 +103,39 @@ public final class GretlDoclet implements Doclet {
         @Override
         public boolean process(String option, List<String> arguments) {
             outputDirectory = Path.of(arguments.get(0));
+            return true;
+        }
+    }
+
+    private final class DocletLocaleOption implements Option {
+        @Override
+        public int getArgumentCount() {
+            return 1;
+        }
+
+        @Override
+        public String getDescription() {
+            return "Target locale for generated documentation, e.g. de_CH or de.";
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.STANDARD;
+        }
+
+        @Override
+        public List<String> getNames() {
+            return List.of("-docletlocale");
+        }
+
+        @Override
+        public String getParameters() {
+            return "<locale>";
+        }
+
+        @Override
+        public boolean process(String option, List<String> arguments) {
+            locale = Locale.forLanguageTag(arguments.get(0).replace('_', '-'));
             return true;
         }
     }

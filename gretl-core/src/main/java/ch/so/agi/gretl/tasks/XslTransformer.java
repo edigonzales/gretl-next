@@ -4,6 +4,7 @@ import ch.so.agi.gretl.internal.xslt.XsltEngine;
 import ch.so.agi.gretl.internal.xslt.XsltRequest;
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.logging.GretlLogger;
 import ch.so.agi.gretl.logging.LogEnvironment;
 import ch.so.agi.gretl.util.TaskUtil;
@@ -26,7 +27,11 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
-@GretlTaskDoc(name = "XslTransformer", description = "Transforms one or more XML files with one XSLT stylesheet.")
+@GretlTaskDoc(
+        name = "XslTransformer",
+        description = "Transforms one or more XML files with an XSLT stylesheet.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Transformiert eine oder mehrere XML-Dateien mit einem XSLT-Stylesheet.") }
+)
 public abstract class XslTransformer extends AbstractCoreGretlTask {
     private final ConfigurableFileCollection xmlFiles;
     private final GretlLogger log;
@@ -59,27 +64,32 @@ public abstract class XslTransformer extends AbstractCoreGretlTask {
         getFileExtension().convention("xtf");
     }
 
-    @GretlDslMethod(required = true, description = "Configures a stylesheet file. Use either xslFile(...) or xslResource(...).")
+    @GretlDslMethod(required = true, description = "Configures a stylesheet file. Use either xslFile(...) or xslResource(...).",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert eine Stylesheet-Datei. Verwenden Sie entweder xslFile(...) oder xslResource(...).") })
     public void xslFile(Object path) {
         setRegularFile(getXslFile(), path);
     }
 
-    @GretlDslMethod(required = true, description = "Configures a classpath stylesheet resource. Use either xslFile(...) or xslResource(...).")
+    @GretlDslMethod(required = true, description = "Configures a classpath stylesheet resource. Use either xslFile(...) or xslResource(...).",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert eine Stylesheet-Klassenpfad-Ressource. Verwenden Sie entweder xslFile(...) oder xslResource(...).") })
     public void xslResource(String resourceName) {
         getXslResource().set(resourceName);
     }
 
-    @GretlDslMethod(required = true, description = "Adds XML input files to transform.")
+    @GretlDslMethod(required = true, description = "Specifies XML input files to transform.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die zu transformierenden XML-Eingabedateien an.") })
     public void xmlFiles(Object... paths) {
         getXmlFiles().from(paths);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the output directory.")
+    @GretlDslMethod(required = true, description = "Configures the output directory.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert das Ausgabeverzeichnis.") })
     public void outDirectory(Object path) {
         setDirectory(getOutDirectory(), path);
     }
 
-    @GretlDslMethod(defaultValue = "xtf", description = "Sets the output file extension without leading dot.")
+    @GretlDslMethod(defaultValue = "xtf", description = "Specifies the output file extension without a leading dot.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt die Ausgabedatei-Erweiterung ohne führenden Punkt fest.") })
     public void fileExtension(String fileExtension) {
         getFileExtension().set(fileExtension);
     }

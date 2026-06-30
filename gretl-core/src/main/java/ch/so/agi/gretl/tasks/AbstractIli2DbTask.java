@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -300,18 +301,21 @@ public abstract class AbstractIli2DbTask extends AbstractInterlisTask {
         return proxyPort;
     }
 
-    @GretlDslMethod(required = true, description = "Configures a file-based ili2db database.")
+    @GretlDslMethod(required = true, description = "Configures a file-based ili2db database.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert eine dateibasierte ili2db-Datenbank.") })
     public void databaseFile(Object path) {
         setRegularFile(getDatabaseFile(), path);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the PostgreSQL/PostGIS database connection with only a JDBC URL.")
+    @GretlDslMethod(required = true, description = "Configures the PostgreSQL/PostGIS database connection using a JDBC URL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit einer JDBC-URL.") })
     public void database(String jdbcUrl) {
         requireNonBlank("database", jdbcUrl);
         getJdbcUrl().set(jdbcUrl);
     }
 
-    @GretlDslMethod(required = true, description = "Configures the PostgreSQL/PostGIS database connection with JDBC URL, username and password.")
+    @GretlDslMethod(required = true, description = "Configures the PostgreSQL/PostGIS database connection using a JDBC URL, username and password.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.") })
     public void database(String jdbcUrl, String username, String password) {
         requireNonBlank("database", jdbcUrl);
         getJdbcUrl().set(jdbcUrl);
@@ -319,67 +323,79 @@ public abstract class AbstractIli2DbTask extends AbstractInterlisTask {
         getPassword().set(password);
     }
 
-    @GretlDslMethod(description = "Sets the ili2db schema name.")
+    @GretlDslMethod(description = "Specifies the ili2db schema name.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt den ili2db-Schemanamen fest.") })
     public void schema(String name) {
         requireNonBlank("schema", name);
         getSchema().set(name);
     }
 
-    @GretlDslMethod(description = "Alias for schema(...).")
+    @GretlDslMethod(description = "Alias for schema(...).",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für schema(...).") })
     public void dbschema(String name) {
         schema(name);
     }
 
-    @GretlDslMethod(description = "Adds INTERLIS model names.")
+    @GretlDslMethod(description = "Specifies the INTERLIS model names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die INTERLIS-Modellnamen an.") })
     public void modelNames(String... names) {
         getModelNames().addAll(requireNonBlank("modelNames", names));
     }
 
-    @GretlDslMethod(description = "Alias for configuring the ili2db models option.")
+    @GretlDslMethod(description = "Alias for configuring the ili2db models option.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für die Konfiguration der ili2db-Option models.") })
     public void models(String value) {
         requireNonBlank("models", value);
         getModelNames().set(List.of(value));
     }
 
-    @GretlDslMethod(description = "Adds model directory or repository entries.")
+    @GretlDslMethod(description = "Specifies model directory or repository entries.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die Modellverzeichnis- oder Repository-Einträge an.") })
     public void modelDirectories(String... entries) {
         getModelDirectories().addAll(requireNonBlank("modelDirectories", entries));
     }
 
-    @GretlDslMethod(description = "Alias for configuring the ili2db modeldir option.")
+    @GretlDslMethod(description = "Alias for configuring the ili2db modeldir option.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Alias für die Konfiguration der ili2db-Option modeldir.") })
     public void modeldir(String value) {
         requireNonBlank("modeldir", value);
         getModelDirectories().set(List.of(value));
     }
 
-    @GretlDslMethod(description = "Configures ili2db baskets.")
+    @GretlDslMethod(description = "Configures ili2db baskets.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert ili2db-Baskets.") })
     public void baskets(String value) {
         requireNonBlank("baskets", value);
         getBaskets().set(List.of(value));
     }
 
-    @GretlDslMethod(description = "Configures ili2db topics.")
+    @GretlDslMethod(description = "Configures ili2db topics.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert ili2db-Topics.") })
     public void topics(String value) {
         requireNonBlank("topics", value);
         getTopics().set(List.of(value));
     }
 
-    @GretlDslMethod(description = "Configures one or more ili2db dataset names.")
+    @GretlDslMethod(description = "Configures one or more ili2db dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert einen oder mehrere ili2db-Dataset-Namen.") })
     public void dataset(Object dataset) {
         setDataset(dataset);
     }
 
-    @GretlDslMethod(description = "Configures substring indexes used to derive legacy dataset names.")
+    @GretlDslMethod(description = "Configures substring indexes used to derive legacy dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.") })
     public void datasetSubstring(Iterable<Integer> datasetSubstring) {
         getDatasetSubstring().set(datasetSubstring);
     }
 
-    @GretlDslMethod(description = "Configures substring indexes used to derive legacy dataset names.")
+    @GretlDslMethod(description = "Configures substring indexes used to derive legacy dataset names.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.") })
     public void datasetSubstring(Integer... datasetSubstring) {
         getDatasetSubstring().set(Arrays.asList(datasetSubstring));
     }
 
-    @GretlDslMethod(description = "Writes ili2db logs to a text file.")
+    @GretlDslMethod(description = "Writes ili2db log messages to a text file.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Schreibt ili2db-Protokollmeldungen in eine Textdatei.") })
     public void logFile(Object path) {
         setRegularFile(getLogFile(), path);
     }

@@ -2,6 +2,7 @@ package ch.so.agi.gretl.tasks;
 
 import ch.so.agi.gretl.doclet.api.GretlDslMethod;
 import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
+import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.internal.s3.S3Engine;
 import ch.so.agi.gretl.internal.s3.S3UploadRequest;
 import ch.so.agi.gretl.logging.GretlLogger;
@@ -27,7 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@GretlTaskDoc(name = "S3Upload", description = "Uploads files to an S3 bucket.")
+@GretlTaskDoc(name = "S3Upload", description = "Uploads files to an S3 bucket.",
+        descriptions = { @LocaleText(locale = "de_CH", value = "Lädt Dateien in einen S3-Bucket hoch.") })
 public abstract class S3Upload extends S3Task {
     private final GretlLogger log = LogEnvironment.getLogger(S3Upload.class);
     private final ConfigurableFileCollection sourceFiles;
@@ -78,7 +80,8 @@ public abstract class S3Upload extends S3Task {
         setDirectory(getSourceDir(), sourceDir);
     }
 
-    @GretlDslMethod(description = "Configures a directory whose direct files are uploaded.")
+    @GretlDslMethod(description = "Configures a directory whose direct files are uploaded.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt ein Verzeichnis fest, dessen direkte Dateien hochgeladen werden.") })
     public void sourceDir(Object sourceDir) {
         configureSourceDir(sourceDir);
     }
@@ -87,7 +90,8 @@ public abstract class S3Upload extends S3Task {
         setRegularFile(getSourceFile(), sourceFile);
     }
 
-    @GretlDslMethod(description = "Configures one file to upload.")
+    @GretlDslMethod(description = "Configures one file to upload.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt eine hochzuladende Datei fest.") })
     public void sourceFile(Object sourceFile) {
         configureSourceFile(sourceFile);
     }
@@ -96,7 +100,8 @@ public abstract class S3Upload extends S3Task {
         getSourceFiles().setFrom(sourceFiles);
     }
 
-    @GretlDslMethod(description = "Configures a file collection to upload.")
+    @GretlDslMethod(description = "Configures a file collection to upload.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Legt eine Dateisammlung zum Hochladen fest.") })
     public void sourceFiles(Object sourceFiles) {
         configureSourceFiles(sourceFiles);
     }
@@ -105,7 +110,8 @@ public abstract class S3Upload extends S3Task {
         this.acl = acl;
     }
 
-    @GretlDslMethod(required = true, description = "Configures the S3 canned ACL.")
+    @GretlDslMethod(required = true, description = "Configures the S3 canned ACL.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die S3-Canned-ACL.") })
     public void acl(String acl) {
         setAcl(acl);
     }
@@ -114,7 +120,8 @@ public abstract class S3Upload extends S3Task {
         this.contentType = contentType;
     }
 
-    @GretlDslMethod(description = "Configures the uploaded content type.")
+    @GretlDslMethod(description = "Configures the content type of uploaded objects.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert den Content-Type der hochgeladenen Objekte.") })
     public void contentType(String contentType) {
         setContentType(contentType);
     }
@@ -127,7 +134,8 @@ public abstract class S3Upload extends S3Task {
         setMetadata(metadata);
     }
 
-    @GretlDslMethod(description = "Configures S3 object metadata.")
+    @GretlDslMethod(description = "Configures S3 object metadata.",
+            descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert S3-Objekt-Metadaten.") })
     public void metadata(Map<String, String> metadata) {
         setMetadata(metadata);
     }
