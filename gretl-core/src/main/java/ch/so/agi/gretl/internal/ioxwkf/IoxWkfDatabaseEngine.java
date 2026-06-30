@@ -104,8 +104,8 @@ public final class IoxWkfDatabaseEngine {
             for (int i = 0; i < request.sourceTableNames().size(); i++) {
                 new Db2Gpkg().exportData(request.dataFile().toFile(), connection,
                         gpkgExportSettings(request, request.sourceTableNames().get(i), request.targetTableNames().get(i)));
-                connection.commit();
             }
+            connection.commit();
         } catch (Exception e) {
             rollback(connection);
             throw e;

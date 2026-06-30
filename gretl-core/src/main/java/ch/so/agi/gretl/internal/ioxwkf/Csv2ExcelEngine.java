@@ -1,14 +1,28 @@
 package ch.so.agi.gretl.internal.ioxwkf;
 
+import ch.ehi.basics.settings.Settings;
+import ch.interlis.ili2c.Ili2c;
+import ch.interlis.ili2c.Ili2cException;
+import ch.interlis.ili2c.config.Configuration;
+import ch.interlis.ili2c.metamodel.TransferDescription;
+import ch.interlis.ilirepository.IliManager;
+import ch.interlis.iom_j.csv.CsvReader;
+import ch.interlis.iox.IoxEvent;
+import ch.interlis.iox.IoxException;
+import ch.interlis.iox_j.EndBasketEvent;
+import ch.interlis.iox_j.EndTransferEvent;
+import ch.interlis.iox_j.ObjectEvent;
+import ch.interlis.iox_j.StartTransferEvent;
+import ch.interlis.ioxwkf.dbtools.IoxWkfConfig;
+import ch.interlis.ioxwkf.excel.ExcelAttributeDescriptor;
+import ch.interlis.ioxwkf.excel.ExcelWriter;
+import org.interlis2.validator.Validator;
+
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public final class Csv2ExcelEngine {
 
@@ -23,161 +37,146 @@ public final class Csv2ExcelEngine {
             Files.createDirectories(request.outputFile().getParent());
         }
 
-        Charset charset = request.encoding() == null
-                ? Charset.defaultCharset()
-                : Charset.forName(request.encoding());
-        List<List<String>> rows = readCsv(request.csvFile(), charset,
-                characterOrDefault(request.valueSeparator(), ','),
-                characterOrDefault(request.valueDelimiter(), '"'));
-        writeWorkbook(request.outputFile(), sheetName(request.csvFile()), rows);
-    }
+        Settings settings = settings(request);
+        ExcelWriter writer = null;
+        CsvReader reader = null;
+        try {
+            writer = new ExcelWriter(request.outputFile().toFile(), settings);
+            reader = new CsvReader(request.csvFile().toFile(), settings);
+            configureReader(reader, request, settings);
+            if (request.models() != null && !request.models().isBlank()) {
+                TransferDescription transferDescription = transferDescription(request.models(),
+                        request.csvFile().getParent(), settings);
+                reader.setModel(transferDescription);
+                writer.setModel(transferDescription);
+            }
 
-    private List<List<String>> readCsv(Path csvFile, Charset charset, char separator, char delimiter) throws IOException {
-        List<String> lines = Files.readAllLines(csvFile, charset);
-        List<List<String>> rows = new ArrayList<>();
-        for (String line : lines) {
-            rows.add(parseLine(line, separator, delimiter));
-        }
-        return rows;
-    }
-
-    private List<String> parseLine(String line, char separator, char delimiter) {
-        List<String> values = new ArrayList<>();
-        StringBuilder value = new StringBuilder();
-        boolean quoted = false;
-        for (int i = 0; i < line.length(); i++) {
-            char ch = line.charAt(i);
-            if (ch == delimiter) {
-                if (quoted && i + 1 < line.length() && line.charAt(i + 1) == delimiter) {
-                    value.append(delimiter);
-                    i++;
-                } else {
-                    quoted = !quoted;
+            writer.write(new StartTransferEvent());
+            IoxEvent event = reader.read();
+            if (event instanceof StartTransferEvent) {
+                event = reader.read();
+                if (request.firstLineIsHeader() && (request.models() == null || request.models().isBlank())) {
+                    writer.setAttributeDescriptors(attributeDescriptors(reader.getAttributes()));
                 }
-            } else if (ch == separator && !quoted) {
-                values.add(value.toString());
-                value.setLength(0);
-            } else {
-                value.append(ch);
+                writer.write(event);
             }
-        }
-        values.add(value.toString());
-        return values;
-    }
 
-    private void writeWorkbook(Path outputFile, String sheetName, List<List<String>> rows) throws IOException {
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(outputFile))) {
-            entry(zip, "[Content_Types].xml", """
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-                      <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-                      <Default Extension="xml" ContentType="application/xml"/>
-                      <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-                      <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-                    </Types>
-                    """);
-            entry(zip, "_rels/.rels", """
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-                      <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-                    </Relationships>
-                    """);
-            entry(zip, "xl/_rels/workbook.xml.rels", """
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-                      <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-                    </Relationships>
-                    """);
-            entry(zip, "xl/workbook.xml", """
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-                              xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-                      <sheets>
-                        <sheet name="%s" sheetId="1" r:id="rId1"/>
-                      </sheets>
-                    </workbook>
-                    """.formatted(xml(sheetName)));
-            entry(zip, "xl/worksheets/sheet1.xml", worksheet(rows));
-        }
-    }
-
-    private String worksheet(List<List<String>> rows) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("""
-                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-                  <sheetData>
-                """);
-        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
-            builder.append("    <row r=\"").append(rowIndex + 1).append("\">\n");
-            List<String> row = rows.get(rowIndex);
-            for (int columnIndex = 0; columnIndex < row.size(); columnIndex++) {
-                String ref = cellRef(columnIndex, rowIndex + 1);
-                builder.append("      <c r=\"").append(ref).append("\" t=\"inlineStr\"><is><t>")
-                        .append(xml(row.get(columnIndex))).append("</t></is></c>\n");
+            while (event != null) {
+                if (event instanceof ObjectEvent) {
+                    writer.write(event);
+                }
+                event = reader.read();
             }
-            builder.append("    </row>\n");
+            writer.write(new EndBasketEvent());
+            writer.write(new EndTransferEvent());
+        } catch (IoxException | Ili2cException e) {
+            throw new IOException(e);
+        } finally {
+            close(reader);
+            close(writer);
         }
-        builder.append("""
-                  </sheetData>
-                </worksheet>
-                """);
-        return builder.toString();
     }
 
-    private void entry(ZipOutputStream zip, String name, String content) throws IOException {
-        zip.putNextEntry(new ZipEntry(name));
-        zip.write(content.getBytes(StandardCharsets.UTF_8));
-        zip.closeEntry();
+    private Settings settings(Csv2ExcelRequest request) {
+        Settings settings = new Settings();
+        settings.setValue(IoxWkfConfig.SETTING_FIRSTLINE,
+                request.firstLineIsHeader()
+                        ? IoxWkfConfig.SETTING_FIRSTLINE_AS_HEADER
+                        : IoxWkfConfig.SETTING_FIRSTLINE_AS_VALUE);
+        if (request.valueDelimiter() != null) {
+            settings.setValue(IoxWkfConfig.SETTING_VALUEDELIMITER, singleCharacter("valueDelimiter", request.valueDelimiter()));
+        }
+        if (request.valueSeparator() != null) {
+            settings.setValue(IoxWkfConfig.SETTING_VALUESEPARATOR, singleCharacter("valueSeparator", request.valueSeparator()));
+        }
+        if (request.encoding() != null) {
+            settings.setValue(CsvReader.ENCODING, request.encoding());
+        }
+        if (request.models() != null && !request.models().isBlank()) {
+            settings.setValue(Validator.SETTING_MODELNAMES, request.models());
+        }
+        if (request.modeldir() != null && !request.modeldir().isBlank()) {
+            settings.setValue(Validator.SETTING_ILIDIRS, request.modeldir());
+        }
+        return settings;
     }
 
-    private char characterOrDefault(String value, char defaultValue) {
-        if (value == null) {
-            return defaultValue;
+    private void configureReader(CsvReader reader, Csv2ExcelRequest request, Settings settings) {
+        reader.setFirstLineIsHeader(request.firstLineIsHeader());
+
+        String valueDelimiter = settings.getValue(IoxWkfConfig.SETTING_VALUEDELIMITER);
+        if (valueDelimiter != null) {
+            reader.setValueDelimiter(valueDelimiter.charAt(0));
         }
+
+        String valueSeparator = settings.getValue(IoxWkfConfig.SETTING_VALUESEPARATOR);
+        if (valueSeparator == null) {
+            reader.setValueSeparator(IoxWkfConfig.SETTING_VALUESEPARATOR_DEFAULT);
+        } else {
+            reader.setValueSeparator(valueSeparator.charAt(0));
+        }
+    }
+
+    private List<ExcelAttributeDescriptor> attributeDescriptors(String[] attributes) {
+        List<ExcelAttributeDescriptor> descriptors = new ArrayList<>();
+        if (attributes == null) {
+            return descriptors;
+        }
+        for (String attribute : attributes) {
+            ExcelAttributeDescriptor descriptor = new ExcelAttributeDescriptor();
+            descriptor.setAttributeName(attribute);
+            descriptor.setBinding(String.class);
+            descriptors.add(descriptor);
+        }
+        return descriptors;
+    }
+
+    private TransferDescription transferDescription(String models, Path additionalRepository, Settings settings)
+            throws Ili2cException {
+        IliManager manager = new IliManager();
+        List<String> repositories = new ArrayList<>();
+        String configuredRepositories = settings.getValue(Validator.SETTING_ILIDIRS);
+        if (configuredRepositories != null && !configuredRepositories.isBlank()) {
+            repositories.addAll(List.of(configuredRepositories.split(";")));
+        }
+        if (additionalRepository != null) {
+            repositories.add(additionalRepository.toString());
+        }
+        manager.setRepositories(repositories.toArray(String[]::new));
+
+        Configuration configuration = manager.getConfig(new ArrayList<>(List.of(models)), 2.3);
+        TransferDescription transferDescription = Ili2c.runCompiler(configuration);
+        if (transferDescription == null) {
+            throw new IllegalArgumentException("INTERLIS compiler failed");
+        }
+        return transferDescription;
+    }
+
+    private String singleCharacter(String propertyName, String value) {
         if (value.length() != 1) {
-            throw new IllegalArgumentException("CSV delimiter settings must be single characters");
+            throw new IllegalArgumentException(propertyName + " must be a single character");
         }
-        return value.charAt(0);
+        return value;
     }
 
-    private String sheetName(Path csvFile) {
-        String name = csvFile.getFileName().toString()
-                .replaceAll("[\\\\/?*\\[\\]:]", "_");
-        if (name.length() > 31) {
-            name = name.substring(0, 31);
-        }
-        return name.isBlank() ? "Sheet1" : name;
-    }
-
-    private String cellRef(int columnIndex, int rowIndex) {
-        StringBuilder column = new StringBuilder();
-        int value = columnIndex + 1;
-        while (value > 0) {
-            int remainder = (value - 1) % 26;
-            column.insert(0, (char) ('A' + remainder));
-            value = (value - 1) / 26;
-        }
-        return column + Integer.toString(rowIndex);
-    }
-
-    private String xml(String value) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char ch = value.charAt(i);
-            if (ch == '&') {
-                builder.append("&amp;");
-            } else if (ch == '<') {
-                builder.append("&lt;");
-            } else if (ch == '>') {
-                builder.append("&gt;");
-            } else if (ch == '"') {
-                builder.append("&quot;");
-            } else if (ch >= 0x20 || ch == '\n' || ch == '\r' || ch == '\t') {
-                builder.append(ch);
+    private void close(CsvReader reader) throws IOException {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IoxException e) {
+                throw new IOException(e);
             }
         }
-        return builder.toString();
+    }
+
+    private void close(ExcelWriter writer) throws IOException {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (IoxException e) {
+                throw new IOException(e);
+            }
+        }
     }
 
     public record Csv2ExcelRequest(

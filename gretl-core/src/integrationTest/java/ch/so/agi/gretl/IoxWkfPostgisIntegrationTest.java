@@ -149,6 +149,30 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
         assertEquals(1, sqliteInt(projectDir.resolve("build/two.gpkg"), "SELECT count(*) FROM exportdata2"));
     }
 
+    @Test
+    void rejectsGeoPackageExportWithMismatchedTableLists() throws Exception {
+        writeSettings();
+        createOrReplaceSchema("gpkgexport_mismatch");
+        try (Connection connection = pg(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE gpkgexport_mismatch.exportdata(attr varchar, the_geom geometry(POINT,2056))");
+            statement.execute("INSERT INTO gpkgexport_mismatch.exportdata(attr, the_geom) "
+                    + "VALUES ('coord2d', '0101000020080800001CD4411DD441CDBF0E69626CDD33E23F')");
+        }
+        writeBuild(ioxWkfBuild("""
+                tasks.register('gpkgExportMismatch', GpkgExport) {
+                    database(project.property('pgUrl'), project.property('pgUser'), project.property('pgPass'))
+                    schemaName 'gpkgexport_mismatch'
+                    srcTableName 'exportdata', 'exportdata'
+                    dstTableName 'exportdata'
+                    dataFile layout.buildDirectory.file('mismatch.gpkg')
+                }
+                """));
+
+        var result = runAndFail("gpkgExportMismatch");
+
+        assertTrue(result.getOutput().contains("number of source table names (2) doesn't match number of destination table names (1)"));
+    }
+
     private String ioxWkfBuild(String tasks) {
         return """
                 plugins { id 'ch.so.agi.gretl' }

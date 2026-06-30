@@ -238,6 +238,120 @@ Key changes:
 - The built-in custom functions are registered internally; `pluginFolder` is no
   longer public DSL in this slice.
 
+## CSV / JSON / GeoPackage WKF Tasks
+
+The lightweight `iox-wkf` tasks live in `gretl-core`. Database-backed tasks use
+the same database DSL as `SqlExecutor` and `Db2Db`.
+
+Before:
+
+```groovy
+tasks.register('csvimport', CsvImport) {
+    database = [db_uri, db_user, db_pass]
+    schemaName = 'csvimport'
+    tableName = 'importdata'
+    dataFile = file('data.csv')
+}
+```
+
+After:
+
+```groovy
+tasks.register('csvimport', CsvImport) {
+    database dbUri, dbUser, dbPass
+    schemaName 'csvimport'
+    tableName 'importdata'
+    dataFile 'data.csv'
+}
+```
+
+For GeoPackage multi-table export:
+
+```groovy
+tasks.register('gpkgexport', GpkgExport) {
+    database dbUri, dbUser, dbPass
+    schemaName 'gpkgexport'
+    srcTableName 'source_a', 'source_b'
+    dstTableName 'layer_a', 'layer_b'
+    dataFile layout.buildDirectory.file('data.gpkg')
+}
+```
+
+Key changes:
+
+- `CsvImport`, `CsvExport`, `GpkgImport`, `GpkgExport` and `JsonImport` use
+  `database(jdbcUrl)` or `database(jdbcUrl, username, password)`.
+- Single file properties use helper methods such as `dataFile(...)`,
+  `jsonFile(...)`, `csvFile(...)` and `outputFile(...)`.
+- `JsonValidator` accepts JSON arrays and single JSON objects; validator-only
+  attributes are added in a temporary copy.
+- `GpkgExport` requires matching source and destination table-name counts.
+
+## AV And DXF Tasks
+
+The lightweight AV/DXF tasks are available in `gretl-core` without adding
+GeoTools to Core.
+
+Before:
+
+```groovy
+task transform(type: Av2ch) {
+    inputFile = files('254900.itf')
+    outputDirectory = file('output')
+}
+```
+
+After:
+
+```groovy
+tasks.register('transform', Av2ch) {
+    inputFiles '254900.itf'
+    outputDirectory layout.buildDirectory.dir('output')
+}
+```
+
+For GeoBau:
+
+```groovy
+tasks.register('av2geobau', Av2geobau) {
+    itfFiles fileTree(projectDir) { include '*.itf' }
+    modeldir projectDir.toString()
+    dxfDirectory layout.buildDirectory.dir('dxf')
+    zip true
+}
+```
+
+For ili2gpkg-to-DXF:
+
+```groovy
+tasks.register('gpkg2dxf', Gpkg2Dxf) {
+    dataFile 'data.gpkg'
+    outputDir layout.buildDirectory.dir('dxf')
+}
+```
+
+Key changes:
+
+- `Av2ch.inputFiles(...)` replaces the old `inputFile = files(...)`
+  assignment style.
+- `Av2geobau.itfFiles(...)` and `Gpkg2Dxf.outputDir(...)` follow the same
+  provider-friendly file DSL as the other Core tasks.
+- File collections are processed in stable path order.
+
+## Tasks Still Not Migrated
+
+These original GRETL tasks remain intentionally outside the current Core
+migration:
+
+- Shapefile-based tasks, including `ShpImport`, `ShpExport`, `Gpkg2Shp` and
+  other `gt-shapefile`/GeoTools-heavy jobs.
+- Publisher tasks.
+- `DatabaseDocumentExport`.
+- `PostgisRasterExport`.
+
+Shape-related tasks should be revisited with the GeoTools worker-isolation
+model instead of adding GeoTools dependencies to `gretl-core`.
+
 ## CsvValidator
 
 Before:

@@ -295,6 +295,191 @@ Semantics and defaults:
   ambiguously.
 - `validationOk` behaves like in `IliValidator`.
 
+## CsvImport / CsvExport
+
+Purpose: import one CSV file into a database table or export one database table
+to a CSV file.
+
+DSL methods:
+
+- `database(String jdbcUrl)`
+- `database(String jdbcUrl, String username, String password)`
+- `dataFile(Object path)`
+- `tableName(String name)`
+- `schemaName(String name)`
+- `attributes(String... names)` for `CsvExport`
+- `firstLineIsHeader(boolean value)`
+- `valueDelimiter(String value)`
+- `valueSeparator(String value)`
+- `encoding(String value)`
+- `batchSize(int value)` for `CsvImport`
+
+Required:
+
+- `database(...)`
+- `dataFile(...)`
+- `tableName(...)`
+
+Semantics and defaults:
+
+- `firstLineIsHeader = true` by default.
+- Database passwords are `@Internal`.
+- Import and export each run in one database transaction.
+
+## Csv2Excel
+
+Purpose: convert one CSV file into an XLSX workbook.
+
+DSL methods:
+
+- `csvFile(Object path)`
+- `outputFile(Object path)`
+- `firstLineIsHeader(boolean value)`
+- `valueDelimiter(String value)`
+- `valueSeparator(String value)`
+- `encoding(String value)`
+- `models(String value)`
+- `modeldir(String value)`
+
+Required:
+
+- `csvFile(...)`
+- `outputFile(...)`
+
+Semantics and defaults:
+
+- `firstLineIsHeader = true` by default.
+- With `models(...)`, the CSV is read through the INTERLIS-aware CSV reader and
+  the XLSX writer receives the compiled model.
+
+## JsonImport / JsonValidator
+
+Purpose: import JSON array/object documents into a database text column, or
+validate JSON data with the GRETL JSON reader adapter.
+
+DSL methods:
+
+- `JsonImport`: `database(...)`, `jsonFile(Object path)`,
+  `qualifiedTableName(String name)`, `columnName(String name)`,
+  `deleteAllRows(boolean value)`
+- `JsonValidator`: validator methods from `IliValidator`, using
+  `dataFiles(Object... paths)` for JSON files
+
+Required:
+
+- `JsonImport`: `database(...)`, `jsonFile(...)`, `qualifiedTableName(...)`,
+  `columnName(...)`
+- `JsonValidator`: exactly one JSON file via `dataFiles(...)`
+
+Semantics and defaults:
+
+- `JsonImport.deleteAllRows = false` by default.
+- `JsonValidator` accepts JSON arrays and single JSON objects. Missing
+  validator attributes such as `@topic`, `@id` and `@bid` are added
+  temporarily from `@type`; source files are not modified.
+
+## GpkgImport / GpkgExport / GpkgValidator
+
+Purpose: import/export GeoPackage tables or validate a GeoPackage table with
+the GRETL GPKG reader adapter.
+
+DSL methods:
+
+- `database(String jdbcUrl)`
+- `database(String jdbcUrl, String username, String password)`
+- `dataFile(Object path)`
+- `schemaName(String name)`
+- `GpkgImport`: `srcTableName(String name)`, `dstTableName(String name)`
+- `GpkgExport`: `srcTableName(String... names)`,
+  `dstTableName(String... names)`
+- `GpkgValidator`: validator methods from `IliValidator` plus
+  `tableName(String name)`
+- `batchSize(int value)`
+- `fetchSize(int value)`
+
+Required:
+
+- `GpkgImport`: `database(...)`, `dataFile(...)`, `srcTableName(...)`,
+  `dstTableName(...)`
+- `GpkgExport`: `database(...)`, `dataFile(...)`, non-empty matching
+  `srcTableName(...)` and `dstTableName(...)`
+- `GpkgValidator`: exactly one file via `dataFiles(...)` and `tableName(...)`
+
+Semantics and defaults:
+
+- Database passwords are `@Internal`.
+- Import and export each run in one database transaction.
+- Multi-table `GpkgExport` rejects source/destination list count mismatches.
+
+## Gpkg2Dxf
+
+Purpose: convert geometry tables in an ili2gpkg GeoPackage to DXF files.
+
+DSL methods:
+
+- `dataFile(Object path)`
+- `outputDir(Object path)`
+
+Required:
+
+- `dataFile(...)`
+- `outputDir(...)`
+
+Semantics and defaults:
+
+- One DXF file is written per geometry class table.
+- The DXF layer is read from ili2db `dxflayer` meta attributes when present;
+  otherwise `default` is used.
+
+## Av2ch
+
+Purpose: convert Swiss cadastral ITF files to the federal AV model.
+
+DSL methods:
+
+- `inputFiles(Object... paths)`
+- `outputDirectory(Object path)`
+- `modeldir(String value)`
+- `language(String value)`
+- `zip(boolean value)`
+
+Required:
+
+- at least one file via `inputFiles(...)`
+- `outputDirectory(...)`
+
+Semantics and defaults:
+
+- `language = "de"` by default. Supported values are `de` and `it`.
+- `zip = false` by default.
+- File collections are processed in stable path order.
+
+## Av2geobau
+
+Purpose: convert cadastral ITF files to GeoBau DXF files.
+
+DSL methods:
+
+- `itfFiles(Object... paths)`
+- `dxfDirectory(Object path)`
+- `modeldir(String value)`
+- `logFile(Object path)`
+- `proxy(String value)`
+- `proxyPort(int value)`
+- `zip(boolean value)`
+
+Required:
+
+- at least one file via `itfFiles(...)`
+- `dxfDirectory(...)`
+
+Semantics and defaults:
+
+- `zip = false` by default.
+- When `zip = true`, the DXF file and bundled GeoBau reference PDFs are added
+  to a per-input ZIP archive.
+- File collections are processed in stable path order.
+
 ## XslTransformer
 
 Purpose: transform one or more XML files with one XSLT stylesheet.

@@ -1,11 +1,15 @@
 package ch.so.agi.gretl;
 
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.ZipFile;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,10 +34,10 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
 
         run("convertData");
 
-        String sheet = zipEntry(projectDir.resolve("build/buildings.xlsx"), "xl/worksheets/sheet1.xml");
-        assertTrue(sheet.contains("<t>egid</t>"));
-        assertTrue(sheet.contains("<t>2605951.2</t>"));
-        assertTrue(sheet.contains("<t>2102-07</t>"));
+        List<String> values = workbookValues(projectDir.resolve("build/buildings.xlsx"));
+        assertTrue(values.contains("EGID"), values.toString());
+        assertTrue(values.contains("2605951.2"), values.toString());
+        assertTrue(values.contains("2102-07"), values.toString());
     }
 
     @Test
@@ -51,8 +55,9 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
 
         run("convertData");
 
-        String sheet = zipEntry(projectDir.resolve("build/empty.xlsx"), "xl/worksheets/sheet1.xml");
-        assertTrue(sheet.contains("<sheetData>"));
+        List<String> values = workbookValues(projectDir.resolve("build/empty.xlsx"));
+        assertTrue(values.contains("egid"));
+        assertTrue(values.contains("xkoordinaten"));
     }
 
     @Test
@@ -144,9 +149,17 @@ class IoxWkfFunctionalTest extends CoreFunctionalTestSupport {
                 """.formatted(tasks);
     }
 
-    private String zipEntry(Path zipFile, String entryName) throws Exception {
-        try (ZipFile zip = new ZipFile(zipFile.toFile())) {
-            return new String(zip.getInputStream(zip.getEntry(entryName)).readAllBytes(), StandardCharsets.UTF_8);
+    private List<String> workbookValues(Path workbookPath) throws Exception {
+        DataFormatter formatter = new DataFormatter();
+        List<String> values = new ArrayList<>();
+        try (Workbook workbook = new XSSFWorkbook(workbookPath.toFile())) {
+            workbook.getSheetAt(0).forEach(row -> row.forEach(cell -> {
+                String value = formatter.formatCellValue(cell);
+                if (!value.isEmpty()) {
+                    values.add(value);
+                }
+            }));
         }
+        return values;
     }
 }

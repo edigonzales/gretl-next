@@ -23,6 +23,9 @@ configurations.configureEach {
     // gretl-core must stay free of GeoTools. Geospatial processing belongs in gretl-geotools.
     exclude group: 'org.geotools'
     exclude group: 'org.geotools.ogc'
+    resolutionStrategy.force "ch.interlis:ili2c-core:${ili2cCoreVersion}"
+    resolutionStrategy.force "ch.interlis:ili2c-tool:${ili2cToolVersion}"
+    resolutionStrategy.force "ch.interlis:iox-ili:${ioxIliVersion}"
     resolutionStrategy.force "ch.interlis:ili2pg:${ili2pgVersion}"
     resolutionStrategy.force "ch.interlis:ili2gpkg:${ili2gpkgVersion}"
 }
@@ -49,6 +52,15 @@ dependencies {
     implementation("ch.interlis:iox-wkf:${ioxWkfVersion}") {
         exclude group: 'ch.interlis', module: 'ili2pg'
         exclude group: 'ch.interlis', module: 'ili2gpkg'
+    }
+    implementation("io.github.sogis:iox-formats:${ioxFormatsVersion}") {
+        exclude group: 'hsqldb', module: 'hsqldb'
+    }
+    implementation("io.github.sogis:av2ch:${av2chVersion}") {
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+    }
+    implementation("ch.interlis:av2geobau:${av2geobauVersion}") {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
     implementation "io.github.sogis:ilivalidator-custom-functions:${ilivalidatorCustomFunctionsVersion}"
     implementation "io.github.sogis:ilivalidator-custom-functions-geometries:${ilivalidatorCustomFunctionsGeometriesVersion}"
