@@ -1,0 +1,18 @@
+defaultTasks 'executeSql'
+
+tasks.register('importData', Ili2pgImport) {
+    database dbUri, dbUser, dbPwd
+    transferFiles files('data.xtf')
+}
+
+tasks.register('executeSql', SqlExecutor) {
+    dependsOn 'importData'
+    database dbUri, dbUser, dbPwd
+    sqlFiles files('transform.sql')
+    finalizedBy 'cleanup'
+}
+
+tasks.register('cleanup', SqlExecutor) {
+    mustRunAfter 'executeSql'
+    sqlFiles files('cleanup.sql')
+}

@@ -1,0 +1,5 @@
+tasks.register('executeSql', SqlExecutor) {
+    database dbUri, dbUser, dbPwd
+    sqlFiles files('demo.sql')
+    sqlParameters dataset: 'Olten'
+}

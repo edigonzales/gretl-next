@@ -44,3 +44,42 @@ by explicitly setting `JAVA_HOME`. Example:
 ```bash
 JAVA_HOME=/path/to/java17 ./gradlew :gretl-lsp:test
 ```
+
+## 0005 - Groovy AST parser with lenient scanner fallback
+
+**Date:** 2026-07-01
+**Status:** accepted
+
+Phase 3 uses a hybrid approach combining a Groovy AST-based parser at
+`Phases.CONVERSION` and a regex-based lenient scanner. The AST parser
+produces precise source positions and type-safe expression trees for
+syntactically valid Gradle-Groovy scripts. The scanner serves as a
+fallback for incomplete editor states where Groovy compilation fails
+(missing tokens, unterminated closures, partial DSL calls).
+
+### Groovy version
+
+Groovy 3.0.19 (`org.codehaus.groovy:groovy`) was chosen because it
+matches the Groovy version shipped with Gradle 7.6.4. This avoids
+classpath conflicts and ensures compatibility with Java 17.
+
+### Parse phase
+
+The AST parser stops at `Phases.CONVERSION`. It does not resolve class
+types, imports, or perform semantic analysis. This means no Gradle API,
+GRETL task classes, or project classpath are needed on the LSP classpath.
+The parser walks the raw AST to locate `tasks.register(...)` and `task(...)`
+calls, extracts DSL method calls and dependencies from closures, and
+produces a `GretlScript` intermediate model.
+
+### Scanner fallback conditions
+
+The `HybridGretlScriptParser` falls back to the `LenientGretlScanner` when:
+- The Groovy compiler throws an exception (syntax error)
+- The AST parser produces zero task blocks
+
+### Non-goals
+
+Neither parser path evaluates Gradle scripts. No `GroovyShell.evaluate()`,
+no `ProjectBuilder`, no Tooling API calls occur during parsing. The LSP
+does not connect to databases or execute any build logic.

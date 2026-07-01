@@ -89,3 +89,67 @@ The test metadata fixture (`gretl-lsp-metadata.json`) is hand-maintained with 2
 tasks. It is intentionally smaller than the full 45+ task manifest to keep unit
 tests fast and predictable. Integration tests (future phases) may use the full
 generated manifest.
+
+### LineIndex Tests
+
+`ch.so.agi.gretl.lsp.document.LineIndexTest`
+
+| Test | What it checks |
+|------|----------------|
+| Single line offset/position | Basic offset↔position roundtrip |
+| Multiline LF | LF-separated text, correct line boundaries |
+| Multiline CRLF | Windows-style newlines handled correctly |
+| Empty string | Returns 1 line, offset 0 |
+| Trailing newline | Correctly handled as extra empty line |
+| Offset past end clamps | Oversized positions clamp to text boundaries |
+| Position past end clamps | Oversized offsets return last valid position |
+| null input | Returns empty index, no NPE |
+| Invalid line index | Returns empty string for out-of-bounds lines |
+
+### Parser Tests
+
+`ch.so.agi.gretl.lsp.parser.GroovyAstGretlParserTest`
+
+| Test | What it checks |
+|------|----------------|
+| Extracts task name and type | `tasks.register('name', Type)` recognized |
+| Extracts method-call DSL | `database url, user, pwd` inside closure |
+| Extracts assignment DSL | `sqlFiles = files('demo.sql')` recognized |
+| Extracts dependsOn | `dependsOn 'otherTask'` inside closure |
+| Extracts defaultTasks | `defaultTasks 'name'` top-level |
+| Multiple tasks | Three `tasks.register` calls all extracted |
+| Fully qualified type | `ch.so.agi.gretl.tasks.SqlExecutor` recognized |
+| sqlParameters named arguments | Map-style arguments extracted correctly |
+| astBased flag | `astBased=true` for valid Groovy parse |
+| Non-GRETL content | Returns empty script, no exceptions |
+| taskByName | `findTask` and `taskAt` methods on GretlScript |
+| Returns empty for no tasks | No false positives |
+
+### Scanner Tests
+
+`ch.so.agi.gretl.lsp.scanner.LenientGretlScannerTest`
+
+| Test | What it checks |
+|------|----------------|
+| Finds valid task | Regex-based scanner picks up `tasks.register` |
+| Incomplete line | `database dbUri,` without closing brace handled |
+| Partial DSL call | `sql` at start of line handled |
+| Empty body | `{ }` with no calls produces empty calls list |
+| Missing closing brace | Unclosed `{` body handled gracefully |
+| Extracts dependencies | `dependsOn 'y'` from scanner |
+| scannerFallbackUsed flag | `scannerFallbackUsed=true` for scanner results |
+| No tasks | Returns empty script, no exception |
+| defaultTasks | Scanner picks up `defaultTasks` declaration |
+
+Test fixtures live in `gretl-lsp/src/test/resources/ch/so/agi/gretl/lsp/parser/`:
+
+| File | Purpose |
+|------|---------|
+| `simple-sql-executor.gradle` | Valid GRETL job with SqlExecutor |
+| `assignment-style.gradle` | Legacy assignment DSL style |
+| `with-dependencies.gradle` | Multi-task with dependsOn chains |
+| `default-tasks.gradle` | `defaultTasks` declaration |
+| `incomplete-dsl.gradle` | Partial `database dbUri,` call |
+| `incomplete-call.gradle` | Partial `sql` at start of body |
+| `empty-body.gradle` | Task with empty closure |
+| `broken-syntax.gradle` | Invalid Groovy for scanner fallback testing |
