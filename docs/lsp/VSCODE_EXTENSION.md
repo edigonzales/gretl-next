@@ -71,7 +71,35 @@ All settings are prefixed with `gretl.`:
 |-----------|-------|-------------|
 | `gretl.restartLanguageServer` | Restart Language Server | Stops and restarts the LSP process. |
 | `gretl.showLanguageServerLogs` | Show Language Server Logs | Opens the output channel. |
-| `gretl.openOverview` | Open GRETL Overview | Placeholder for future job-graph webview (Phase 8). |
+| `gretl.openOverview` | Open GRETL Overview | Opens a read-only webview with job-graph, tasks, diagnostics, SQL files, and SQL parameters. |
+| `gretl.refreshOverview` | Refresh GRETL Overview | Re-fetches overview data from the LSP server for the active editor. |
+
+## GRETL Overview Webview
+
+The `gretl.openOverview` command opens a read-only webview panel beside the
+editor. It sends a `workspace/executeCommand` request with command
+`gretl.getOverview` to the Java LSP server, which returns a JSON-serializable
+overview of the current `build.gradle` file.
+
+### Sections
+
+| Section | Content |
+|---------|---------|
+| **Summary** | Task count, error/warning/info count, parse mode |
+| **Pipeline** | Ordered list of tasks with dependency edges and problems |
+| **Tasks** | Card per task: name, type, line number, required property status |
+| **Diagnostics** | Table of all diagnostics grouped by task |
+| **SQL Files** | Referenced `.sql` file paths |
+| **SQL Parameters** | Missing parameters (used in SQL but not provided) and unused parameters (provided but not used) |
+
+### Security
+
+- All user-provided strings (task names, file paths, diagnostic messages) are
+  HTML-escaped with `escapeHtml()` to prevent XSS.
+- The webview HTML includes a Content Security Policy (CSP) meta tag:
+  `default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'`
+- Only a minimal inline script is used for click-to-navigate functionality.
+- No external resources are loaded.
 
 ## File Watchers
 

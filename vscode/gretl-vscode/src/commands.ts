@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { GretlLanguageClientController } from './languageServer';
+import { GretlOverviewPanel } from './overviewWebview';
 
 export function registerCommands(
     context: vscode.ExtensionContext,
@@ -41,10 +42,64 @@ export function registerCommands(
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('gretl.openOverview', () => {
-            vscode.window.showInformationMessage(
-                'GRETL Overview will be available in a future update.'
-            );
-        })
+        vscode.commands.registerCommand(
+            'gretl.openOverview',
+            async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    vscode.window.showWarningMessage(
+                        'Open a build.gradle file to view the GRETL Overview.'
+                    );
+                    return;
+                }
+
+                const client = clientController.getClient();
+                if (!client) {
+                    vscode.window.showErrorMessage(
+                        'GRETL language server is not running.'
+                    );
+                    return;
+                }
+
+                try {
+                    await GretlOverviewPanel.openOrReveal(
+                        context,
+                        client,
+                        editor.document.uri
+                    );
+                } catch (e) {
+                    vscode.window.showErrorMessage(
+                        `Failed to open GRETL Overview: ${e}`
+                    );
+                }
+            }
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'gretl.refreshOverview',
+            async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    return;
+                }
+
+                const client = clientController.getClient();
+                if (!client) {
+                    return;
+                }
+
+                try {
+                    await GretlOverviewPanel.openOrReveal(
+                        context,
+                        client,
+                        editor.document.uri
+                    );
+                } catch {
+                    // Silently ignore refresh errors
+                }
+            }
+        )
     );
 }

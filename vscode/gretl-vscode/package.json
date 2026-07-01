@@ -28,7 +28,8 @@
     "workspaceContains:**/*.gradle",
     "onCommand:gretl.restartLanguageServer",
     "onCommand:gretl.showLanguageServerLogs",
-    "onCommand:gretl.openOverview"
+    "onCommand:gretl.openOverview",
+    "onCommand:gretl.refreshOverview"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -80,6 +81,11 @@
         "command": "gretl.openOverview",
         "title": "Open GRETL Overview",
         "category": "GRETL"
+      },
+      {
+        "command": "gretl.refreshOverview",
+        "title": "Refresh GRETL Overview",
+        "category": "GRETL"
       }
     ]
   },
@@ -87,7 +93,7 @@
     "vscode:prepublish": "npm run build",
     "build": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node --test test/config.test.js",
+    "test": "node --test test/config.test.js test/overviewWebview.test.js",
     "package:vsix": "vsce package"
   },
   "dependencies": {

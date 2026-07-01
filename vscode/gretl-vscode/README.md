@@ -70,7 +70,22 @@ Open the command palette (`Cmd+Shift+P`) and type `GRETL`:
 |---------|--------|
 | `GRETL: Restart Language Server` | Stops and restarts the Java LSP process |
 | `GRETL: Show Language Server Logs` | Opens the GRETL output channel |
-| `GRETL: Open GRETL Overview` | [Planned] Job-graph webview |
+| `GRETL: Open GRETL Overview` | Opens a read-only webview with job-graph, tasks, diagnostics, SQL files, and SQL parameters |
+| `GRETL: Refresh GRETL Overview` | Re-fetches overview data from the language server |
+
+## GRETL Overview
+
+The `GRETL: Open GRETL Overview` command opens a read-only side panel that
+shows a complete overview of the current `build.gradle` job:
+
+- **Pipeline** with task dependencies
+- **Tasks** with type and required property status
+- **Diagnostics** grouped by task
+- **SQL Files** and **SQL Parameters**
+
+Click on any task name to navigate to its definition in the editor.
+The overview is refreshed automatically on re-open and can be refreshed
+manually with `GRETL: Refresh GRETL Overview`.
 
 ## Settings
 

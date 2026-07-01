@@ -10,7 +10,7 @@
 | 5 | Completion, Hover, Signature Help | done | 2026-07-01 | 2026-07-01 | - | CompletionProvider, HoverProvider, SignatureHelpProvider, CompletionContextDetector | :gretl-lsp:test (144 passed, 0 failed) | docs/lsp/README.md, docs/lsp/TESTING.md | Context-dependent completion (task-type, body, dependency), hover (task, property), signature help with active parameter. Data from gretl-lsp-metadata.json, no hardcoded task lists. |
 | 6 | Document Symbols, Links und SQL-Parameteranalyse | done | 2026-07-01 | 2026-07-01 | - | DocumentSymbolProvider, DocumentLinkProvider, SqlParameterExtractor, SqlParameterRule | :gretl-lsp:test (170 passed, 0 failed) | docs/lsp/PHASE_STATUS.md | 9 diagnostic rules, workspace root support, file reference extraction, no database connections |
 | 7 | VS-Code-Extension v1 mit F5-Workflow | done | 2026-07-01 | 2026-07-01 | - | vscode/gretl-vscode/ Extension mit TypeScript-Client | npm test (9 passed) | docs/lsp/VSCODE_EXTENSION.md, vscode/gretl-vscode/README.md | 4 Settings, 3 Commands, F5-Workflow, copyDevGretlServerJar |
-| 8 | GRETL Overview / Job-Graph-Webview | not-started | | | | | | | |
+| 8 | GRETL Overview / Job-Graph-Webview | done | 2026-07-01 | 2026-07-01 | - | gretl.getOverview LSP command, read-only webview | :gretl-lsp:test (183 passed), npm test (21 passed) | docs/lsp/VSCODE_EXTENSION.md, vscode/gretl-vscode/README.md | TaskGraphBuilder, TaskOverviewService, executeCommand in GretlWorkspaceService, GretlOverviewPanel with CSP + HTML escaping, click-to-navigate |
 | 9 | Quick Fixes und DSL-Migration | not-started | | | | | | | |
 | 10 | GitHub Actions CI und VSIX Packaging | not-started | | | | | | | |
 | 11 | Stabilisierung, Dokumentation und Release-Kandidaten | not-started | | | | | | | |

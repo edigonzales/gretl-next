@@ -16,6 +16,7 @@ import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import ch.so.agi.gretl.lsp.scanner.HybridGretlScriptParser;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
+import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -63,7 +64,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
         this.analyzer = new GretlAnalyzer(parser, metadata, rules);
 
         this.textDocumentService = new GretlTextDocumentService(documentStore, analyzer, metadata, logger);
-        this.workspaceService = new GretlWorkspaceService(logger);
+        this.workspaceService = new GretlWorkspaceService(logger, documentStore, analyzer);
     }
 
     @Override
@@ -75,6 +76,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
             this.workspaceRoot = Path.of(URI.create(params.getWorkspaceFolders().get(0).getUri()));
             analyzer.setWorkspaceRoot(workspaceRoot);
             textDocumentService.setWorkspaceRoot(workspaceRoot);
+            workspaceService.setWorkspaceRoot(workspaceRoot);
         }
 
         ServerCapabilities capabilities = new ServerCapabilities();
@@ -84,6 +86,8 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
         capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of()));
         capabilities.setDocumentSymbolProvider(true);
         capabilities.setDocumentLinkProvider(new DocumentLinkOptions(true));
+        capabilities.setExecuteCommandProvider(
+                new ExecuteCommandOptions(List.of("gretl.getOverview")));
 
         InitializeResult result = new InitializeResult(capabilities);
         result.setServerInfo(new ServerInfo("gretl-lsp", "0.1.0"));
