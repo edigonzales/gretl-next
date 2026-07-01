@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build/publish
-          cp gretl-lsp/build/libs/gretl-lsp-*-all.jar build/publish/gretl-lsp-all.jar
+          cp gretl-lsp/build/libs/gretl-lsp-all.jar build/publish/gretl-lsp-all.jar
 
       - name: Upload LSP JAR artifact
         uses: actions/upload-artifact@v4

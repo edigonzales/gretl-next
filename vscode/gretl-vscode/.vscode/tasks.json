@@ -9,10 +9,26 @@
       "problemMatcher": "$tsc"
     },
     {
+      "label": "gradle: build-lsp",
+      "type": "shell",
+      "command": "./gradlew copyDevGretlServerJar",
+      "options": {
+        "cwd": "${workspaceFolder}/../.."
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
       "label": "npm: test",
       "type": "npm",
       "script": "test",
       "problemMatcher": []
+    },
+    {
+      "label": "build-all",
+      "dependsOn": ["npm: build", "gradle: build-lsp"],
+      "dependsOrder": "sequence",
+      "group": "build"
     }
   ]
 }
