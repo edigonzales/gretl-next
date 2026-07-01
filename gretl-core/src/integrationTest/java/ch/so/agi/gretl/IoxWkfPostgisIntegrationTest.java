@@ -5,11 +5,16 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
+
+import ch.so.agi.gretl.internal.shapefile.core.DbfReader;
+import ch.so.agi.gretl.internal.shapefile.core.ShapeType;
+import ch.so.agi.gretl.internal.shapefile.core.ShpReader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -150,6 +155,67 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
     }
 
     @Test
+    void importsAndExportsShapefiles() throws Exception {
+        writeSettings();
+        copyResourceTree("fixtures/iox-wkf/ShpImportBatchSize", projectDir.resolve("ShpImportBatchSize"));
+        createOrReplaceSchema("shpimport");
+        createOrReplaceSchema("shpexport");
+        try (Connection connection = pg(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE shpimport.importdata_batchsize("
+                    + "t_id serial, \"Aint\" integer, adec decimal(7,1), atext varchar(40), "
+                    + "aenum varchar(120), adate date, geometrie geometry(POINT,2056), aextra varchar(40))");
+            statement.execute("CREATE TABLE shpexport.exportdata("
+                    + "t_id serial, \"Aint\" integer, adec decimal(7,1), atext varchar(40), "
+                    + "aenum varchar(120), adate date, atimstamp timestamp, aboolean boolean, geom_so geometry(POINT,2056))");
+            statement.execute("INSERT INTO shpexport.exportdata(t_id, \"Aint\", adec, atext, adate, atimstamp, aboolean, geom_so) "
+                    + "VALUES (1,2,3.4,'abc','2013-10-21','2015-02-16T08:35:45.000',true,"
+                    + "ST_GeomFromText('POINT(2638000.0 1175250.0)',2056))");
+            statement.execute("INSERT INTO shpexport.exportdata(t_id) VALUES (2)");
+        }
+        writeBuild(ioxWkfBuild("""
+                tasks.register('shpImport', ShpImport) {
+                    database = [project.property('pgUrl'), project.property('pgUser'), project.property('pgPass')]
+                    schemaName = 'shpimport'
+                    tableName = 'importdata_batchsize'
+                    dataFile = file('ShpImportBatchSize/data.shp')
+                    batchSize = 10
+                }
+
+                tasks.register('shpExport', ShpExport) {
+                    database = [project.property('pgUrl'), project.property('pgUser'), project.property('pgPass')]
+                    schemaName = 'shpexport'
+                    tableName = 'exportdata'
+                    dataFile = layout.buildDirectory.file('data.shp')
+                }
+                """));
+
+        run("shpImport", "shpExport");
+
+        assertEquals(2, count("SELECT count(*) FROM shpimport.importdata_batchsize"));
+        assertEquals("2", scalar("SELECT \"Aint\"::text FROM shpimport.importdata_batchsize WHERE t_id = 1"));
+        assertEquals(new BigDecimal("3.4"), decimal("SELECT adec FROM shpimport.importdata_batchsize WHERE t_id = 1"));
+        assertEquals("abc", scalar("SELECT atext FROM shpimport.importdata_batchsize WHERE t_id = 1"));
+        assertEquals("rot", scalar("SELECT aenum FROM shpimport.importdata_batchsize WHERE t_id = 1"));
+        assertEquals("2638000", scalar("SELECT ST_X(geometrie)::int::text FROM shpimport.importdata_batchsize WHERE t_id = 1"));
+
+        Path exported = projectDir.resolve("build/data.shp");
+        try (ShpReader shp = ShpReader.open(exported);
+             DbfReader dbf = DbfReader.open(exported.resolveSibling("data.dbf"), StandardCharsets.UTF_8)) {
+            assertEquals(ShapeType.POINT, shp.header().shapeType());
+            assertEquals(2, countShpRecords(shp));
+            List<String> fieldNames = dbf.fields().stream().map(field -> field.name()).toList();
+            assertTrue(fieldNames.contains("Aint"), fieldNames.toString());
+            assertTrue(fieldNames.contains("atext"), fieldNames.toString());
+            List<String> values = dbf.readNext().orElseThrow().values();
+            assertEquals("2", values.get(fieldNames.indexOf("Aint")).trim());
+            assertEquals("abc", values.get(fieldNames.indexOf("atext")).trim());
+            assertEquals("20131021", values.get(fieldNames.indexOf("adate")).trim());
+            assertEquals("T", values.get(fieldNames.indexOf("aboolean")).trim());
+            assertTrue(values.get(fieldNames.indexOf("atimstamp")).trim().startsWith("2015-02-16"));
+        }
+    }
+
+    @Test
     void rejectsGeoPackageExportWithMismatchedTableLists() throws Exception {
         writeSettings();
         createOrReplaceSchema("gpkgexport_mismatch");
@@ -182,9 +248,28 @@ class IoxWkfPostgisIntegrationTest extends PostgisIntegrationTestSupport {
                 import ch.so.agi.gretl.tasks.JsonImport
                 import ch.so.agi.gretl.tasks.GpkgImport
                 import ch.so.agi.gretl.tasks.GpkgExport
+                import ch.so.agi.gretl.tasks.ShpImport
+                import ch.so.agi.gretl.tasks.ShpExport
 
                 %s
                 """.formatted(tasks);
+    }
+
+    private BigDecimal decimal(String sql) throws Exception {
+        try (Connection connection = pg();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            assertTrue(resultSet.next());
+            return resultSet.getBigDecimal(1);
+        }
+    }
+
+    private int countShpRecords(ShpReader reader) throws Exception {
+        int count = 0;
+        while (reader.readNext().isPresent()) {
+            count++;
+        }
+        return count;
     }
 
     private int sqliteInt(Path database, String sql) throws Exception {

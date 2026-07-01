@@ -338,19 +338,79 @@ Key changes:
   provider-friendly file DSL as the other Core tasks.
 - File collections are processed in stable path order.
 
+## Shapefile Tasks
+
+The shapefile tasks are migrated into `gretl-core` without adding GeoTools.
+The reader/writer implementation is lightweight and schema-driven.
+
+`ShpImport` remains close to the legacy DSL:
+
+```groovy
+tasks.register('shpimport', ShpImport) {
+    database project.property('dbUrl'), project.property('dbUser'), project.property('dbPass')
+    schemaName 'public'
+    tableName 'importdata'
+    dataFile 'data.shp'
+    encoding 'UTF-8'
+    batchSize 1000
+}
+```
+
+`ShpExport` derives the shapefile schema from database metadata. No INTERLIS
+model file is required for export.
+
+```groovy
+tasks.register('shpexport', ShpExport) {
+    database project.property('dbUrl'), project.property('dbUser'), project.property('dbPass')
+    schemaName 'public'
+    tableName 'exportdata'
+    dataFile layout.buildDirectory.file('data.shp')
+    encoding 'UTF-8'
+}
+```
+
+`Gpkg2Shp` derives the shapefile schema from GeoPackage metadata and
+`gpkg_geometry_columns`.
+
+```groovy
+tasks.register('gpkg2shp', Gpkg2Shp) {
+    dataFile 'data.gpkg'
+    outputDir layout.buildDirectory.dir('shp')
+}
+```
+
+`ShpValidator` still uses INTERLIS models, because ilivalidator validates the
+shapefile content against a model.
+
+```groovy
+tasks.register('validateShp', ShpValidator) {
+    models = 'ShpModel'
+    modeldir = projectDir.toString()
+    dataFiles = files('data.shp')
+    encoding 'UTF-8'
+}
+```
+
+Key changes:
+
+- `ShpExport` and `Gpkg2Shp` do not require an INTERLIS model; the schema comes
+  from database or GeoPackage metadata.
+- GeoPackage geometry types such as `MULTISURFACE`, `CURVEPOLYGON` and
+  `COMPOUNDCURVE` are mapped to shapefile-compatible geometry families.
+- GeoPackage class tables without geometry are exported as NullShape
+  shapefiles with DBF attributes.
+
 ## Tasks Still Not Migrated
 
 These original GRETL tasks remain intentionally outside the current Core
 migration:
 
-- Shapefile-based tasks, including `ShpImport`, `ShpExport`, `Gpkg2Shp` and
-  other `gt-shapefile`/GeoTools-heavy jobs.
 - Publisher tasks.
 - `DatabaseDocumentExport`.
 - `PostgisRasterExport`.
 
-Shape-related tasks should be revisited with the GeoTools worker-isolation
-model instead of adding GeoTools dependencies to `gretl-core`.
+Other GeoTools-heavy jobs should be revisited with the GeoTools
+worker-isolation model instead of adding GeoTools dependencies to `gretl-core`.
 
 ## CsvValidator
 

@@ -411,6 +411,63 @@ Semantics and defaults:
 - Import and export each run in one database transaction.
 - Multi-table `GpkgExport` rejects source/destination list count mismatches.
 
+## ShpImport / ShpExport / ShpValidator
+
+Purpose: import/export one shapefile table or validate one shapefile with the
+GRETL shapefile reader adapter.
+
+DSL methods:
+
+- `database(String jdbcUrl)`
+- `database(String jdbcUrl, String username, String password)`
+- `dataFile(Object path)` for `ShpImport` and `ShpExport`
+- `tableName(String name)` for `ShpImport` and `ShpExport`
+- `schemaName(String name)` for `ShpImport` and `ShpExport`
+- `encoding(String value)`
+- `batchSize(int value)` for `ShpImport`
+- `ShpValidator`: validator methods from `IliValidator`, using
+  `dataFiles(Object... paths)` for the shapefile
+
+Required:
+
+- `ShpImport`: `database(...)`, `dataFile(...)`, `tableName(...)`
+- `ShpExport`: `database(...)`, `dataFile(...)`, `tableName(...)`
+- `ShpValidator`: exactly one shapefile via `dataFiles(...)` and validator
+  model configuration
+
+Semantics and defaults:
+
+- Database passwords are `@Internal`.
+- `ShpExport` derives the shapefile schema from database metadata and does not
+  require an INTERLIS model.
+- `ShpValidator` uses the INTERLIS model for ilivalidator validation.
+- The implementation writes `.shp`, `.shx`, `.dbf` and `.cpg`; `.prj` is
+  written where the converting task supplies projection metadata.
+
+## Gpkg2Shp
+
+Purpose: convert ili2gpkg class tables to shapefiles.
+
+DSL methods:
+
+- `dataFile(Object path)`
+- `outputDir(Object path)`
+
+Required:
+
+- `dataFile(...)`
+- `outputDir(...)`
+
+Semantics and defaults:
+
+- Class tables are read from `T_ILI2DB_TABLE_PROP` in stable order.
+- Shapefile schemas are derived from GeoPackage table metadata and
+  `gpkg_geometry_columns`.
+- Tables without geometry are exported as NullShape shapefiles with DBF
+  attributes.
+- Curved and multi-surface GeoPackage geometry names are mapped to shapefile
+  point, polyline, polygon or multipoint geometry families.
+
 ## Gpkg2Dxf
 
 Purpose: convert geometry tables in an ili2gpkg GeoPackage to DXF files.

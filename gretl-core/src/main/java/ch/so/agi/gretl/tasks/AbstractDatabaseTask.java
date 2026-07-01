@@ -9,6 +9,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 
+import java.util.List;
+
 abstract class AbstractDatabaseTask extends AbstractCoreGretlTask {
 
     @Input
@@ -36,6 +38,19 @@ abstract class AbstractDatabaseTask extends AbstractCoreGretlTask {
         database(jdbcUrl);
         getUsername().set(username);
         getPassword().set(password);
+    }
+
+    public void setDatabase(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            throw new GradleException("database must not be empty");
+        }
+        if (values.size() == 1) {
+            database(values.get(0));
+        } else if (values.size() >= 3) {
+            database(values.get(0), values.get(1), values.get(2));
+        } else {
+            throw new GradleException("database list must contain jdbcUrl or jdbcUrl, username and password");
+        }
     }
 
     protected DatabaseSpec databaseSpec() {

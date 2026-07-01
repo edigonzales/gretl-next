@@ -10,6 +10,8 @@ import ch.so.agi.gretl.tasks.CsvValidator;
 import ch.so.agi.gretl.tasks.GpkgValidator;
 import ch.so.agi.gretl.tasks.IliValidator;
 import ch.so.agi.gretl.tasks.JsonValidator;
+import ch.so.agi.gretl.tasks.ShpValidator;
+import ch.so.agi.gretl.internal.shapefile.ShapefileConstants;
 import org.gradle.api.GradleException;
 import org.interlis2.validator.Validator;
 
@@ -82,6 +84,22 @@ public final class ValidatorExecutionSupport {
         settings.setValue(IoxWkfConfig.SETTING_GPKGTABLE, task.getTableName().get());
         settings.setTransientObject(ch.interlis.iox_j.validator.Validator.CONFIG_CUSTOM_FUNCTIONS, createCustomFunctions());
         return new GpkgValidatorImpl().validate(toPaths(task.getDataFiles().getFiles()), settings);
+    }
+
+    public boolean validate(ShpValidator task) {
+        if (task.getDataFiles().isEmpty()) {
+            return true;
+        }
+        if (task.getDataFiles().getFiles().size() > 1) {
+            throw new GradleException("ShpValidator accepts exactly one input file.");
+        }
+
+        Settings settings = createSettings(task);
+        if (task.getEncoding().isPresent()) {
+            settings.setValue(ShapefileConstants.ENCODING, task.getEncoding().get());
+        }
+        settings.setTransientObject(ch.interlis.iox_j.validator.Validator.CONFIG_CUSTOM_FUNCTIONS, createCustomFunctions());
+        return new ShpValidatorImpl().validate(toPaths(task.getDataFiles().getFiles()), settings);
     }
 
     private Settings createSettings(AbstractInterlisValidatorTask task) {

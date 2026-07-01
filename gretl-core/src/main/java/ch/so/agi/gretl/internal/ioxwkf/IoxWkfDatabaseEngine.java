@@ -7,6 +7,7 @@ import ch.interlis.ioxwkf.dbtools.Db2Csv;
 import ch.interlis.ioxwkf.dbtools.Db2Gpkg;
 import ch.interlis.ioxwkf.dbtools.Gpkg2db;
 import ch.interlis.ioxwkf.dbtools.IoxWkfConfig;
+import ch.so.agi.gretl.internal.shapefile.ShapefileConstants;
 import ch.so.agi.gretl.internal.sql.DatabaseSpec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -83,6 +84,25 @@ public final class IoxWkfDatabaseEngine {
         }
     }
 
+    public void importShp(ShpImportRequest request) throws Exception {
+        validateDatabase(request.database());
+        requireFile(request.dataFile(), "dataFile");
+        requireNonBlank(request.tableName(), "tableName");
+
+        Connection connection = null;
+        try {
+            connection = open(request.database());
+            connection.setAutoCommit(false);
+            new Shp2Db().importData(request.dataFile().toFile(), connection, shpImportSettings(request));
+            connection.commit();
+        } catch (Exception e) {
+            rollback(connection);
+            throw e;
+        } finally {
+            close(connection);
+        }
+    }
+
     public void exportGpkg(GpkgExportRequest request) throws Exception {
         validateDatabase(request.database());
         requireOutput(request.dataFile(), "dataFile");
@@ -105,6 +125,25 @@ public final class IoxWkfDatabaseEngine {
                 new Db2Gpkg().exportData(request.dataFile().toFile(), connection,
                         gpkgExportSettings(request, request.sourceTableNames().get(i), request.targetTableNames().get(i)));
             }
+            connection.commit();
+        } catch (Exception e) {
+            rollback(connection);
+            throw e;
+        } finally {
+            close(connection);
+        }
+    }
+
+    public void exportShp(ShpExportRequest request) throws Exception {
+        validateDatabase(request.database());
+        requireOutput(request.dataFile(), "dataFile");
+        requireNonBlank(request.tableName(), "tableName");
+
+        Connection connection = null;
+        try {
+            connection = open(request.database());
+            connection.setAutoCommit(false);
+            new Db2Shp().exportData(request.dataFile().toFile(), connection, shpExportSettings(request));
             connection.commit();
         } catch (Exception e) {
             rollback(connection);
@@ -196,6 +235,33 @@ public final class IoxWkfDatabaseEngine {
         Settings settings = commonGpkgSettings(request.schemaName(), request.batchSize(), request.fetchSize());
         settings.setValue(IoxWkfConfig.SETTING_GPKGTABLE, request.sourceTableName());
         settings.setValue(IoxWkfConfig.SETTING_DBTABLE, request.targetTableName());
+        return settings;
+    }
+
+    private Settings shpImportSettings(ShpImportRequest request) {
+        Settings settings = new Settings();
+        settings.setValue(IoxWkfConfig.SETTING_DBTABLE, request.tableName());
+        if (request.schemaName() != null) {
+            settings.setValue(IoxWkfConfig.SETTING_DBSCHEMA, request.schemaName());
+        }
+        if (request.encoding() != null) {
+            settings.setValue(ShapefileConstants.ENCODING, request.encoding());
+        }
+        if (request.batchSize() != null) {
+            settings.setValue(IoxWkfConfig.SETTING_BATCHSIZE, request.batchSize().toString());
+        }
+        return settings;
+    }
+
+    private Settings shpExportSettings(ShpExportRequest request) {
+        Settings settings = new Settings();
+        settings.setValue(IoxWkfConfig.SETTING_DBTABLE, request.tableName());
+        if (request.schemaName() != null) {
+            settings.setValue(IoxWkfConfig.SETTING_DBSCHEMA, request.schemaName());
+        }
+        if (request.encoding() != null) {
+            settings.setValue(ShapefileConstants.ENCODING, request.encoding());
+        }
         return settings;
     }
 
@@ -321,6 +387,23 @@ public final class IoxWkfDatabaseEngine {
             String schemaName,
             Integer batchSize,
             Integer fetchSize) {
+    }
+
+    public record ShpImportRequest(
+            DatabaseSpec database,
+            Path dataFile,
+            String tableName,
+            String schemaName,
+            String encoding,
+            Integer batchSize) {
+    }
+
+    public record ShpExportRequest(
+            DatabaseSpec database,
+            Path dataFile,
+            String tableName,
+            String schemaName,
+            String encoding) {
     }
 
     public record JsonImportRequest(

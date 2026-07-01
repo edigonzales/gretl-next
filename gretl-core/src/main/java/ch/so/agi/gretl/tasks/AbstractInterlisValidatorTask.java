@@ -21,6 +21,8 @@ import java.util.Collections;
 public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask {
 
     private final ConfigurableFileCollection dataFiles;
+    private final RegularFileProperty logFile;
+    private final RegularFileProperty xtfLogFile;
     private boolean validationOk = true;
 
     @InputFiles
@@ -71,11 +73,15 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
 
     @OutputFile
     @Optional
-    public abstract RegularFileProperty getLogFile();
+    public RegularFileProperty getLogFile() {
+        return logFile;
+    }
 
     @OutputFile
     @Optional
-    public abstract RegularFileProperty getXtfLogFile();
+    public RegularFileProperty getXtfLogFile() {
+        return xtfLogFile;
+    }
 
     @Input
     @Optional
@@ -91,6 +97,8 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
     @Inject
     public AbstractInterlisValidatorTask() {
         this.dataFiles = getProject().files();
+        this.logFile = getProject().getObjects().fileProperty();
+        this.xtfLogFile = getProject().getObjects().fileProperty();
         getModelNames().convention(Collections.emptyList());
         getModelDirectories().convention(Collections.emptyList());
         getForceTypeValidation().convention(false);
@@ -105,6 +113,10 @@ public abstract class AbstractInterlisValidatorTask extends AbstractInterlisTask
             descriptions = { @LocaleText(locale = "de_CH", value = "Gibt die zu validierenden Datendateien an.") })
     public void dataFiles(Object... paths) {
         getDataFiles().from(paths);
+    }
+
+    public void setDataFiles(Object paths) {
+        getDataFiles().setFrom(paths);
     }
 
     @GretlDslMethod(description = "Specifies the INTERLIS model names.",
