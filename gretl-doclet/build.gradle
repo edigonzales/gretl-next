@@ -13,6 +13,13 @@ dependencies {
     testImplementation project(':gretl-geotools')
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+}
+
+tasks.register('generateLspMetadata') {
+    group = 'documentation'
+    description = 'Generates GRETL LSP metadata JSON file.'
+    dependsOn rootProject.tasks.named('generateLspMetadata')
 }
 
 publishing {

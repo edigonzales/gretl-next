@@ -218,6 +218,15 @@ tasks.register('generateTaskDocs', Javadoc) {
     options.quiet()
 }
 
+tasks.register('generateLspMetadata', Javadoc) {
+    group = 'documentation'
+    description = 'Generates GRETL LSP metadata JSON file from task DSL annotations.'
+    destinationDir = layout.buildDirectory.dir('generated-docs/lsp').get().asFile
+    failOnError = true
+    options.doclet = 'ch.so.agi.gretl.doclet.GretlDoclet'
+    options.quiet()
+}
+
 gradle.projectsEvaluated {
     tasks.named('generateTaskDocs', Javadoc).configure { task ->
         def docletProject = project(':gretl-doclet')
@@ -243,5 +252,32 @@ gradle.projectsEvaluated {
                 geotoolsProject.sourceSets.main.compileClasspath
         )
         task.options.docletpath = files(docletProject.tasks.named('jar')).files.toList()
+    }
+
+    tasks.named('generateLspMetadata', Javadoc).configure { task ->
+        def docletProject = project(':gretl-doclet')
+        def coreProject = project(':gretl-core')
+        def geotoolsProject = project(':gretl-geotools')
+
+        task.dependsOn docletProject.tasks.named('jar')
+        task.dependsOn coreProject.tasks.named('classes')
+        task.dependsOn geotoolsProject.tasks.named('classes')
+
+        task.source = files(
+                coreProject.fileTree('src/main/java') {
+                    include 'ch/so/agi/gretl/tasks/*.java'
+                },
+                geotoolsProject.fileTree('src/main/java') {
+                    include 'ch/so/agi/gretl/geotools/tasks/*.java'
+                }
+        )
+        task.classpath = files(
+                coreProject.sourceSets.main.output,
+                coreProject.sourceSets.main.compileClasspath,
+                geotoolsProject.sourceSets.main.output,
+                geotoolsProject.sourceSets.main.compileClasspath
+        )
+        task.options.docletpath = files(docletProject.tasks.named('jar')).files.toList()
+        task.options.addStringOption('lspoutput', docletProject.layout.buildDirectory.dir('generated/gretl-lsp-metadata').get().asFile.absolutePath)
     }
 }

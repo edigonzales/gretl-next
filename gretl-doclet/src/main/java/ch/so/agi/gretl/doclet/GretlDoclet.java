@@ -3,6 +3,9 @@ package ch.so.agi.gretl.doclet;
 import ch.so.agi.gretl.doclet.internal.AsciiDocRenderer;
 import ch.so.agi.gretl.doclet.internal.TaskClassCollector;
 import ch.so.agi.gretl.doclet.internal.TaskDescriptorExtractor;
+import ch.so.agi.gretl.doclet.lsp.LspMetadataBuilder;
+import ch.so.agi.gretl.doclet.lsp.LspMetadataDocument;
+import ch.so.agi.gretl.doclet.lsp.LspMetadataWriter;
 import ch.so.agi.gretl.doclet.model.TaskDescriptor;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
@@ -19,6 +22,7 @@ import java.util.Set;
 public final class GretlDoclet implements Doclet {
     private Reporter reporter;
     private Path outputDirectory;
+    private Path lspOutputDirectory;
     private Locale locale = Locale.ENGLISH;
 
     @Override
@@ -36,6 +40,7 @@ public final class GretlDoclet implements Doclet {
     public Set<? extends Option> getSupportedOptions() {
         return Set.of(
                 new OutputDirectoryOption(),
+                new LspOutputOption(),
                 new DocletLocaleOption(),
                 new IgnoredBooleanOption("-notimestamp", "Ignored Gradle Javadoc timestamp option."));
     }
@@ -61,6 +66,12 @@ public final class GretlDoclet implements Doclet {
                     .map(extractor::extract)
                     .toList();
             new AsciiDocRenderer(locale).render(outputDirectory, tasks);
+
+            if (lspOutputDirectory != null) {
+                LspMetadataDocument lspDoc = new LspMetadataBuilder()
+                        .build(tasks, gretlVersion(), gitCommit());
+                new LspMetadataWriter().write(lspDoc, lspOutputDirectory.resolve("gretl-lsp-metadata.json"));
+            }
             return true;
         } catch (IOException | RuntimeException e) {
             error("Could not generate GRETL task documentation: " + e.getMessage());
@@ -178,5 +189,47 @@ public final class GretlDoclet implements Doclet {
         public boolean process(String option, List<String> arguments) {
             return true;
         }
+    }
+
+    private final class LspOutputOption implements Option {
+        @Override
+        public int getArgumentCount() {
+            return 1;
+        }
+
+        @Override
+        public String getDescription() {
+            return "Output directory for LSP metadata JSON.";
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.STANDARD;
+        }
+
+        @Override
+        public List<String> getNames() {
+            return List.of("-lspoutput");
+        }
+
+        @Override
+        public String getParameters() {
+            return "<directory>";
+        }
+
+        @Override
+        public boolean process(String option, List<String> arguments) {
+            lspOutputDirectory = Path.of(arguments.get(0));
+            return true;
+        }
+    }
+
+    private static String gretlVersion() {
+        String v = GretlDoclet.class.getPackage().getImplementationVersion();
+        return v != null && !v.isBlank() ? v : "unknown";
+    }
+
+    private static String gitCommit() {
+        return null;
     }
 }
