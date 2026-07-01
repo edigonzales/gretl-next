@@ -33,8 +33,23 @@ class GretlLanguageServerInitializeTest {
 
         ServerCapabilities caps = result.getCapabilities();
         assertEquals(TextDocumentSyncKind.Full, caps.getTextDocumentSync().getLeft());
+        assertNotNull(caps.getCompletionProvider());
         assertTrue(caps.getHoverProvider().getLeft());
+        assertNotNull(caps.getSignatureHelpProvider());
         assertTrue(caps.getDocumentSymbolProvider().getLeft());
+    }
+
+    @Test
+    @DisplayName("capabilities include completion provider")
+    void capabilitiesIncludeCompletionProvider() throws ExecutionException, InterruptedException, TimeoutException {
+        GretlServerConfig config = GretlServerConfig.parse("--stdio");
+        ServerLogger logger = new ServerLogger("WARN");
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
+
+        InitializeParams params = new InitializeParams();
+        InitializeResult result = server.initialize(params).get(5, TimeUnit.SECONDS);
+
+        assertNotNull(result.getCapabilities().getCompletionProvider());
     }
 
     @Test

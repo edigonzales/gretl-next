@@ -76,17 +76,20 @@ java -jar gretl-lsp/build/libs/gretl-lsp-5.0.0-SNAPSHOT-all.jar --stdio --metada
 java -jar gretl-lsp/build/libs/gretl-lsp-5.0.0-SNAPSHOT-all.jar --stdio --log-level=DEBUG --trace
 ```
 
-## Capabilities (Phase 2)
+## Capabilities (Phase 5)
 
 The server currently responds to `initialize` with:
 
 | Capability | Value |
 |------------|-------|
 | Text document sync | Full |
+| Completion provider | Enabled |
 | Hover provider | true |
+| Signature help provider | Enabled |
 | Document symbol provider | true |
 
-Completion, signature help, and document links are reserved for later phases.
+Completion, hover, and signature help content is entirely sourced from
+`gretl-lsp-metadata.json` via the metadata model classes.
 
 ## Project Structure
 
@@ -94,11 +97,20 @@ Completion, signature help, and document links are reserved for later phases.
 gretl-lsp/
   src/
     main/java/ch/so/agi/gretl/lsp/
-      metadata/         -- Metadata model, loader, and validator
-      server/           -- LSP server implementation
-    main/resources/     -- Classpath resources (metadata JSON copied here)
-    test/java/          -- Unit tests
-    test/resources/     -- Test fixtures
+      analysis/           -- GretlAnalyzer, AnalysisResult, AnalysisInput
+      completion/         -- CompletionProvider, CompletionContextDetector
+      diagnostics/        -- Diagnostic rules
+      document/           -- DocumentStore, TextDocument, LineIndex
+      hover/              -- HoverProvider
+      metadata/           -- Metadata model, loader, and validator
+      model/              -- GRETL intermediate model (GretlScript, GretlTaskBlock, ...)
+      parser/             -- Groovy AST parser, lenient scanner
+      scanner/            -- HybridGretlScriptParser, LenientGretlScanner
+      server/             -- LSP server implementation
+      signature/          -- SignatureHelpProvider
+    main/resources/       -- Classpath resources (metadata JSON copied here)
+    test/java/            -- Unit tests
+    test/resources/       -- Test fixtures
 ```
 
 ## Package Overview
@@ -114,13 +126,34 @@ gretl-lsp/
 | `MetadataLoader` | Jackson-based JSON deserializer |
 | `MetadataValidator` | Structural metadata validation |
 
+### `ch.so.agi.gretl.lsp.completion`
+
+| Class | Purpose |
+|-------|---------|
+| `CompletionProvider` | Generates CompletionItems for task types, properties, and dependencies |
+| `CompletionContextDetector` | Detects completion context (task-type, body, dependency) from cursor position |
+| `CompletionContext` | Context descriptor with kind and optional task block |
+| `CompletionContextKind` | Enum: TASK_TYPE, INSIDE_GRETL_TASK_BODY, DEPENDENCY_TASK_NAME, FILE_PATH, SQL_PARAMETER_NAME, TOP_LEVEL, UNKNOWN |
+
+### `ch.so.agi.gretl.lsp.hover`
+
+| Class | Purpose |
+|-------|---------|
+| `HoverProvider` | Generates markdown hover documentation for task types and DSL properties |
+
+### `ch.so.agi.gretl.lsp.signature`
+
+| Class | Purpose |
+|-------|---------|
+| `SignatureHelpProvider` | Generates SignatureHelp with active parameter detection for multi-argument method calls |
+
 ### `ch.so.agi.gretl.lsp.server`
 
 | Class | Purpose |
 |-------|---------|
 | `GretlServerLauncher` | Main entry point, argument parsing, LSP launch |
-| `GretlLanguageServer` | `LanguageServer` implementation |
-| `GretlTextDocumentService` | Stub `TextDocumentService` |
+| `GretlLanguageServer` | `LanguageServer` implementation with completion/hover/signature capabilities |
+| `GretlTextDocumentService` | `TextDocumentService` with completion, hover, and signature help |
 | `GretlWorkspaceService` | Stub `WorkspaceService` |
 | `GretlServerConfig` | Parsed CLI configuration |
 | `ServerLogger` | Stderr-only logging |

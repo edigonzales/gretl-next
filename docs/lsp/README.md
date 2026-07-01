@@ -8,7 +8,38 @@ completion, hover, and more within VS Code.
 
 See [PHASE_STATUS.md](PHASE_STATUS.md) for implementation progress.
 
-## Current Features (Phase 4)
+## Current Features (Phase 5)
+
+### Completion
+
+Context-dependent completion triggered at any position. Three completion
+contexts are detected automatically.
+
+| Context | Example | Result |
+|---------|---------|--------|
+| Task type | `tasks.register('x', \|)` | All GRETL task types from metadata, sorted alphabetically |
+| Task body | `tasks.register('x', SqlExecutor) { \| }` | Missing properties first (required), then optional, deprecated last. Includes snippet insert text. |
+| Dependency | `dependsOn '\|'` | All task names defined in the current script |
+
+### Hover
+
+Hover over GRETL symbols shows documentation from metadata.
+
+| Hover target | Content |
+|-------------|---------|
+| Task type name | Description, qualified class name, category, status, required fields |
+| DSL property name | Type, required flag, description, non-legacy signature as code block, deprecated/sqlParameterProvider info |
+
+### Signature Help
+
+Signature help guides argument typing for multi-argument DSL calls.
+
+| Call | Signature | Active parameter |
+|------|-----------|-----------------|
+| `database dbUri, \|` | `database url, user, password` | 1 (user) |
+| `sqlFiles files(\|` | `sqlFiles files('...')` | 0 |
+
+Active parameter detection is line-based by counting commas before the cursor.
 
 ### Diagnostics
 

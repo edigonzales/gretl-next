@@ -13,10 +13,12 @@ import ch.so.agi.gretl.lsp.diagnostics.WrongArgumentCountRule;
 import ch.so.agi.gretl.lsp.document.DocumentStore;
 import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import ch.so.agi.gretl.lsp.scanner.HybridGretlScriptParser;
+import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
+import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -53,7 +55,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
         );
         GretlAnalyzer analyzer = new GretlAnalyzer(parser, metadata, rules);
 
-        this.textDocumentService = new GretlTextDocumentService(documentStore, analyzer, logger);
+        this.textDocumentService = new GretlTextDocumentService(documentStore, analyzer, metadata, logger);
         this.workspaceService = new GretlWorkspaceService(logger);
     }
 
@@ -64,9 +66,9 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
 
         ServerCapabilities capabilities = new ServerCapabilities();
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
-        capabilities.setCompletionProvider(null);
+        capabilities.setCompletionProvider(new CompletionOptions(true, List.of()));
         capabilities.setHoverProvider(true);
-        capabilities.setSignatureHelpProvider(null);
+        capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of()));
         capabilities.setDocumentSymbolProvider(true);
         capabilities.setDocumentLinkProvider(null);
 

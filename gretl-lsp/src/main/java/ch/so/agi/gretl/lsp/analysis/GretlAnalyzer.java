@@ -24,7 +24,7 @@ public final class GretlAnalyzer {
     }
 
     public AnalysisResult analyze(TextDocument document) {
-        GretlScript script = parser.parse(document.uri(), document.text());
+        GretlScript script = parse(document.uri(), document.text());
         AnalysisInput input = new AnalysisInput(document, script, metadata);
         List<Diagnostic> diagnostics = new ArrayList<>();
         for (GretlDiagnosticRule rule : rules) {
@@ -42,6 +42,10 @@ public final class GretlAnalyzer {
                 diagnostics.add(diag);
             }
         }
-        return new AnalysisResult(document, script, diagnostics);
+        return new AnalysisResult(document, script, metadata, diagnostics);
+    }
+
+    public GretlScript parse(String uri, String text) {
+        return parser.parse(uri, text);
     }
 }

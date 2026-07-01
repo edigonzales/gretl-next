@@ -37,6 +37,79 @@ gretl-lsp/src/test/resources/ch/so/agi/gretl/lsp/metadata/
   broken.json                    -- truncated JSON (parse error)
 ```
 
+### Completion Tests
+
+`ch.so.agi.gretl.lsp.completion.CompletionContextDetectorTest`
+
+| Test | What it checks |
+|------|----------------|
+| TASK_TYPE from typeRange | Cursor inside parsed type range returns TASK_TYPE |
+| TASK_TYPE from line text | Regex `tasks.register('name', \|)` detects type position |
+| INSIDE_GRETL_TASK_BODY | Cursor inside body range returns task body context |
+| DEPENDENCY_TASK_NAME | Cursor inside dependency range returns dependency context |
+| UNKNOWN for empty script | No tasks in script returns UNKNOWN |
+| UNKNOWN outside blocks | Cursor outside all task ranges returns UNKNOWN |
+| positionInside true | Correctly identifies position inside a range |
+| positionInside before | Position before range start is not inside |
+| positionInside after | Position after range end is not inside |
+| positionInside null range | Null range returns false |
+
+`ch.so.agi.gretl.lsp.completion.CompletionProviderTest`
+
+| Test | What it checks |
+|------|----------------|
+| Task type completion returns all tasks | Lists all task types from metadata alphabetically |
+| Property completion sorts required first | Required properties get sortText prefix "0100" |
+| Property completion excludes already-set | Already called properties are not offered |
+| Insert text from non-legacy form | Snippet insert text from method-call accepted form |
+| Dependency completion shows task names | All script task names appear as completion items |
+| Empty for unknown context | UNKNOWN context returns empty list |
+| Empty for unknown type | Task block without typeName returns empty list |
+
+### Hover Tests
+
+`ch.so.agi.gretl.lsp.hover.HoverProviderTest`
+
+| Test | What it checks |
+|------|----------------|
+| Hover over task type | Shows task description, qualified class name, category |
+| Hover over DSL property | Shows type, required status ("ja/nein"), description |
+| Hover shows signature | Non-legacy accepted form rendered as code block |
+| Returns empty for no target | Position outside any block returns empty |
+| Hover shows deprecated status | Deprecated property shows "Status: deprecated" |
+| Hover shows sqlParameterProvider | `sqlParameterProvider=true` noted in hover |
+
+### Signature Help Tests
+
+`ch.so.agi.gretl.lsp.signature.SignatureHelpProviderTest`
+
+| Test | What it checks |
+|------|----------------|
+| Signature help for multi-argument call | Returns signature with correct label |
+| Active parameter from comma count | Comma count in source text determines active parameter |
+| Returns empty outside task block | No signature help outside a task block |
+| Returns empty for unknown type | No signature help when task type not known |
+| activeParameterIndex counts commas | Line-based comma counting works correctly |
+| activeParameterIndex empty text | Null/empty source text returns 0 |
+
+### LSP Protocol Tests
+
+`ch.so.agi.gretl.lsp.server.GretlTextDocumentServiceLspTest`
+
+End-to-end LSP protocol tests using `CompletableFuture` and the full server:
+
+| Test | What it checks |
+|------|----------------|
+| Completion in empty task body | `didOpen` then `completion` returns required/optional properties |
+| Completion suggests task types | `tasks.register('x', \|)` returns known task type names |
+| Completion in dependency context | `dependsOn '\|'` returns script task names |
+| Hover over property | Hover contains property type and required status |
+| Hover over task type | Hover contains task class name and description |
+| Signature help for database call | `database dbUri, \|` returns `database url, user, password` |
+| Signature help for sqlFiles call | `sqlFiles files(\|` returns a signature |
+| Returns null hover for empty script | Unknown documents return null hover |
+| Returns null signature help for empty script | Unknown documents return null signature help |
+
 ### Server Tests
 
 `ch.so.agi.gretl.lsp.server.GretlLanguageServerInitializeTest`
