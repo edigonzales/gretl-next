@@ -4,7 +4,7 @@
 |------:|-------|--------|-------|------|--------|----------|-------|------|-------------|
 | 0 | Arbeitsgrundlage und Projektgerüst | done | 2026-07-01 | 2026-07-01 | - | gretl-lsp Minimalsubprojekt | :gretl-lsp:test passed | docs/lsp/ erstellt | |
 | 1 | Doclet-Metadatenformat v1 | implemented | 2026-07-01 | 2026-07-01 | - | gretl-lsp-metadata.json + JSON Schema | :gretl-doclet:test (18 passed) | docs/lsp/METADATA_FORMAT.md | 45 tasks, SqlExecutor verified |
-| 2 | LSP-Projekt, Metadaten-Loader und Server-Skelett | not-started | | | | | | | |
+| 2 | LSP-Projekt, Metadaten-Loader und Server-Skelett | done | 2026-07-01 | 2026-07-01 | - | gretl-lsp-all.jar (fat JAR) | :gretl-lsp:test (31 passed) | docs/lsp/DEVELOPMENT.md, docs/lsp/TESTING.md | LSP4J server with initialize, 45 tasks loaded from embedded metadata, stderr logging |
 | 3 | Groovy-AST-Parser und GRETL-Zwischenmodell | not-started | | | | | | | |
 | 4 | Diagnostics v1 | not-started | | | | | | | |
 | 5 | Completion, Hover, Signature Help | not-started | | | | | | | |

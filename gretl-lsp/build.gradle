@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'application'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 base {
@@ -10,6 +11,7 @@ base {
 
 dependencies {
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
@@ -17,6 +19,34 @@ dependencies {
 
 application {
     mainClass = 'ch.so.agi.gretl.lsp.server.GretlServerLauncher'
+}
+
+shadowJar {
+    archiveClassifier = 'all'
+    mergeServiceFiles()
+}
+
+tasks.register('copyLspMetadata', Copy) {
+    group = 'build'
+    description = 'Copies the generated LSP metadata JSON into the processResources output.'
+    dependsOn rootProject.tasks.named('generateLspMetadata')
+
+    def docletProject = project(':gretl-doclet')
+    from docletProject.layout.buildDirectory.dir('generated/gretl-lsp-metadata')
+    into layout.buildDirectory.dir('generated-resources/main/ch/so/agi/gretl/lsp/metadata')
+    include 'gretl-lsp-metadata.json'
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir layout.buildDirectory.dir('generated-resources/main')
+        }
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn 'copyLspMetadata'
 }
 
 publishing {

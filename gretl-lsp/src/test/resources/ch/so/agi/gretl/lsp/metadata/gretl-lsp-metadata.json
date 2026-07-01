@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-07-01T12:00:00Z",
+  "gretlVersion": "test",
+  "source": {
+    "repository": "test",
+    "doclet": "test"
+  },
+  "tasks": [
+    {
+      "name": "SqlExecutor",
+      "qualifiedClassName": "ch.so.agi.gretl.tasks.SqlExecutor",
+      "simpleClassName": "SqlExecutor",
+      "category": "database",
+      "status": "stable",
+      "description": "Fuhrt SQL-Dateien in angegebener Reihenfolge aus.",
+      "examples": [],
+      "properties": [
+        {
+          "name": "database",
+          "displayName": "database",
+          "kind": "dsl-method-and-property",
+          "valueType": "Connector",
+          "javaType": "Property<String>",
+          "required": true,
+          "deprecated": false,
+          "description": "Datenbankverbindung.",
+          "acceptedForms": [
+            {
+              "style": "method-call",
+              "signature": "database url, user, password",
+              "insertText": "database ${1:url}, ${2:user}, ${3:password}",
+              "argumentCount": 3,
+              "legacy": false
+            },
+            {
+              "style": "assignment",
+              "signature": "database = [url, user, password]",
+              "insertText": "database = ${1:value}",
+              "legacy": true
+            }
+          ],
+          "sqlParameterProvider": false,
+          "completion": {
+            "label": "database",
+            "detail": "Pflicht \u00b7 Connector",
+            "sortText": "0100_database"
+          }
+        },
+        {
+          "name": "sqlFiles",
+          "displayName": "sqlFiles",
+          "kind": "dsl-method-and-property",
+          "valueType": "FileCollection",
+          "javaType": "Property<FileCollection>",
+          "required": true,
+          "deprecated": false,
+          "description": "SQL-Dateien, deren Statements gelesen und ausgefuhrt werden.",
+          "file": {
+            "role": "input",
+            "extensions": [".sql"],
+            "multiple": true,
+            "mustExist": true
+          },
+          "acceptedForms": [
+            {
+              "style": "method-call",
+              "signature": "sqlFiles files('...')",
+              "insertText": "sqlFiles files('${1:script.sql}')",
+              "argumentCount": 1,
+              "legacy": false
+            },
+            {
+              "style": "assignment",
+              "signature": "sqlFiles = files('...')",
+              "insertText": "sqlFiles = ${1:value}",
+              "legacy": true
+            }
+          ],
+          "sqlParameterProvider": false,
+          "completion": {
+            "label": "sqlFiles",
+            "detail": "Pflicht \u00b7 FileCollection",
+            "sortText": "0100_sqlFiles"
+          }
+        },
+        {
+          "name": "sqlParameters",
+          "displayName": "sqlParameters",
+          "kind": "dsl-method-and-property",
+          "valueType": "Object",
+          "javaType": "Property<Object>",
+          "required": false,
+          "deprecated": false,
+          "description": "Map mit SQL-Parametern.",
+          "acceptedForms": [
+            {
+              "style": "method-call",
+              "signature": "sqlParameters key: 'value'",
+              "insertText": "sqlParameters ${1:key}: ${2:'value'}",
+              "argumentCount": 1,
+              "legacy": false
+            },
+            {
+              "style": "assignment",
+              "signature": "sqlParameters = value",
+              "insertText": "sqlParameters = ${1:value}",
+              "legacy": true
+            }
+          ],
+          "sqlParameterProvider": true,
+          "completion": {
+            "label": "sqlParameters",
+            "detail": "Optional \u00b7 Object",
+            "sortText": "0200_sqlParameters"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DuckDbSqlExecutor",
+      "qualifiedClassName": "ch.so.agi.gretl.tasks.DuckDbSqlExecutor",
+      "simpleClassName": "DuckDbSqlExecutor",
+      "category": "database",
+      "status": "stable",
+      "description": "Fuhrt SQL-Dateien mit DuckDB aus.",
+      "examples": [],
+      "properties": [
+        {
+          "name": "database",
+          "displayName": "database",
+          "kind": "dsl-method-and-property",
+          "valueType": "Object",
+          "javaType": "Property<Object>",
+          "required": true,
+          "deprecated": false,
+          "description": "Datenbankdatei.",
+          "acceptedForms": [
+            {
+              "style": "method-call",
+              "signature": "database file('...')",
+              "insertText": "database file('${1:work.duckdb}')",
+              "argumentCount": 1,
+              "legacy": false
+            },
+            {
+              "style": "assignment",
+              "signature": "database = file('...')",
+              "insertText": "database = ${1:value}",
+              "legacy": true
+            }
+          ],
+          "sqlParameterProvider": false,
+          "completion": {
+            "label": "database",
+            "detail": "Pflicht \u00b7 Object",
+            "sortText": "0100_database"
+          }
+        },
+        {
+          "name": "sqlFiles",
+          "displayName": "sqlFiles",
+          "kind": "dsl-method-and-property",
+          "valueType": "FileCollection",
+          "javaType": "Property<FileCollection>",
+          "required": true,
+          "deprecated": false,
+          "description": "SQL-Dateien.",
+          "file": {
+            "role": "input",
+            "extensions": [".sql"],
+            "multiple": true,
+            "mustExist": true
+          },
+          "acceptedForms": [
+            {
+              "style": "method-call",
+              "signature": "sqlFiles files('...')",
+              "insertText": "sqlFiles files('${1:script.sql}')",
+              "argumentCount": 1,
+              "legacy": false
+            }
+          ],
+          "sqlParameterProvider": false,
+          "completion": {
+            "label": "sqlFiles",
+            "detail": "Pflicht \u00b7 FileCollection",
+            "sortText": "0100_sqlFiles"
+          }
+        }
+      ]
+    }
+  ]
+}
