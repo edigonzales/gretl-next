@@ -3,7 +3,7 @@
   "displayName": "GRETL",
   "description": "GRETL language support for VS Code — completion, diagnostics, hover, and more for Gradle Groovy build scripts",
   "version": "0.1.0",
-  "publisher": "sogis",
+  "publisher": "edigonzales",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -94,7 +94,11 @@
     "build": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "node --test test/config.test.js test/overviewWebview.test.js",
-    "package:vsix": "vsce package"
+    "version:ci": "node ./scripts/set-ci-version.js",
+    "package:vsix": "vsce package --out gretl-vscode.vsix",
+    "check:vsix": "node ./scripts/assert-vsix-contents.js gretl-vscode.vsix",
+    "publish:vsmarketplace": "vsce publish --packagePath gretl-vscode.vsix",
+    "publish:openvsx": "ovsx publish gretl-vscode.vsix"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.0"
@@ -103,6 +107,7 @@
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.0.0",
+    "ovsx": "^1.0.1",
     "typescript": "^5.4.0"
   }
 }

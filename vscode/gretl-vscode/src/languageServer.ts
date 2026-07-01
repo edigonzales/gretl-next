@@ -6,6 +6,7 @@ import {
 } from 'vscode-languageclient/node';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { loadConfig } from './config';
 
 export class GretlLanguageClientController {
@@ -66,7 +67,7 @@ export class GretlLanguageClientController {
         jarPath: string;
         jvmArgs: string[];
     }): ServerOptions {
-        const javaCommand = resolveJavaCommand(config.javaPath);
+        const javaCommand = resolveJavaCommand(config.javaPath, this.context);
         const serverJarPath = resolveServerJar(
             config.jarPath,
             this.context.extensionPath
@@ -97,8 +98,20 @@ export class GretlLanguageClientController {
     }
 }
 
-export function resolveJavaCommand(configuredPath: string): string {
-    return configuredPath || 'java';
+export function resolveJavaCommand(
+    configuredPath: string,
+    context?: vscode.ExtensionContext
+): string {
+    if (configuredPath) {
+        return configuredPath;
+    }
+    if (context) {
+        const bundled = resolveBundledJavaPath(context);
+        if (bundled) {
+            return bundled.command;
+        }
+    }
+    return 'java';
 }
 
 export function resolveServerJar(
@@ -109,4 +122,46 @@ export function resolveServerJar(
         return configuredPath;
     }
     return path.join(extensionPath, 'server', 'gretl-lsp-all.jar');
+}
+
+export function runtimePlatformId(
+    platform: NodeJS.Platform = os.platform(),
+    arch: string = os.arch()
+): string | undefined {
+    if (platform === 'darwin' && arch === 'arm64') {
+        return 'darwin-arm64';
+    }
+    if (platform === 'darwin' && arch === 'x64') {
+        return 'darwin-x64';
+    }
+    if (platform === 'linux' && arch === 'arm64') {
+        return 'linux-arm64';
+    }
+    if (platform === 'linux' && arch === 'x64') {
+        return 'linux-x64';
+    }
+    if (platform === 'win32' && arch === 'x64') {
+        return 'win32-x64';
+    }
+    return undefined;
+}
+
+export function resolveBundledJavaPath(
+    context: vscode.ExtensionContext
+): { command: string; platformId: string } | undefined {
+    const platformId = runtimePlatformId();
+    if (!platformId) {
+        return undefined;
+    }
+
+    const executable = os.platform() === 'win32' ? 'java.exe' : 'java';
+    const command = context.asAbsolutePath(path.join('server', 'jre', platformId, 'bin', executable));
+    if (!fs.existsSync(command)) {
+        return undefined;
+    }
+
+    return {
+        command,
+        platformId
+    };
 }
