@@ -13,7 +13,9 @@ public enum DiagnosticCode {
     UNKNOWN_DEFAULT_TASK("GRETL1102", "defaultTasks verweist auf unbekannten Task `%s`. Meintest du `%s`?"),
     UNKNOWN_DEFAULT_TASK_NO_SUGGESTION("GRETL1102", "defaultTasks verweist auf unbekannten Task `%s`."),
     DUPLICATE_TASK_NAME("GRETL1103", "Task-Name `%s` ist mehrfach definiert."),
-    LEGACY_DSL("GRETL1201", "Alte GRETL-DSL-Schreibweise. Quick Fix kann zu `%s` migrieren.");
+    LEGACY_DSL("GRETL1201", "Alte GRETL-DSL-Schreibweise. Quick Fix kann zu `%s` migrieren."),
+    MISSING_SQL_PARAMETER("GRETL1301", "Parameter `${%s}` in SQL verwendet aber nicht in `sqlParameters` von Task `%s` gesetzt."),
+    UNUSED_SQL_PARAMETER("GRETL1302", "Parameter `${%s}` in `sqlParameters` von Task `%s` gesetzt aber nicht in SQL verwendet.");
 
     private final String code;
     private final String messageTemplate;

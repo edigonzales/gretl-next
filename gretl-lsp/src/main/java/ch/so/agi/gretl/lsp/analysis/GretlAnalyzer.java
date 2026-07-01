@@ -6,6 +6,7 @@ import ch.so.agi.gretl.lsp.model.GretlScript;
 import ch.so.agi.gretl.lsp.parser.GretlScriptParser;
 import org.eclipse.lsp4j.Diagnostic;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,7 @@ public final class GretlAnalyzer {
     private final GretlScriptParser parser;
     private final GretlMetadata metadata;
     private final List<GretlDiagnosticRule> rules;
+    private Path workspaceRoot;
 
     public GretlAnalyzer(GretlScriptParser parser, GretlMetadata metadata,
                          List<GretlDiagnosticRule> rules) {
@@ -23,9 +25,13 @@ public final class GretlAnalyzer {
         this.rules = List.copyOf(rules);
     }
 
+    public void setWorkspaceRoot(Path workspaceRoot) {
+        this.workspaceRoot = workspaceRoot;
+    }
+
     public AnalysisResult analyze(TextDocument document) {
         GretlScript script = parse(document.uri(), document.text());
-        AnalysisInput input = new AnalysisInput(document, script, metadata);
+        AnalysisInput input = new AnalysisInput(document, script, metadata, workspaceRoot);
         List<Diagnostic> diagnostics = new ArrayList<>();
         for (GretlDiagnosticRule rule : rules) {
             diagnostics.addAll(rule.evaluate(input));

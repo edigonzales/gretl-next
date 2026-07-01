@@ -6,6 +6,7 @@ import ch.so.agi.gretl.lsp.diagnostics.DefaultTaskRule;
 import ch.so.agi.gretl.lsp.diagnostics.DuplicateTaskNameRule;
 import ch.so.agi.gretl.lsp.diagnostics.LegacyDslRule;
 import ch.so.agi.gretl.lsp.diagnostics.MissingRequiredPropertyRule;
+import ch.so.agi.gretl.lsp.diagnostics.SqlParameterRule;
 import ch.so.agi.gretl.lsp.diagnostics.UnknownDependencyRule;
 import ch.so.agi.gretl.lsp.diagnostics.UnknownPropertyRule;
 import ch.so.agi.gretl.lsp.diagnostics.UnknownTaskTypeRule;
@@ -14,6 +15,7 @@ import ch.so.agi.gretl.lsp.document.DocumentStore;
 import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import ch.so.agi.gretl.lsp.scanner.HybridGretlScriptParser;
 import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -26,6 +28,8 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,9 +37,11 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
 
     private final GretlTextDocumentService textDocumentService;
     private final GretlWorkspaceService workspaceService;
+    private final GretlAnalyzer analyzer;
     private final ServerLifecycle lifecycle;
     private final ServerLogger logger;
     private LanguageClient client;
+    private Path workspaceRoot;
 
     public GretlLanguageServer(GretlServerConfig config, GretlMetadata metadata, ServerLogger logger) {
         this.lifecycle = new ServerLifecycle();
@@ -51,9 +57,10 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
                 new UnknownDependencyRule(),
                 new DefaultTaskRule(),
                 new DuplicateTaskNameRule(),
-                new LegacyDslRule()
+                new LegacyDslRule(),
+                new SqlParameterRule()
         );
-        GretlAnalyzer analyzer = new GretlAnalyzer(parser, metadata, rules);
+        this.analyzer = new GretlAnalyzer(parser, metadata, rules);
 
         this.textDocumentService = new GretlTextDocumentService(documentStore, analyzer, metadata, logger);
         this.workspaceService = new GretlWorkspaceService(logger);
@@ -64,13 +71,19 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
         logger.info("initialize: workspaceRoot="
                 + (params.getWorkspaceFolders() != null ? params.getWorkspaceFolders() : "none"));
 
+        if (params.getWorkspaceFolders() != null && !params.getWorkspaceFolders().isEmpty()) {
+            this.workspaceRoot = Path.of(URI.create(params.getWorkspaceFolders().get(0).getUri()));
+            analyzer.setWorkspaceRoot(workspaceRoot);
+            textDocumentService.setWorkspaceRoot(workspaceRoot);
+        }
+
         ServerCapabilities capabilities = new ServerCapabilities();
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
         capabilities.setCompletionProvider(new CompletionOptions(true, List.of()));
         capabilities.setHoverProvider(true);
         capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of()));
         capabilities.setDocumentSymbolProvider(true);
-        capabilities.setDocumentLinkProvider(null);
+        capabilities.setDocumentLinkProvider(new DocumentLinkOptions(true));
 
         InitializeResult result = new InitializeResult(capabilities);
         result.setServerInfo(new ServerInfo("gretl-lsp", "0.1.0"));
