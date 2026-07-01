@@ -1,0 +1,102 @@
+{
+  "name": "gretl-vscode",
+  "displayName": "GRETL",
+  "description": "GRETL language support for VS Code — completion, diagnostics, hover, and more for Gradle Groovy build scripts",
+  "version": "0.1.0",
+  "publisher": "sogis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sogis/gretl"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "gretl",
+    "etl",
+    "gradle",
+    "groovy",
+    "geodata"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/build.gradle",
+    "workspaceContains:**/*.gradle",
+    "onCommand:gretl.restartLanguageServer",
+    "onCommand:gretl.showLanguageServerLogs",
+    "onCommand:gretl.openOverview"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "GRETL",
+      "properties": {
+        "gretl.java.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the Java executable used to start the GRETL language server. Leave empty to use `java` from `PATH`."
+        },
+        "gretl.server.jarPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the GRETL language server fat JAR (`gretl-lsp-all.jar`). Leave empty to use the bundled JAR at `server/gretl-lsp-all.jar`."
+        },
+        "gretl.server.jvmArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Additional JVM arguments passed to the GRETL language server process (e.g. `-Xmx512m`)."
+        },
+        "gretl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "markdownDescription": "Trace verbosity for LSP messages exchanged between VS Code and the language server."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "gretl.restartLanguageServer",
+        "title": "Restart Language Server",
+        "category": "GRETL"
+      },
+      {
+        "command": "gretl.showLanguageServerLogs",
+        "title": "Show Language Server Logs",
+        "category": "GRETL"
+      },
+      {
+        "command": "gretl.openOverview",
+        "title": "Open GRETL Overview",
+        "category": "GRETL"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node --test test/config.test.js",
+    "package:vsix": "vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
+}

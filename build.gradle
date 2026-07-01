@@ -205,6 +205,15 @@ tasks.register('checkAgentSkills') {
     dependsOn tasks.named('checkAgentSkillAdapters')
 }
 
+tasks.register('copyDevGretlServerJar', Copy) {
+    group = 'gretl-lsp'
+    description = 'Copies the GRETL LSP fat JAR into the VS Code extension server directory.'
+    dependsOn ':gretl-lsp:shadowJar'
+    from project(':gretl-lsp').tasks.named('shadowJar').map { it.archiveFile }
+    into layout.projectDirectory.dir('vscode/gretl-vscode/server')
+    rename { 'gretl-lsp-all.jar' }
+}
+
 tasks.named('check') {
     dependsOn tasks.named('checkAgentSkills')
 }

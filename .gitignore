@@ -7,3 +7,7 @@ bin/
 **/.classpath
 **/.project
 **/.settings/org.eclipse.buildship.core.prefs
+vscode/gretl-vscode/node_modules/
+vscode/gretl-vscode/dist/
+vscode/gretl-vscode/*.vsix
+vscode/gretl-vscode/server/*.jar
