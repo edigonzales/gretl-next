@@ -1,5 +1,18 @@
 package ch.so.agi.gretl.lsp.server;
 
+import ch.so.agi.gretl.lsp.analysis.GretlAnalyzer;
+import ch.so.agi.gretl.lsp.analysis.GretlDiagnosticRule;
+import ch.so.agi.gretl.lsp.diagnostics.DefaultTaskRule;
+import ch.so.agi.gretl.lsp.diagnostics.DuplicateTaskNameRule;
+import ch.so.agi.gretl.lsp.diagnostics.LegacyDslRule;
+import ch.so.agi.gretl.lsp.diagnostics.MissingRequiredPropertyRule;
+import ch.so.agi.gretl.lsp.diagnostics.UnknownDependencyRule;
+import ch.so.agi.gretl.lsp.diagnostics.UnknownPropertyRule;
+import ch.so.agi.gretl.lsp.diagnostics.UnknownTaskTypeRule;
+import ch.so.agi.gretl.lsp.diagnostics.WrongArgumentCountRule;
+import ch.so.agi.gretl.lsp.document.DocumentStore;
+import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
+import ch.so.agi.gretl.lsp.scanner.HybridGretlScriptParser;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -11,6 +24,7 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class GretlLanguageServer implements LanguageServer, LanguageClientAware {
@@ -21,10 +35,25 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
     private final ServerLogger logger;
     private LanguageClient client;
 
-    public GretlLanguageServer(GretlServerConfig config, ServerLogger logger) {
+    public GretlLanguageServer(GretlServerConfig config, GretlMetadata metadata, ServerLogger logger) {
         this.lifecycle = new ServerLifecycle();
         this.logger = logger;
-        this.textDocumentService = new GretlTextDocumentService(logger);
+
+        DocumentStore documentStore = new DocumentStore();
+        HybridGretlScriptParser parser = new HybridGretlScriptParser();
+        List<GretlDiagnosticRule> rules = List.of(
+                new MissingRequiredPropertyRule(),
+                new UnknownPropertyRule(),
+                new WrongArgumentCountRule(),
+                new UnknownTaskTypeRule(),
+                new UnknownDependencyRule(),
+                new DefaultTaskRule(),
+                new DuplicateTaskNameRule(),
+                new LegacyDslRule()
+        );
+        GretlAnalyzer analyzer = new GretlAnalyzer(parser, metadata, rules);
+
+        this.textDocumentService = new GretlTextDocumentService(documentStore, analyzer, logger);
         this.workspaceService = new GretlWorkspaceService(logger);
     }
 
@@ -72,6 +101,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
     @Override
     public void connect(LanguageClient client) {
         this.client = client;
+        textDocumentService.setClient(client);
         logger.info("client connected");
     }
 }

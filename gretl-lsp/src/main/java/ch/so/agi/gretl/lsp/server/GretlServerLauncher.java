@@ -43,15 +43,16 @@ public final class GretlServerLauncher {
         logger.info("loaded " + metadata.tasks().size() + " tasks from metadata v" + metadata.schemaVersion());
 
         if (config.stdio()) {
-            launchStdio(config, logger);
+            launchStdio(config, metadata, logger);
         } else {
             logger.info("no transport mode specified, defaulting to --stdio");
-            launchStdio(config, logger);
+            launchStdio(config, metadata, logger);
         }
     }
 
-    private static void launchStdio(GretlServerConfig config, ServerLogger logger) throws Exception {
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+    private static void launchStdio(GretlServerConfig config, GretlMetadata metadata,
+                                    ServerLogger logger) throws Exception {
+        GretlLanguageServer server = new GretlLanguageServer(config, metadata, logger);
 
         Launcher<LanguageClient> launcher = Launcher.createLauncher(
                 server,

@@ -1,5 +1,6 @@
 package ch.so.agi.gretl.lsp.server;
 
+import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -21,7 +22,7 @@ class GretlLanguageServerInitializeTest {
     void initializeReturnsExpectedCapabilities() throws ExecutionException, InterruptedException, TimeoutException {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         InitializeParams params = new InitializeParams();
         CompletableFuture<InitializeResult> future = server.initialize(params);
@@ -41,7 +42,7 @@ class GretlLanguageServerInitializeTest {
     void initializeReturnsServerInfo() throws ExecutionException, InterruptedException, TimeoutException {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         InitializeParams params = new InitializeParams();
         CompletableFuture<InitializeResult> future = server.initialize(params);
@@ -57,7 +58,7 @@ class GretlLanguageServerInitializeTest {
     void shutdownCompletesSuccessfully() throws ExecutionException, InterruptedException, TimeoutException {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         server.initialize(new InitializeParams()).get(5, TimeUnit.SECONDS);
         Object result = server.shutdown().get(5, TimeUnit.SECONDS);
@@ -69,7 +70,7 @@ class GretlLanguageServerInitializeTest {
     void exitDoesNotThrow() {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         assertDoesNotThrow(server::exit);
     }
@@ -79,7 +80,7 @@ class GretlLanguageServerInitializeTest {
     void textDocumentServiceReturnsNonNull() {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         assertNotNull(server.getTextDocumentService());
     }
@@ -89,7 +90,7 @@ class GretlLanguageServerInitializeTest {
     void workspaceServiceReturnsNonNull() {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         assertNotNull(server.getWorkspaceService());
     }
@@ -99,7 +100,7 @@ class GretlLanguageServerInitializeTest {
     void capabilitiesIncludeHoverProvider() throws ExecutionException, InterruptedException, TimeoutException {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         InitializeParams params = new InitializeParams();
         InitializeResult result = server.initialize(params).get(5, TimeUnit.SECONDS);
@@ -112,7 +113,7 @@ class GretlLanguageServerInitializeTest {
     void capabilitiesIncludeDocumentSymbolProvider() throws ExecutionException, InterruptedException, TimeoutException {
         GretlServerConfig config = GretlServerConfig.parse("--stdio");
         ServerLogger logger = new ServerLogger("WARN");
-        GretlLanguageServer server = new GretlLanguageServer(config, logger);
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
 
         InitializeParams params = new InitializeParams();
         InitializeResult result = server.initialize(params).get(5, TimeUnit.SECONDS);
