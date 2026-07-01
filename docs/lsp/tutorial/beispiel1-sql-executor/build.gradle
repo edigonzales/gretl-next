@@ -1,0 +1,10 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.SqlExecutor
+
+tasks.register('helloWorld', SqlExecutor) {
+    database 'jdbc:sqlite:build/gretl.db'
+    sqlFiles 'sql/hello.sql'
+}

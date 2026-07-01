@@ -1,0 +1,25 @@
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+import ch.so.agi.gretl.tasks.SqlExecutor
+
+defaultTasks 'transformation'
+
+tasks.register('vorbereitung', SqlExecutor) {
+    database 'jdbc:sqlite:build/gretl.db'
+    sqlFiles 'sql/010_setup.sql'
+}
+
+tasks.register('transformation', SqlExecutor) {
+    dependsOn 'vorbereitung'
+    database 'jdbc:sqlite:build/gretl.db'
+    sqlFiles 'sql/020_transform.sql'
+    finalizedBy 'bereinigung'
+}
+
+tasks.register('bereinigung', SqlExecutor) {
+    mustRunAfter 'transformation'
+    database 'jdbc:sqlite:build/gretl.db'
+    sqlFiles 'sql/030_cleanup.sql'
+}
