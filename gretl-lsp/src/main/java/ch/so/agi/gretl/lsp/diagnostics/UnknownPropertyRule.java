@@ -6,6 +6,7 @@ import ch.so.agi.gretl.lsp.metadata.PropertyMetadata;
 import ch.so.agi.gretl.lsp.metadata.TaskMetadata;
 import ch.so.agi.gretl.lsp.model.GretlDslCall;
 import ch.so.agi.gretl.lsp.model.GretlTaskBlock;
+import ch.so.agi.gretl.lsp.util.LevenshteinUtil;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -34,7 +35,7 @@ public final class UnknownPropertyRule implements GretlDiagnosticRule {
                 if (knownProperties.contains(call.name())) {
                     continue;
                 }
-                Optional<String> suggestion = suggestClosest(call.name(), knownProperties);
+                Optional<String> suggestion = LevenshteinUtil.suggestClosest(call.name(), knownProperties);
                 String message;
                 if (suggestion.isPresent()) {
                     message = DiagnosticCode.UNKNOWN_PROPERTY.format(call.name(), suggestion.get());
@@ -58,35 +59,10 @@ public final class UnknownPropertyRule implements GretlDiagnosticRule {
     }
 
     static Optional<String> suggestClosest(String name, Set<String> candidates) {
-        String best = null;
-        int bestDistance = Integer.MAX_VALUE;
-        for (String candidate : candidates) {
-            int distance = levenshteinDistance(name, candidate);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = candidate;
-            }
-        }
-        if (best != null && bestDistance <= 3 && bestDistance < name.length()) {
-            return Optional.of(best);
-        }
-        return Optional.empty();
+        return LevenshteinUtil.suggestClosest(name, candidates);
     }
 
     static int levenshteinDistance(String a, String b) {
-        int[][] d = new int[a.length() + 1][b.length() + 1];
-        for (int i = 0; i <= a.length(); i++) {
-            d[i][0] = i;
-        }
-        for (int j = 0; j <= b.length(); j++) {
-            d[0][j] = j;
-        }
-        for (int i = 1; i <= a.length(); i++) {
-            for (int j = 1; j <= b.length(); j++) {
-                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
-                d[i][j] = Math.min(Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1), d[i - 1][j - 1] + cost);
-            }
-        }
-        return d[a.length()][b.length()];
+        return LevenshteinUtil.levenshteinDistance(a, b);
     }
 }

@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static ch.so.agi.gretl.lsp.diagnostics.UnknownPropertyRule.levenshteinDistance;
-import static ch.so.agi.gretl.lsp.diagnostics.UnknownPropertyRule.suggestClosest;
+import static ch.so.agi.gretl.lsp.util.LevenshteinUtil.suggestClosest;
 
 public final class UnknownDependencyRule implements GretlDiagnosticRule {
 

@@ -2,6 +2,7 @@ package ch.so.agi.gretl.lsp.server;
 
 import ch.so.agi.gretl.lsp.analysis.AnalysisResult;
 import ch.so.agi.gretl.lsp.analysis.GretlAnalyzer;
+import ch.so.agi.gretl.lsp.codeaction.GretlCodeActionProvider;
 import ch.so.agi.gretl.lsp.completion.CompletionProvider;
 import ch.so.agi.gretl.lsp.document.DocumentStore;
 import ch.so.agi.gretl.lsp.document.TextDocument;
@@ -11,6 +12,9 @@ import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import ch.so.agi.gretl.lsp.model.GretlScript;
 import ch.so.agi.gretl.lsp.signature.SignatureHelpProvider;
 import ch.so.agi.gretl.lsp.symbol.DocumentSymbolProvider;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
@@ -50,6 +54,7 @@ public final class GretlTextDocumentService implements TextDocumentService {
     private final SignatureHelpProvider signatureHelpProvider;
     private final DocumentSymbolProvider documentSymbolProvider;
     private final DocumentLinkProvider documentLinkProvider;
+    private final GretlCodeActionProvider codeActionProvider;
     private final ServerLogger logger;
     private final Map<String, AnalysisResult> lastAnalysis = new ConcurrentHashMap<>();
     private LanguageClient client;
@@ -65,6 +70,7 @@ public final class GretlTextDocumentService implements TextDocumentService {
         this.signatureHelpProvider = new SignatureHelpProvider(metadata);
         this.documentSymbolProvider = new DocumentSymbolProvider(metadata);
         this.documentLinkProvider = new DocumentLinkProvider(metadata);
+        this.codeActionProvider = new GretlCodeActionProvider(metadata);
         this.logger = logger;
     }
 
@@ -203,6 +209,25 @@ public final class GretlTextDocumentService implements TextDocumentService {
             GretlScript script = parseOrGetCached(uri, doc);
 
             return documentLinkProvider.links(script, workspaceRoot);
+        });
+    }
+
+    @Override
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            String uri = params.getTextDocument().getUri();
+
+            Optional<TextDocument> docOpt = documentStore.get(uri);
+            if (docOpt.isEmpty()) {
+                return List.of();
+            }
+
+            AnalysisResult cached = lastAnalysis.get(uri);
+            if (cached == null) {
+                return List.of();
+            }
+
+            return codeActionProvider.codeActions(params, cached);
         });
     }
 

@@ -14,6 +14,8 @@ import ch.so.agi.gretl.lsp.diagnostics.WrongArgumentCountRule;
 import ch.so.agi.gretl.lsp.document.DocumentStore;
 import ch.so.agi.gretl.lsp.metadata.GretlMetadata;
 import ch.so.agi.gretl.lsp.scanner.HybridGretlScriptParser;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
@@ -88,6 +90,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
         capabilities.setDocumentLinkProvider(new DocumentLinkOptions(true));
         capabilities.setExecuteCommandProvider(
                 new ExecuteCommandOptions(List.of("gretl.getOverview")));
+        capabilities.setCodeActionProvider(new CodeActionOptions(List.of(CodeActionKind.QuickFix)));
 
         InitializeResult result = new InitializeResult(capabilities);
         result.setServerInfo(new ServerInfo("gretl-lsp", "0.1.0"));
