@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = 'gretl-lsp'
+}
+
+dependencies {
+    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0'
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+application {
+    mainClass = 'ch.so.agi.gretl.lsp.server.GretlServerLauncher'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = base.archivesName.get()
+            from components.java
+        }
+    }
+}
