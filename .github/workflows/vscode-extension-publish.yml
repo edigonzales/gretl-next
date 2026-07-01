@@ -118,7 +118,7 @@ jobs:
 
       - name: Build runtime bundle
         if: runner.os != 'Windows'
-        shell: ${{ matrix.shell }}
+        shell: bash
         run: |
           JAR=$(ls dist/*.jar | head -n1)
           MODS=$(jdeps --print-module-deps --ignore-missing-deps --multi-release 17 "$JAR")
@@ -126,7 +126,7 @@ jobs:
 
       - name: Build runtime bundle (Windows)
         if: runner.os == 'Windows'
-        shell: ${{ matrix.shell }}
+        shell: pwsh
         run: |
           $JAR = Get-ChildItem dist/*.jar | Select-Object -First 1
           Write-Host "Creating jdeps from $JAR"
