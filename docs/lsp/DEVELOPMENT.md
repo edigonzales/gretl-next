@@ -76,7 +76,7 @@ java -jar gretl-lsp/build/libs/gretl-lsp-5.0.0-SNAPSHOT-all.jar --stdio --metada
 java -jar gretl-lsp/build/libs/gretl-lsp-5.0.0-SNAPSHOT-all.jar --stdio --log-level=DEBUG --trace
 ```
 
-## Capabilities (Phase 5)
+## Capabilities
 
 The server currently responds to `initialize` with:
 
@@ -87,9 +87,12 @@ The server currently responds to `initialize` with:
 | Hover provider | true |
 | Signature help provider | Enabled |
 | Document symbol provider | true |
+| Document link provider | true (resolve) |
+| Execute command provider | `gretl.getOverview` |
+| Code action provider | QuickFix |
 
-Completion, hover, and signature help content is entirely sourced from
-`gretl-lsp-metadata.json` via the metadata model classes.
+All content (completion, hover, signature help, diagnostics, code actions) is
+sourced from `gretl-lsp-metadata.json` via the metadata model classes.
 
 ## Project Structure
 
@@ -98,6 +101,7 @@ gretl-lsp/
   src/
     main/java/ch/so/agi/gretl/lsp/
       analysis/           -- GretlAnalyzer, AnalysisResult, AnalysisInput
+      codeaction/         -- GretlCodeActionProvider (quick fix code actions)
       completion/         -- CompletionProvider, CompletionContextDetector
       diagnostics/        -- Diagnostic rules
       document/           -- DocumentStore, TextDocument, LineIndex
@@ -108,6 +112,8 @@ gretl-lsp/
       scanner/            -- HybridGretlScriptParser, LenientGretlScanner
       server/             -- LSP server implementation
       signature/          -- SignatureHelpProvider
+      symbol/             -- DocumentSymbolProvider, DocumentLinkProvider
+      util/               -- LevenshteinUtil, FileReferenceUtil
     main/resources/       -- Classpath resources (metadata JSON copied here)
     test/java/            -- Unit tests
     test/resources/       -- Test fixtures
@@ -152,9 +158,22 @@ gretl-lsp/
 | Class | Purpose |
 |-------|---------|
 | `GretlServerLauncher` | Main entry point, argument parsing, LSP launch |
-| `GretlLanguageServer` | `LanguageServer` implementation with completion/hover/signature capabilities |
-| `GretlTextDocumentService` | `TextDocumentService` with completion, hover, and signature help |
-| `GretlWorkspaceService` | Stub `WorkspaceService` |
+| `GretlLanguageServer` | `LanguageServer` implementation; registers all capabilities |
+| `GretlTextDocumentService` | `TextDocumentService` with completion, hover, signature help, and code actions |
+| `GretlWorkspaceService` | `WorkspaceService` with `gretl.getOverview` execute command |
 | `GretlServerConfig` | Parsed CLI configuration |
 | `ServerLogger` | Stderr-only logging |
 | `ServerLifecycle` | Server lifecycle state tracking |
+
+### `ch.so.agi.gretl.lsp.codeaction`
+
+| Class | Purpose |
+|-------|---------|
+| `GretlCodeActionProvider` | Provides quick fix code actions for diagnostics GRETL1001, GRETL1002, GRETL1101, GRETL1201 |
+
+### `ch.so.agi.gretl.lsp.util`
+
+| Class | Purpose |
+|-------|---------|
+| `LevenshteinUtil` | Levenshtein distance calculation and closest-match suggestion |
+| `FileReferenceUtil` | Utility for extracting file references from task properties |

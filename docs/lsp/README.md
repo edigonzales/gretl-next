@@ -16,7 +16,7 @@ Quick fix code actions are provided for the most common GRETL diagnostics.
 
 | Diagnostic | Code Action | Description |
 |-----------|-------------|-------------|
-| GRETL1001 Missing required property | "Fuge `<prop>` hinzu" | Inserts the missing property at the end of the task body using its modern DSL form |
+| GRETL1001 Missing required property | "Füge `<prop>` hinzu" | Inserts the missing property at the end of the task body using its modern DSL form |
 | GRETL1002 Unknown property | "Korrigiere `<old>` zu `<new>`" | Replaces the wrong property name with the closest Levenshtein suggestion |
 | GRETL1101 Unknown dependency | "Korrigiere `<old>` zu `<new>`" | Replaces the wrong dependency task name with the closest match |
 | GRETL1201 Legacy DSL | "Migriere zu moderner DSL-Schreibweise" | Converts `prop = [a, b, c]` to `prop a, b, c` and other assignment forms to method-call |

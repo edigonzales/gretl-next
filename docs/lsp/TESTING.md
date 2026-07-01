@@ -135,6 +135,24 @@ End-to-end LSP protocol tests using `CompletableFuture` and the full server:
 | Unknown option | Throws `IllegalArgumentException` |
 | No args | Returns usable config, no modes enabled |
 
+### Code Action Tests
+
+`ch.so.agi.gretl.lsp.codeaction.GretlCodeActionProviderTest`
+
+| Test | What it checks |
+|------|----------------|
+| Provides quick fix for missing required property `sqlFiles` | GRETL1001: inserts `sqlFiles value` with correct indentation |
+| Missing required property preserves indentation | Inserted text matches existing DSL call indentation (tab, 2-space, 4-space, 8-space) |
+| Provides quick fix for unknown property typo | GRETL1002: replaces `databaze` with `database` via Levenshtein suggestion |
+| Provides quick fix for unknown dependency | GRETL1101: replaces unknown dependency task name with closest match |
+| Provides quick fix for legacy DSL assignment migration with list | GRETL1201: converts `sqlFiles = ['a', 'b']` to `sqlFiles 'a', 'b'` |
+| Provides quick fix for legacy DSL assignment migration with method call | GRETL1201: converts `sqlFiles = files('x')` to `sqlFiles files('x')` |
+| No code actions for diagnostics without matching code | Non-GRETL diagnostic codes return empty action list |
+| `buildModernMethodCall` converts list arguments correctly | ListExpression arguments joined with ", " |
+| `buildModernMethodCall` handles single non-list argument | Single argument passed through as source text |
+| `buildInsertText` uses signature from accepted form | Returns `files('value')` from modern form signature |
+| `buildInsertText` falls back to property name when signature is blank | Returns `prop value` as default insert text |
+
 ## Smoke Test the Fat JAR
 
 ```bash

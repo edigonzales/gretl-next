@@ -62,6 +62,44 @@ In the Extension Development Host:
   - `GRETL` in the output channel dropdown
   - Diagnostics, completions, and hover triggered as you edit
 
+## Features
+
+### Completions
+
+Context-dependent completions for task types, DSL properties, and
+dependency task names. Type as you normally would and accept suggestions
+with `Enter` or `Tab`.
+
+### Diagnostics
+
+Real-time validation of GRETL build scripts:
+- Missing required properties
+- Unknown/tpyo-d properties (with Levenshtein suggestions)
+- Wrong argument counts
+- Unknown task types and dependencies
+- Legacy DSL style detection
+- SQL parameter consistency
+
+### Quick Fixes
+
+Press `Ctrl+.` (or `Cmd+.` on macOS) on any diagnostic to see available
+quick fix actions:
+
+| Diagnostic | Quick Fix |
+|-----------|-----------|
+| Missing required property | Inserts the property at the end of the task body |
+| Unknown property / dependency | Replaces typo with closest suggestion |
+| Legacy DSL | Converts assignment style to modern method-call DSL |
+
+### Hover & Signature Help
+
+Hover over task types and properties for documentation. Signature help
+guides argument typing for multi-argument DSL calls.
+
+### GRETL Overview
+
+See [GRETL Overview](#gretl-overview) below.
+
 ## Commands
 
 Open the command palette (`Cmd+Shift+P`) and type `GRETL`:

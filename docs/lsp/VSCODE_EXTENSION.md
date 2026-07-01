@@ -3,6 +3,22 @@
 This document describes the architecture, lifecycle, and integration of the
 GRETL VS Code extension with the Java Language Server.
 
+## Features
+
+The extension delivers the following GRETL language features through the
+Java LSP server:
+
+| Feature | Description |
+|---------|-------------|
+| Completions | Task types, DSL properties, dependency names |
+| Diagnostics | 9 validation rules (missing required, unknown properties, dependencies, legacy DSL, SQL params) |
+| Quick Fixes | 4 code action types for GRETL1001, GRETL1002, GRETL1101, GRETL1201 |
+| Hover | Task and property documentation from metadata |
+| Signature Help | Active parameter guidance for multi-argument calls |
+| Document Symbols | Outline view with task blocks and dependencies |
+| Document Links | Clickable file references (SQL files, properties) |
+| GRETL Overview | Job-graph webview with pipeline, tasks, diagnostics, SQL files/params |
+
 ## Architecture
 
 ```
