@@ -77,9 +77,24 @@ Die Dateien findest du fertig vorbereitet unter
 
 ### Schritt 2: settings.gradle
 
+Damit Gradle das GRETL-Plugin finden kann, muss in `settings.gradle` das
+Snapshot-Repository konfiguriert werden:
+
 ```groovy
+pluginManagement {
+    repositories {
+        maven {
+            url = 'https://jars.interlis.guru/snapshots'
+        }
+        gradlePluginPortal()
+    }
+}
 rootProject.name = 'gretl-tutorial-beispiel1'
 ```
+
+> **Hinweis:** Das GRETL-Plugin wird als `5.0.0-SNAPSHOT` auf
+> `jars.interlis.guru/snapshots` publiziert. Ohne `pluginManagement`-Block
+> findet Gradle das Plugin nicht, da es nicht im Gradle Plugin Portal liegt.
 
 ### Schritt 3: sql/hello.sql
 

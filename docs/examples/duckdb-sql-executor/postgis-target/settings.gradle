@@ -1,1 +1,9 @@
+pluginManagement {
+    repositories {
+        maven {
+            url = 'https://jars.interlis.guru/snapshots'
+        }
+        gradlePluginPortal()
+    }
+}
 rootProject.name = 'duckdb-sql-executor-postgis-target'
