@@ -1,6 +1,6 @@
 {
   "name": "gretl-vscode",
-  "displayName": "GRETL",
+  "displayName": "GRETL Language Support",
   "description": "GRETL language support for VS Code — completion, diagnostics, hover, and more for Gradle Groovy build scripts",
   "version": "0.1.0",
   "publisher": "edigonzales",
