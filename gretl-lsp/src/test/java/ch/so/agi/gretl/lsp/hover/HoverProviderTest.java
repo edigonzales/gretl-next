@@ -82,6 +82,8 @@ class HoverProviderTest {
         assertTrue(content.contains("ch.so.agi.gretl.tasks.SqlExecutor"));
         assertTrue(content.contains("- `database`\n- `sqlFiles`"),
                 "required properties should be separated by newlines");
+        assertTrue(content.contains("- `sqlParameters`"), "optional properties should appear in hover");
+        assertTrue(content.contains("Object (Optional)"), "property types should appear with status");
     }
 
     @Test

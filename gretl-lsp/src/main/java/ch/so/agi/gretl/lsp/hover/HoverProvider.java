@@ -66,6 +66,16 @@ public final class HoverProvider {
             }
         }
 
+        if (!task.properties().isEmpty()) {
+            sb.append("\n\n**Properties:**\n");
+            for (PropertyMetadata prop : task.properties()) {
+                String type = prop.valueType() != null ? prop.valueType() : "-";
+                String status = prop.required() ? "Pflicht" : "Optional";
+                sb.append("- `").append(prop.name()).append("` \u2014 ").append(type)
+                        .append(" (").append(status).append(")\n");
+            }
+        }
+
         MarkupContent content = new MarkupContent("markdown", sb.toString());
         return Optional.of(new Hover(content, typeRange));
     }
