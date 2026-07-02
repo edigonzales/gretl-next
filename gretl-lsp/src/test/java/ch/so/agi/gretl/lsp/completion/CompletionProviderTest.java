@@ -123,9 +123,35 @@ class CompletionProviderTest {
                 .findFirst().orElseThrow();
         assertNotNull(sql.getTextEdit());
         TextEdit edit = sql.getTextEdit().getLeft();
-        assertEquals("SqlExecutor", edit.getNewText());
+        assertEquals(" SqlExecutor", edit.getNewText(), "should include leading space after comma");
         assertTrue(edit.getRange().getStart().getCharacter() < edit.getRange().getEnd().getCharacter(),
                 "edit range should cover typed prefix after comma");
+    }
+
+    @Test
+    @DisplayName("task type completion inserts space after comma even with trailing whitespace")
+    void taskTypeCompletionInsertsSpaceAfterComma() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        // Cursor right after comma+space, no type characters typed
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 30),
+                        "tasks.register('x', ");
+
+        List<CompletionItem> items = result.getLeft();
+        assertNotNull(items);
+        assertFalse(items.isEmpty());
+
+        CompletionItem sql = items.stream()
+                .filter(i -> "SqlExecutor".equals(i.getLabel()))
+                .findFirst().orElseThrow();
+        assertNotNull(sql.getTextEdit());
+        TextEdit edit = sql.getTextEdit().getLeft();
+        assertTrue(edit.getNewText().startsWith(" "),
+                "insert text should start with space after comma");
+        assertEquals("SqlExecutor", sql.getLabel(),
+                "label should remain the simple name without leading space");
     }
 
     @Test

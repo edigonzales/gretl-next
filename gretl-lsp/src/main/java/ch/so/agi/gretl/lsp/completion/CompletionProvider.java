@@ -44,7 +44,12 @@ public final class CompletionProvider {
 
     private Either<List<CompletionItem>, CompletionList> taskTypeCompletion(
             Position position, String currentLineText) {
-        int replaceStart = findTypeReplaceStart(position, currentLineText);
+        int col = Math.min(position.getCharacter(),
+                currentLineText != null ? currentLineText.length() : 0);
+        String before = currentLineText != null ? currentLineText.substring(0, col) : "";
+        int commaIdx = before.lastIndexOf(',');
+        int replaceStart = commaIdx >= 0 ? commaIdx + 1 : col;
+        boolean afterComma = commaIdx >= 0;
 
         List<CompletionItem> items = new ArrayList<>();
         for (TaskMetadata task : metadata.tasksSortedByName()) {
@@ -56,24 +61,12 @@ public final class CompletionProvider {
             Range editRange = new Range(
                     new Position(position.getLine(), replaceStart),
                     position);
-            item.setTextEdit(Either.forLeft(new TextEdit(editRange, task.name())));
+            String insertText = afterComma ? " " + task.name() : task.name();
+            item.setTextEdit(Either.forLeft(new TextEdit(editRange, insertText)));
 
             items.add(item);
         }
         return Either.forLeft(items);
-    }
-
-    private static int findTypeReplaceStart(Position position, String currentLineText) {
-        if (currentLineText == null) {
-            return position.getCharacter();
-        }
-        int col = Math.min(position.getCharacter(), currentLineText.length());
-        String before = currentLineText.substring(0, col);
-        int commaIdx = before.lastIndexOf(',');
-        if (commaIdx >= 0) {
-            return commaIdx + 1;
-        }
-        return col;
     }
 
     private Either<List<CompletionItem>, CompletionList> propertyCompletion(GretlTaskBlock taskBlock) {
