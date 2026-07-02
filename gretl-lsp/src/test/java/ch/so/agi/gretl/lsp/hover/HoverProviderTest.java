@@ -80,6 +80,8 @@ class HoverProviderTest {
         assertTrue(content.contains("**SqlExecutor**"));
         assertTrue(content.contains("Fuhrt SQL-Dateien"));
         assertTrue(content.contains("ch.so.agi.gretl.tasks.SqlExecutor"));
+        assertTrue(content.contains("- `database`\n- `sqlFiles`"),
+                "required properties should be separated by newlines");
     }
 
     @Test

@@ -62,7 +62,7 @@ public final class HoverProvider {
         if (!task.requiredProperties().isEmpty()) {
             sb.append("\n\n**Pflichtfelder:**\n");
             for (PropertyMetadata prop : task.requiredProperties()) {
-                sb.append("- `").append(prop.name()).append("`");
+                sb.append("- `").append(prop.name()).append("`\n");
             }
         }
 
