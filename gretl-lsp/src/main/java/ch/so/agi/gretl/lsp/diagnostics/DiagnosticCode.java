@@ -15,7 +15,8 @@ public enum DiagnosticCode {
     DUPLICATE_TASK_NAME("GRETL1103", "Task-Name `%s` ist mehrfach definiert."),
     LEGACY_DSL("GRETL1201", "Alte GRETL-DSL-Schreibweise. Quick Fix kann zu `%s` migrieren."),
     MISSING_SQL_PARAMETER("GRETL1301", "Parameter `${%s}` in SQL verwendet aber nicht in `sqlParameters` von Task `%s` gesetzt."),
-    UNUSED_SQL_PARAMETER("GRETL1302", "Parameter `${%s}` in `sqlParameters` von Task `%s` gesetzt aber nicht in SQL verwendet.");
+    UNUSED_SQL_PARAMETER("GRETL1302", "Parameter `${%s}` in `sqlParameters` von Task `%s` gesetzt aber nicht in SQL verwendet."),
+    MISSING_IMPORT("GRETL1401", "Task-Typ `%s` wird ohne expliziten Import verwendet. GRETL importiert Task-Klassen automatisch – ein expliziter Import kann zur Dokumentation hinzugefügt werden.");
 
     private final String code;
     private final String messageTemplate;

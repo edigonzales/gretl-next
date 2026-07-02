@@ -6,6 +6,7 @@ import ch.so.agi.gretl.lsp.diagnostics.DefaultTaskRule;
 import ch.so.agi.gretl.lsp.diagnostics.DuplicateTaskNameRule;
 import ch.so.agi.gretl.lsp.diagnostics.LegacyDslRule;
 import ch.so.agi.gretl.lsp.diagnostics.MissingRequiredPropertyRule;
+import ch.so.agi.gretl.lsp.diagnostics.MissingImportRule;
 import ch.so.agi.gretl.lsp.diagnostics.SqlParameterRule;
 import ch.so.agi.gretl.lsp.diagnostics.UnknownDependencyRule;
 import ch.so.agi.gretl.lsp.diagnostics.UnknownPropertyRule;
@@ -61,7 +62,8 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
                 new DefaultTaskRule(),
                 new DuplicateTaskNameRule(),
                 new LegacyDslRule(),
-                new SqlParameterRule()
+                new SqlParameterRule(),
+                new MissingImportRule()
         );
         this.analyzer = new GretlAnalyzer(parser, metadata, rules);
 
