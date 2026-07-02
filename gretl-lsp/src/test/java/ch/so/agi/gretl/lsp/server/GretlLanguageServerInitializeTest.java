@@ -149,4 +149,20 @@ class GretlLanguageServerInitializeTest {
         boolean resolveProvider = result.getCapabilities().getCompletionProvider().getResolveProvider();
         assertFalse(resolveProvider, "resolveProvider should be false to prevent UnsupportedOperationException");
     }
+
+    @Test
+    @DisplayName("completion provider has trigger characters")
+    void completionProviderHasTriggerCharacters() throws ExecutionException, InterruptedException, TimeoutException {
+        GretlServerConfig config = GretlServerConfig.parse("--stdio");
+        ServerLogger logger = new ServerLogger("WARN");
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
+
+        InitializeParams params = new InitializeParams();
+        InitializeResult result = server.initialize(params).get(5, TimeUnit.SECONDS);
+
+        var triggerChars = result.getCapabilities().getCompletionProvider().getTriggerCharacters();
+        assertNotNull(triggerChars);
+        assertTrue(triggerChars.contains("."));
+        assertTrue(triggerChars.contains(","));
+    }
 }
