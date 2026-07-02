@@ -135,4 +135,18 @@ class GretlLanguageServerInitializeTest {
 
         assertTrue(result.getCapabilities().getDocumentSymbolProvider().getLeft());
     }
+
+    @Test
+    @DisplayName("completion resolve provider is disabled")
+    void completionResolveProviderIsDisabled() throws ExecutionException, InterruptedException, TimeoutException {
+        GretlServerConfig config = GretlServerConfig.parse("--stdio");
+        ServerLogger logger = new ServerLogger("WARN");
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
+
+        InitializeParams params = new InitializeParams();
+        InitializeResult result = server.initialize(params).get(5, TimeUnit.SECONDS);
+
+        boolean resolveProvider = result.getCapabilities().getCompletionProvider().getResolveProvider();
+        assertFalse(resolveProvider, "resolveProvider should be false to prevent UnsupportedOperationException");
+    }
 }

@@ -83,7 +83,7 @@ public final class GretlLanguageServer implements LanguageServer, LanguageClient
 
         ServerCapabilities capabilities = new ServerCapabilities();
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
-        capabilities.setCompletionProvider(new CompletionOptions(true, List.of()));
+        capabilities.setCompletionProvider(new CompletionOptions(false, List.of()));
         capabilities.setHoverProvider(true);
         capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of()));
         capabilities.setDocumentSymbolProvider(true);
