@@ -44,12 +44,10 @@ public final class LspMetadataBuilder {
                 .collect(Collectors.groupingBy(
                         DslMethodDescriptor::name,
                         java.util.LinkedHashMap::new,
-                        Collectors.collectingAndThen(
-                                Collectors.maxBy(Comparator.comparingInt(m -> m.parameters().size())),
-                                java.util.Optional::get)))
+                        Collectors.toList()))
                 .values().stream()
-                .sorted(Comparator.comparing(DslMethodDescriptor::name))
-                .map(method -> toPropertyMetadata(method, descriptor))
+                .sorted(Comparator.comparing(methods -> methods.get(0).name()))
+                .map(methods -> toPropertyMetadataFromOverloads(methods, descriptor))
                 .toList();
 
         return new LspTaskMetadata(
@@ -64,22 +62,29 @@ public final class LspMetadataBuilder {
                 properties);
     }
 
-    private LspPropertyMetadata toPropertyMetadata(DslMethodDescriptor method, TaskDescriptor task) {
-        String propName = method.name();
+    private LspPropertyMetadata toPropertyMetadataFromOverloads(List<DslMethodDescriptor> overloads, TaskDescriptor task) {
+        DslMethodDescriptor representative = overloads.stream()
+                .max(Comparator.comparingInt(m -> m.parameters().size()))
+                .orElseThrow();
+
+        String propName = representative.name();
         String displayName = propName;
         String kind = "dsl-method-and-property";
-        String valueType = inferValueType(method);
-        String javaType = inferJavaType(method);
+        String valueType = inferValueType(representative);
+        String javaType = inferJavaType(representative);
 
-        List<LspAcceptedForm> acceptedForms = generateAcceptedForms(method);
+        List<LspAcceptedForm> acceptedForms = new ArrayList<>();
+        for (DslMethodDescriptor method : overloads) {
+            acceptedForms.addAll(generateAcceptedForms(method));
+        }
 
-        LspFileMetadata file = inferFileMetadata(method);
+        LspFileMetadata file = inferFileMetadata(representative);
         boolean sqlParamProvider = SQL_PARAMETER_PROVIDERS.contains(propName);
 
         LspCompletionMetadata completion = new LspCompletionMetadata(
                 propName,
-                buildCompletionDetail(method),
-                buildSortText(propName, method.required()));
+                buildCompletionDetail(representative),
+                buildSortText(propName, representative.required()));
 
         return new LspPropertyMetadata(
                 propName,
@@ -87,9 +92,9 @@ public final class LspMetadataBuilder {
                 kind,
                 valueType,
                 javaType,
-                method.required(),
+                representative.required(),
                 false,
-                method.description(),
+                representative.description(),
                 file,
                 acceptedForms,
                 null,

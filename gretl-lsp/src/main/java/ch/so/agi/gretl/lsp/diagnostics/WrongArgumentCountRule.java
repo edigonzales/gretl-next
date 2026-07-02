@@ -12,9 +12,9 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class WrongArgumentCountRule implements GretlDiagnosticRule {
 
@@ -34,27 +34,23 @@ public final class WrongArgumentCountRule implements GretlDiagnosticRule {
                 if (propMeta.isEmpty()) {
                     continue;
                 }
-                Optional<AcceptedForm> matchingForm = findMatchingForm(call, propMeta.get());
-                if (matchingForm.isEmpty()) {
+                List<AcceptedForm> methodForms = findMethodCallForms(propMeta.get());
+                if (methodForms.isEmpty()) {
                     continue;
                 }
-                AcceptedForm form = matchingForm.get();
-                if (form.argumentCount() == null) {
-                    continue;
-                }
-                int expected = form.argumentCount();
                 int actual = call.arguments().size();
-                if (actual != expected) {
-                    String message = DiagnosticCode.WRONG_ARGUMENT_COUNT.format(
-                            call.name(), expected, form.signature());
-                    Diagnostic diag = new Diagnostic();
-                    diag.setSeverity(DiagnosticSeverity.Warning);
-                    diag.setRange(call.fullRange());
-                    diag.setCode(DiagnosticCode.WRONG_ARGUMENT_COUNT.code());
-                    diag.setMessage(message);
-                    diag.setSource("gretl-lsp");
-                    diagnostics.add(diag);
+                if (methodForms.stream().anyMatch(f -> f.argumentCount() != null && f.argumentCount() == actual)) {
+                    continue;
                 }
+
+                String message = buildWrongArgumentMessage(call.name(), methodForms);
+                Diagnostic diag = new Diagnostic();
+                diag.setSeverity(DiagnosticSeverity.Warning);
+                diag.setRange(call.fullRange());
+                diag.setCode(DiagnosticCode.WRONG_ARGUMENT_COUNT.code());
+                diag.setMessage(message);
+                diag.setSource("gretl-lsp");
+                diagnostics.add(diag);
             }
         }
         return diagnostics;
@@ -64,16 +60,39 @@ public final class WrongArgumentCountRule implements GretlDiagnosticRule {
         return task.typeName().flatMap(tn -> input.metadata().findTask(tn));
     }
 
-    private Optional<AcceptedForm> findMatchingForm(GretlDslCall call, PropertyMetadata propMeta) {
-        String targetStyle = "method-call";
+    private List<AcceptedForm> findMethodCallForms(PropertyMetadata propMeta) {
+        List<AcceptedForm> result = new ArrayList<>();
         for (AcceptedForm form : propMeta.acceptedForms()) {
-            if (targetStyle.equals(form.style()) && !form.legacy()) {
-                return Optional.of(form);
+            if ("method-call".equals(form.style()) && !form.legacy()) {
+                result.add(form);
             }
         }
-        if (!propMeta.acceptedForms().isEmpty()) {
-            return Optional.of(propMeta.acceptedForms().get(0));
+        return result;
+    }
+
+    private String buildWrongArgumentMessage(String name, List<AcceptedForm> forms) {
+        List<AcceptedForm> counted = forms.stream()
+                .filter(f -> f.argumentCount() != null)
+                .toList();
+        if (counted.isEmpty()) {
+            return DiagnosticCode.WRONG_ARGUMENT_COUNT.code() + ": `" + name + "` akzeptiert keine Argumente.";
         }
-        return Optional.empty();
+        if (counted.size() == 1) {
+            return DiagnosticCode.WRONG_ARGUMENT_COUNT.format(
+                    name, counted.get(0).argumentCount(), counted.get(0).signature());
+        }
+        List<Integer> counts = counted.stream()
+                .map(AcceptedForm::argumentCount)
+                .distinct()
+                .sorted()
+                .toList();
+        String countsStr = counts.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(" oder "));
+        String sigs = counted.stream()
+                .map(AcceptedForm::signature)
+                .collect(Collectors.joining(", "));
+        return DiagnosticCode.WRONG_ARGUMENT_COUNT.code() + ": `" + name
+                + "` erwartet " + countsStr + " Argumente: " + sigs + ".";
     }
 }
