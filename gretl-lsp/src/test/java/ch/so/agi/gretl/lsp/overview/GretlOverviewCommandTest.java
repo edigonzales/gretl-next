@@ -8,6 +8,7 @@ import ch.so.agi.gretl.lsp.model.GretlScript;
 import ch.so.agi.gretl.lsp.server.GretlServerConfig;
 import ch.so.agi.gretl.lsp.server.GretlLanguageServer;
 import ch.so.agi.gretl.lsp.server.ServerLogger;
+import com.google.gson.JsonObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -93,5 +94,30 @@ class GretlOverviewCommandTest {
         Map<String, Object> map = (Map<String, Object>) value;
         assertTrue(map.containsKey("error"));
         assertTrue(map.get("error").toString().contains("Document not found"));
+    }
+
+    @Test
+    @DisplayName("executeCommand with JsonObject argument parses correctly")
+    void uriAsJsonObjectArgument() throws Exception {
+        GretlServerConfig config = GretlServerConfig.parse("--stdio");
+        ServerLogger logger = new ServerLogger("WARN");
+        GretlLanguageServer server = new GretlLanguageServer(config, GretlMetadata.empty(), logger);
+
+        JsonObject jo = new JsonObject();
+        jo.addProperty("uri", "file:///unknown.gradle");
+
+        var params = new org.eclipse.lsp4j.ExecuteCommandParams();
+        params.setCommand("gretl.getOverview");
+        params.setArguments(java.util.List.of(jo));
+
+        CompletableFuture<Object> result = server.getWorkspaceService().executeCommand(params);
+        Object value = result.get(5, TimeUnit.SECONDS);
+
+        assertInstanceOf(Map.class, value);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) value;
+        assertTrue(map.containsKey("error"));
+        assertTrue(map.get("error").toString().contains("Document not found"),
+                "should reach document lookup, not fail on argument parsing");
     }
 }

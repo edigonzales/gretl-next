@@ -14,6 +14,7 @@ import ch.so.agi.gretl.lsp.overview.TaskGraphNode;
 import ch.so.agi.gretl.lsp.overview.TaskGraphProblem;
 import ch.so.agi.gretl.lsp.overview.TaskOverviewService;
 import ch.so.agi.gretl.lsp.overview.UnusedParam;
+import com.google.gson.JsonObject;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
@@ -80,12 +81,13 @@ public final class GretlWorkspaceService implements WorkspaceService {
 
         Object firstArg = arguments.get(0);
         String uri;
-        if (firstArg instanceof String) {
-            uri = (String) firstArg;
-        } else if (firstArg instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> argMap = (Map<String, Object>) firstArg;
-            uri = (String) argMap.getOrDefault("uri", "");
+        if (firstArg instanceof String s) {
+            uri = s;
+        } else if (firstArg instanceof JsonObject jo) {
+            uri = jo.has("uri") ? jo.get("uri").getAsString() : "";
+        } else if (firstArg instanceof Map<?, ?> m) {
+            Object raw = m.get("uri");
+            uri = raw instanceof String s ? s : "";
         } else {
             return Map.of("error", "Invalid argument: expected uri string or object with uri field");
         }
