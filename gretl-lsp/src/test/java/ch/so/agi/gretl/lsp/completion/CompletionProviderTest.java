@@ -17,6 +17,7 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -101,6 +102,30 @@ class CompletionProviderTest {
         assertEquals(2, items.size());
         assertEquals("DuckDbSqlExecutor", items.get(0).getLabel());
         assertEquals("SqlExecutor", items.get(1).getLabel());
+    }
+
+    @Test
+    @DisplayName("task type completion uses text edit for correct insert after comma")
+    void taskTypeCompletionUsesTextEditAfterComma() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 30),
+                        "tasks.register('x', SqlE");
+
+        List<CompletionItem> items = result.getLeft();
+        assertNotNull(items);
+        assertFalse(items.isEmpty());
+
+        CompletionItem sql = items.stream()
+                .filter(i -> "SqlExecutor".equals(i.getLabel()))
+                .findFirst().orElseThrow();
+        assertNotNull(sql.getTextEdit());
+        TextEdit edit = sql.getTextEdit().getLeft();
+        assertEquals("SqlExecutor", edit.getNewText());
+        assertTrue(edit.getRange().getStart().getCharacter() < edit.getRange().getEnd().getCharacter(),
+                "edit range should cover typed prefix after comma");
     }
 
     @Test
@@ -311,5 +336,31 @@ class CompletionProviderTest {
         assertTrue(sql.isPresent());
         assertEquals(CompletionItemKind.Class, sql.get().getKind());
         assertEquals("SqlExecutor", sql.get().getDetail());
+    }
+
+    @Test
+    @DisplayName("import completion text edit covers only the import path")
+    void importCompletionTextEditCoversImportPath() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 40),
+                        "import ch.so.agi.gretl.tasks.");
+
+        List<CompletionItem> items = result.getLeft();
+        var sql = items.stream()
+                .filter(i -> i.getLabel().equals("ch.so.agi.gretl.tasks.SqlExecutor"))
+                .findFirst();
+        assertTrue(sql.isPresent());
+
+        TextEdit edit = sql.get().getTextEdit().getLeft();
+        assertEquals("ch.so.agi.gretl.tasks.SqlExecutor", edit.getNewText());
+
+        int importKeywordLen = "import ".length();
+        assertEquals(importKeywordLen, edit.getRange().getStart().getCharacter(),
+                "edit range should start after 'import '");
+        assertEquals(40, edit.getRange().getEnd().getCharacter(),
+                "edit range should end at cursor position");
     }
 }
