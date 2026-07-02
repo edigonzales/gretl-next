@@ -12,6 +12,7 @@ import ch.so.agi.gretl.lsp.model.GretlDslCall;
 import ch.so.agi.gretl.lsp.model.GretlScript;
 import ch.so.agi.gretl.lsp.model.GretlTaskBlock;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
@@ -254,5 +255,61 @@ class CompletionProviderTest {
         List<CompletionItem> items = result.getLeft();
         assertNotNull(items);
         assertTrue(items.isEmpty());
+    }
+
+    @Test
+    @DisplayName("import completion returns fully qualified class names")
+    void importCompletionReturnsFqns() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 40),
+                        "import ch.so.agi.gretl.tasks.");
+
+        List<CompletionItem> items = result.getLeft();
+        assertNotNull(items);
+        assertFalse(items.isEmpty());
+        assertTrue(items.stream().anyMatch(
+                i -> i.getLabel().equals("ch.so.agi.gretl.tasks.SqlExecutor")));
+        assertTrue(items.stream().anyMatch(
+                i -> i.getLabel().equals("ch.so.agi.gretl.tasks.DuckDbSqlExecutor")));
+    }
+
+    @Test
+    @DisplayName("import completion filters by prefix")
+    void importCompletionFiltersByPrefix() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 34),
+                        "import ch.so.agi.gretl.tasks.Sql");
+
+        List<CompletionItem> items = result.getLeft();
+        assertNotNull(items);
+        assertTrue(items.stream().anyMatch(
+                i -> i.getLabel().equals("ch.so.agi.gretl.tasks.SqlExecutor")));
+        assertFalse(items.stream().anyMatch(
+                i -> i.getLabel().equals("ch.so.agi.gretl.tasks.DuckDbSqlExecutor")));
+    }
+
+    @Test
+    @DisplayName("import completion items have class kind and task name detail")
+    void importCompletionItemsHaveKindAndDetail() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        Either<List<CompletionItem>, CompletionList> result =
+                provider.complete(script, new Position(0, 40),
+                        "import ch.so.agi.gretl.tasks.");
+
+        List<CompletionItem> items = result.getLeft();
+        var sql = items.stream()
+                .filter(i -> i.getLabel().equals("ch.so.agi.gretl.tasks.SqlExecutor"))
+                .findFirst();
+        assertTrue(sql.isPresent());
+        assertEquals(CompletionItemKind.Class, sql.get().getKind());
+        assertEquals("SqlExecutor", sql.get().getDetail());
     }
 }

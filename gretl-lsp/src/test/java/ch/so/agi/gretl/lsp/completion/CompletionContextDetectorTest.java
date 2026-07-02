@@ -150,4 +150,43 @@ class CompletionContextDetectorTest {
     void positionInsideNullRange() {
         assertFalse(CompletionContextDetector.positionInside(new Position(0, 0), null));
     }
+
+    @Test
+    @DisplayName("detects IMPORT context from line text")
+    void detectsImportContext() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        CompletionContext ctx = detector.detect(script,
+                new Position(0, 40), "import ch.so.agi.gretl.tasks.SqlE");
+
+        assertEquals(CompletionContextKind.IMPORT, ctx.kind());
+        assertEquals("ch.so.agi.gretl.tasks.SqlE", ctx.importPrefix());
+    }
+
+    @Test
+    @DisplayName("detects IMPORT context when cursor at end of import")
+    void detectsImportContextAtEndOfImport() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        CompletionContext ctx = detector.detect(script,
+                new Position(0, 7), "import ");
+
+        assertEquals(CompletionContextKind.IMPORT, ctx.kind());
+        assertEquals("", ctx.importPrefix());
+    }
+
+    @Test
+    @DisplayName("import context returns empty prefix when cursor on keyword")
+    void importContextEmptyPrefixOnKeyword() {
+        GretlScript script = new GretlScript("test.gradle", List.of(),
+                List.of(), List.of(), List.of(), true, false);
+
+        CompletionContext ctx = detector.detect(script,
+                new Position(0, 5), "import");
+
+        assertEquals(CompletionContextKind.IMPORT, ctx.kind());
+        assertEquals("", ctx.importPrefix());
+    }
 }

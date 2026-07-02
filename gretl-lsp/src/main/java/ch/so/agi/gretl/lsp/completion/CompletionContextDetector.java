@@ -9,6 +9,10 @@ import org.eclipse.lsp4j.Range;
 public final class CompletionContextDetector {
 
     public CompletionContext detect(GretlScript script, Position position, String currentLineText) {
+        if (isImportPosition(currentLineText)) {
+            return CompletionContext.importContext(extractImportPrefix(currentLineText, position));
+        }
+
         for (GretlTaskBlock block : script.tasks()) {
             if (block.typeRange() != null && positionInside(position, block.typeRange())) {
                 return CompletionContext.of(CompletionContextKind.TASK_TYPE);
@@ -81,5 +85,28 @@ public final class CompletionContextDetector {
         int col = Math.min(position.getCharacter(), currentLineText.length());
         String beforeCursor = currentLineText.substring(0, col);
         return beforeCursor.matches(".*tasks\\.register\\(\\s*['\"].*['\"]\\s*,\\s*.*");
+    }
+
+    private boolean isImportPosition(String currentLineText) {
+        if (currentLineText == null) {
+            return false;
+        }
+        String trimmed = currentLineText.trim();
+        return trimmed.equals("import") || trimmed.startsWith("import ");
+    }
+
+    private String extractImportPrefix(String currentLineText, Position position) {
+        if (currentLineText == null) {
+            return "";
+        }
+        int col = Math.min(position.getCharacter(), currentLineText.length());
+        String beforeCursor = currentLineText.substring(0, col).trim();
+        if (beforeCursor.equals("import")) {
+            return "";
+        }
+        if (beforeCursor.startsWith("import ")) {
+            return beforeCursor.substring("import ".length()).trim();
+        }
+        return "";
     }
 }

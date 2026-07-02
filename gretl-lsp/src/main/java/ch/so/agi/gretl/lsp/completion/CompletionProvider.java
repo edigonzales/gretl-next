@@ -35,6 +35,7 @@ public final class CompletionProvider {
             case TASK_TYPE -> taskTypeCompletion();
             case INSIDE_GRETL_TASK_BODY -> propertyCompletion(context.taskBlock());
             case DEPENDENCY_TASK_NAME -> dependencyCompletion(script);
+            case IMPORT -> importCompletion(context.importPrefix());
             case TOP_LEVEL, FILE_PATH, SQL_PARAMETER_NAME, UNKNOWN -> Either.forLeft(List.of());
         };
     }
@@ -97,6 +98,22 @@ public final class CompletionProvider {
             items.add(item);
         }
 
+        return Either.forLeft(items);
+    }
+
+    private Either<List<CompletionItem>, CompletionList> importCompletion(String prefix) {
+        List<CompletionItem> items = new ArrayList<>();
+        for (TaskMetadata task : metadata.tasksSortedByName()) {
+            String fqn = task.qualifiedClassName();
+            if (prefix != null && !prefix.isEmpty() && !fqn.startsWith(prefix)) {
+                continue;
+            }
+            CompletionItem item = new CompletionItem(fqn);
+            item.setKind(CompletionItemKind.Class);
+            item.setDetail(task.name());
+            item.setDocumentation(toMarkup(task.description()));
+            items.add(item);
+        }
         return Either.forLeft(items);
     }
 
