@@ -7,11 +7,6 @@ Fixture description with `code`.
 |===
 | DSL method | Required | Default | Description
 
-| `inputFile(Object path)`
-| yes
-| 
-| Configures `input` path.
-
 | `count(int value)`
 | no
 | 7
@@ -19,12 +14,17 @@ Fixture description with `code`.
 
 | `fallback(String value)`
 | no
-| 
+|
 | Uses javadoc `fallback`.
+
+| `inputFile(Object path)`
+| yes
+|
+| Configures `input` path.
 
 | `labels(String... values)`
 | yes
-| 
+|
 | Sets labels.
 
 |===

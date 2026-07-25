@@ -11,7 +11,9 @@ import javax.tools.ToolProvider;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -149,6 +151,54 @@ class LspMetadataBuilderTest {
         }
     }
 
+    @Test
+    void generatesCompleteMetadataForInheritedDslMethods(@TempDir Path tempDir) throws Exception {
+        Path adocOutput = tempDir.resolve("adoc");
+        Path lspOutput = tempDir.resolve("lsp");
+        Files.createDirectories(lspOutput);
+
+        generate(adocOutput, lspOutput, realTaskSources());
+
+        JsonNode root = objectMapper.readTree(lspOutput.resolve("gretl-lsp-metadata.json").toFile());
+        JsonNode tasks = root.get("tasks");
+        assertEquals(45, tasks.size());
+
+        for (JsonNode task : tasks) {
+            JsonNode properties = task.get("properties");
+            assertTrue(properties.size() > 0,
+                    task.get("name").asText() + " should contain at least one DSL property");
+
+            Set<String> propertyNames = new HashSet<>();
+            for (JsonNode property : properties) {
+                assertTrue(propertyNames.add(property.get("name").asText()),
+                        task.get("name").asText() + " contains duplicate property "
+                                + property.get("name").asText());
+            }
+        }
+
+        JsonNode csvValidator = findTask(tasks, "CsvValidator");
+        assertInheritedProperty(csvValidator, "dataFiles", true);
+        assertInheritedProperty(csvValidator, "models", false);
+
+        JsonNode ili2pgImport = findTask(tasks, "Ili2pgImport");
+        JsonNode database = assertInheritedProperty(ili2pgImport, "database", true);
+        assertTrue(database.get("acceptedForms").size() >= 4,
+                "database overloads should contribute accepted forms");
+        assertInheritedProperty(ili2pgImport, "schema", false);
+        assertInheritedProperty(ili2pgImport, "transferFiles", true);
+
+        JsonNode gpkgValidator = findTask(tasks, "GpkgValidator");
+        assertInheritedProperty(gpkgValidator, "dataFiles", true);
+        assertInheritedProperty(gpkgValidator, "tableName", true);
+
+        for (String taskName : previouslyEmptyTaskNames()) {
+            JsonNode task = findTask(tasks, taskName);
+            assertNotNull(task, taskName + " should be present");
+            assertTrue(task.get("properties").size() > 0,
+                    taskName + " should no longer have empty properties");
+        }
+    }
+
     private void generate(Path adocOutput, Path lspOutput, List<Path> sources) {
         List<String> args = new ArrayList<>();
         args.add("-d");
@@ -183,5 +233,49 @@ class LspMetadataBuilderTest {
             }
         }
         return null;
+    }
+
+    private static JsonNode assertInheritedProperty(JsonNode task, String propertyName, boolean required) {
+        assertNotNull(task);
+        JsonNode property = findProperty(task.get("properties"), propertyName);
+        assertNotNull(property, task.get("name").asText() + "." + propertyName + " should be present");
+        assertEquals(required, property.get("required").asBoolean());
+        assertTrue(property.get("description").asText().length() > 0);
+        assertTrue(property.get("acceptedForms").size() > 0);
+        return property;
+    }
+
+    private static List<Path> realTaskSources() throws Exception {
+        List<Path> sources = new ArrayList<>();
+        addJavaSources(sources, Path.of("../gretl-core/src/main/java/ch/so/agi/gretl/tasks"));
+        addJavaSources(sources, Path.of("../gretl-geotools/src/main/java/ch/so/agi/gretl/geotools/tasks"));
+        return sources;
+    }
+
+    private static void addJavaSources(List<Path> sources, Path directory) throws Exception {
+        try (var files = Files.list(directory)) {
+            files.filter(path -> path.getFileName().toString().endsWith(".java"))
+                    .sorted()
+                    .forEach(sources::add);
+        }
+    }
+
+    private static Set<String> previouslyEmptyTaskNames() {
+        return Set.of(
+                "CsvValidator",
+                "Ili2duckdbExport",
+                "Ili2duckdbImport",
+                "Ili2duckdbImportSchema",
+                "Ili2gpkgImport",
+                "Ili2pgDelete",
+                "Ili2pgExport",
+                "Ili2pgImport",
+                "Ili2pgImportSchema",
+                "Ili2pgReplace",
+                "Ili2pgUpdate",
+                "Ili2pgValidate",
+                "IliValidator",
+                "JsonValidator",
+                "ShpValidator");
     }
 }

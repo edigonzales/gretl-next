@@ -46,11 +46,20 @@ public final class AsciiDocRenderer {
         for (DslMethodDescriptor method : task.methods()) {
             out.append("| `").append(escapeInline(signatures.render(method))).append("`\n");
             out.append("| ").append(method.required() ? messages.yes() : messages.no()).append("\n");
-            out.append("| ").append(method.defaultValue().isBlank() ? "" : escapeCell(method.defaultValue())).append("\n");
-            out.append("| ").append(method.description().isBlank() ? "" : escapeCell(method.description())).append("\n\n");
+            appendCell(out, method.defaultValue().isBlank() ? "" : escapeCell(method.defaultValue()));
+            appendCell(out, method.description().isBlank() ? "" : escapeCell(method.description()));
+            out.append("\n");
         }
         out.append("|===\n");
         return out.toString();
+    }
+
+    private static void appendCell(StringBuilder out, String value) {
+        out.append("|");
+        if (!value.isBlank()) {
+            out.append(" ").append(value);
+        }
+        out.append("\n");
     }
 
     private String renderIndex(List<TaskDescriptor> tasks) {

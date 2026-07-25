@@ -14,17 +14,26 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class TaskDescriptorExtractor {
+    private static final Comparator<DslMethodDescriptor> DSL_METHOD_ORDER =
+            Comparator.comparing(DslMethodDescriptor::name)
+                    .thenComparingInt(method -> method.parameters().size())
+                    .thenComparing(TaskDescriptorExtractor::parameterTypeKey);
+
+    private final Elements elements;
     private final AnnotationValues annotations;
     private final JavadocToAsciiDoc javadoc;
     private final TypeNameFormatter typeNames = new TypeNameFormatter();
     private final Locale locale;
 
     public TaskDescriptorExtractor(Elements elements, DocTrees docTrees, Locale locale) {
+        this.elements = elements;
         this.annotations = new AnnotationValues(elements);
         this.javadoc = new JavadocToAsciiDoc(docTrees);
         this.locale = locale;
@@ -39,12 +48,13 @@ public final class TaskDescriptorExtractor {
                 AnnotationValues.string(taskDoc, "description"),
                 taskLocaleMap,
                 type);
-        List<DslMethodDescriptor> methods = type.getEnclosedElements().stream()
+        List<DslMethodDescriptor> methods = elements.getAllMembers(type).stream()
                 .filter(element -> element.getKind() == ElementKind.METHOD)
                 .map(ExecutableElement.class::cast)
                 .filter(method -> method.getModifiers().contains(Modifier.PUBLIC))
                 .filter(this::hasDslMethodAnnotation)
                 .map(this::methodDescriptor)
+                .sorted(DSL_METHOD_ORDER)
                 .toList();
 
         return new TaskDescriptor(
@@ -78,6 +88,12 @@ public final class TaskDescriptorExtractor {
                 AnnotationValues.bool(values, "required"),
                 AnnotationValues.string(values, "defaultValue"),
                 description);
+    }
+
+    private static String parameterTypeKey(DslMethodDescriptor method) {
+        return method.parameters().stream()
+                .map(ParameterDescriptor::type)
+                .collect(Collectors.joining(","));
     }
 
     private ParameterDescriptor parameterDescriptor(ExecutableElement method, VariableElement parameter, int index) {
