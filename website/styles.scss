@@ -67,9 +67,11 @@ $border-radius-lg: 1.2rem;
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
+  overflow-x: hidden;
   background: #ffffff;
   color: var(--gretl-ink);
   font-variation-settings: "CASL" 0;
@@ -163,7 +165,6 @@ body.landing-page main.content {
 
 .landing-shell {
   position: relative;
-  overflow: hidden;
   max-width: 1540px;
   margin: 0 auto;
   padding: clamp(4rem, 7vw, 7.6rem) clamp(1.25rem, 4vw, 4.5rem) 4rem;
