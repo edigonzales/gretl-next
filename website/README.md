@@ -28,7 +28,7 @@ Das Ergebnis liegt anschliessend in `_site/`.
 - `_quarto.yml` – Navigation und globale Quarto-Konfiguration
 - `assets/gretl-mark.svg` – einfaches, editierbares Vektorlogo
 
-Die Webseite lädt **Recursive** über Google Fonts. Überschriften und andere fette Texte verwenden Gewicht **800 (ExtraBold)**.
+Die Webseite bindet **Recursive** lokal als woff2 ein. Überschriften und andere fette Texte verwenden Gewicht **800 (ExtraBold)**. Für Code-Blöcke wird die Monospace-Achse (`MONO`) des Recursive-Variable-Fonts verwendet.
 
 ## Schnelle visuelle Anpassungen
 
