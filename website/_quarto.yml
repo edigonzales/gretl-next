@@ -10,8 +10,6 @@ website:
   navbar:
     pinned: true
     collapse-below: lg
-    logo: assets/gretl-mark.svg
-    logo-alt: "GRETL next"
     left:
       - href: index.qmd
         text: Overview
