@@ -1,13 +1,13 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `csvFile(Object path)`
-| Legt die zu konvertierende CSV-Datei fest.
-| ja
+| [.dsl-signature]#*csvFile*(Object path)#
+| Legt die zu konvertierende [.acronym]#CSV#-Datei fest.
+| [.required]#ja#
 
-| `outputFile(Object path)`
-| Legt die XLSX-Ausgabedatei fest.
-| ja
+| [.dsl-signature]#*outputFile*(Object path)#
+| Legt die [.acronym]#XLSX#-Ausgabedatei fest.
+| [.required]#ja#
 
 |===

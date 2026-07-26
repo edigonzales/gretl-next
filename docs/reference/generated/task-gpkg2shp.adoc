@@ -1,13 +1,13 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `dataFile(Object path)`
+| [.dsl-signature]#*dataFile*(Object path)#
 | Legt die zu konvertierende GeoPackage-Datei fest.
-| ja
+| [.required]#ja#
 
-| `outputDir(Object path)`
+| [.dsl-signature]#*outputDir*(Object path)#
 | Legt das Shapefile-Ausgabeverzeichnis fest.
-| ja
+| [.required]#ja#
 
 |===

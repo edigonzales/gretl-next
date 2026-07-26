@@ -1,49 +1,49 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `controlKeepAliveTimeout(long controlKeepAliveTimeout)`
-| Konfiguriert das FTP-Control-Keep-Alive-Timeout in Sekunden.
-| nein
+| [.dsl-signature]#*controlKeepAliveTimeout*(long controlKeepAliveTimeout)#
+| Konfiguriert das [.acronym]#FTP#-Control-Keep-Alive-Timeout in Sekunden.
+| [.optional]#nein#
 
-| `fileSeparator(String fileSeparator)`
-| Konfiguriert das Pfadtrennzeichen auf dem FTP-Server.
-| nein
+| [.dsl-signature]#*fileSeparator*(String fileSeparator)#
+| Konfiguriert das Pfadtrennzeichen auf dem [.acronym]#FTP#-Server.
+| [.optional]#nein#
 
-| `fileType(String fileType)`
-| Konfiguriert den Dateitransfer-Modus (ASCII oder BINARY).
-| nein
+| [.dsl-signature]#*fileType*(String fileType)#
+| Konfiguriert den Dateitransfer-Modus ([.acronym]#ASCII# oder [.acronym]#BINARY#).
+| [.optional]#nein#
 
-| `localDir(Object localDir)`
+| [.dsl-signature]#*localDir*(Object localDir)#
 | Legt das lokale Download-Verzeichnis fest.
-| ja
+| [.required]#ja#
 
-| `passiveMode(boolean passiveMode)`
-| Konfiguriert den passiven FTP-Modus.
-| nein
+| [.dsl-signature]#*passiveMode*(boolean passiveMode)#
+| Konfiguriert den passiven [.acronym]#FTP#-Modus.
+| [.optional]#nein#
 
-| `password(String password)`
-| Konfiguriert das FTP-Passwort.
-| ja
+| [.dsl-signature]#*password*(String password)#
+| Konfiguriert das [.acronym]#FTP#-Passwort.
+| [.required]#ja#
 
-| `remoteDir(String remoteDir)`
-| Legt das entfernte FTP-Verzeichnis fest.
-| ja
+| [.dsl-signature]#*remoteDir*(String remoteDir)#
+| Legt das entfernte [.acronym]#FTP#-Verzeichnis fest.
+| [.required]#ja#
 
-| `remoteFile(Object remoteFile)`
+| [.dsl-signature]#*remoteFile*(Object remoteFile)#
 | Konfiguriert einen oder mehrere entfernte Dateinamen oder Wildcard-Muster.
-| nein
+| [.optional]#nein#
 
-| `server(String server)`
-| Konfiguriert den FTP-Server-Host, optional host:port.
-| ja
+| [.dsl-signature]#*server*(String server)#
+| Konfiguriert den [.acronym]#FTP#-Server-Host, optional host:port.
+| [.required]#ja#
 
-| `systemType(String systemType)`
-| Konfiguriert den FTP-Server-Systemtyp.
-| nein
+| [.dsl-signature]#*systemType*(String systemType)#
+| Konfiguriert den [.acronym]#FTP#-Server-Systemtyp.
+| [.optional]#nein#
 
-| `user(String user)`
-| Konfiguriert den FTP-Benutzernamen.
-| ja
+| [.dsl-signature]#*user*(String user)#
+| Konfiguriert den [.acronym]#FTP#-Benutzernamen.
+| [.required]#ja#
 
 |===

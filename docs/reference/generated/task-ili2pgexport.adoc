@@ -1,93 +1,93 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `baskets(String value)`
+| [.dsl-signature]#*baskets*(String value)#
 | Konfiguriert ili2db-Baskets.
-| nein
+| [.optional]#nein#
 
-| `dataFiles(Object... paths)`
-| Gibt die INTERLIS-Transfer-Ausgabedateien an.
-| ja
+| [.dsl-signature]#*dataFiles*(Object\... paths)#
+| Gibt die [.acronym]#INTERLIS#-Transfer-Ausgabedateien an.
+| [.required]#ja#
 
-| `database(String jdbcUrl)`
-| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit einer JDBC-URL.
-| ja
+| [.dsl-signature]#*database*(String jdbcUrl)#
+| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit einer [.acronym]#JDBC#-URL.
+| [.required]#ja#
 
-| `database(String jdbcUrl, String username, String password)`
-| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
-| ja
+| [.dsl-signature]#*database*(String jdbcUrl, String username, String password)#
+| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit [.acronym]#JDBC#-URL, Benutzername und Passwort.
+| [.required]#ja#
 
-| `databaseFile(Object path)`
+| [.dsl-signature]#*databaseFile*(Object path)#
 | Konfiguriert eine dateibasierte ili2db-Datenbank.
-| ja
+| [.required]#ja#
 
-| `dataset(Object dataset)`
+| [.dsl-signature]#*dataset*(Object dataset)#
 | Konfiguriert einen oder mehrere ili2db-Dataset-Namen.
-| nein
+| [.optional]#nein#
 
-| `datasetNameSlice(int start)`
+| [.dsl-signature]#*datasetNameSlice*(int start)#
 | Verwendet einen Substring ab start für abgeleitete Dataset-Namen.
-| nein
+| [.optional]#nein#
 
-| `datasetNameSlice(int start, int endExclusive)`
+| [.dsl-signature]#*datasetNameSlice*(int start, int endExclusive)#
 | Verwendet den Substring [start, endExclusive) für abgeleitete Dataset-Namen.
-| nein
+| [.optional]#nein#
 
-| `datasetNames(String... names)`
+| [.dsl-signature]#*datasetNames*(String\... names)#
 | Gibt die expliziten Dataset-Namen an.
-| nein
+| [.optional]#nein#
 
-| `datasetNamesFromFiles(Object... paths)`
+| [.dsl-signature]#*datasetNamesFromFiles*(Object\... paths)#
 | Leitet Dataset-Namen aus den angegebenen Dateien ab.
-| nein
+| [.optional]#nein#
 
-| `datasetNamesFromTransferFiles()`
+| [.dsl-signature]#*datasetNamesFromTransferFiles*()#
 | Leitet Dataset-Namen aus den konfigurierten Transferdateien ab.
-| nein
+| [.optional]#nein#
 
-| `datasetSubstring(Integer... datasetSubstring)`
+| [.dsl-signature]#*datasetSubstring*(Integer\... datasetSubstring)#
 | Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.
-| nein
+| [.optional]#nein#
 
-| `datasetSubstring(Iterable<Integer> datasetSubstring)`
+| [.dsl-signature]#*datasetSubstring*(Iterable<Integer> datasetSubstring)#
 | Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.
-| nein
+| [.optional]#nein#
 
-| `dbschema(String name)`
-| Alias für schema(...).
-| nein
+| [.dsl-signature]#*dbschema*(String name)#
+| Alias für [.dsl-method]#`schema(\...)`#.
+| [.optional]#nein#
 
-| `exportModels(String... names)`
-| Beschränkt den Export auf die angegebenen INTERLIS-Modelle.
-| nein
+| [.dsl-signature]#*exportModels*(String\... names)#
+| Beschränkt den Export auf die angegebenen [.acronym]#INTERLIS#-Modelle.
+| [.optional]#nein#
 
-| `logFile(Object path)`
+| [.dsl-signature]#*logFile*(Object path)#
 | Schreibt ili2db-Protokollmeldungen in eine Textdatei.
-| nein
+| [.optional]#nein#
 
-| `modelDirectories(String... entries)`
+| [.dsl-signature]#*modelDirectories*(String\... entries)#
 | Gibt die Modellverzeichnis- oder Repository-Einträge an.
-| nein
+| [.optional]#nein#
 
-| `modelNames(String... names)`
-| Gibt die INTERLIS-Modellnamen an.
-| nein
+| [.dsl-signature]#*modelNames*(String\... names)#
+| Gibt die [.acronym]#INTERLIS#-Modellnamen an.
+| [.optional]#nein#
 
-| `modeldir(String value)`
+| [.dsl-signature]#*modeldir*(String value)#
 | Alias für die Konfiguration der ili2db-Option modeldir.
-| nein
+| [.optional]#nein#
 
-| `models(String value)`
+| [.dsl-signature]#*models*(String value)#
 | Alias für die Konfiguration der ili2db-Option models.
-| nein
+| [.optional]#nein#
 
-| `schema(String name)`
+| [.dsl-signature]#*schema*(String name)#
 | Legt den ili2db-Schemanamen fest.
-| nein
+| [.optional]#nein#
 
-| `topics(String value)`
+| [.dsl-signature]#*topics*(String value)#
 | Konfiguriert ili2db-Topics.
-| nein
+| [.optional]#nein#
 
 |===

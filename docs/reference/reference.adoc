@@ -1,14 +1,14 @@
 = GRETL-Referenzdokumentation
 
-Das Datenmanagement-Tool _GRETL_ wird für Datenimporte, Datenumbauten
-(Modellumbauten) und Datenexporte eingesetzt. _GRETL_ führt Jobs aus, wobei
+Das Datenmanagement-Tool [.product]#GRETL# wird für Datenimporte, Datenumbauten
+(Modellumbauten) und Datenexporte eingesetzt. [.product]#GRETL# führt Jobs aus, wobei
 ein Job aus mehreren atomaren Tasks besteht. Damit ein Job vollständig
 ausgeführt wurde, muss jeder zum Job gehörende Task erfolgreich ausgeführt
 worden sein. Schlägt ein Task fehl, gilt auch der Job als fehlgeschlagen.
 
 Ein Job besteht aus einem oder mehreren Tasks, die gemäss einem gerichteten
-azyklischen Graphen (Directed Acyclic Graph; DAG) miteinander verknüpft sind.
-Die Tasks werden im Gradle-Build-File konfiguriert.
+azyklischen Graphen (Directed Acyclic Graph; [.acronym]#DAG#) miteinander verknüpft sind.
+Die Tasks werden im [.product]#Gradle#-Build-File konfiguriert.
 
 Ein Job kann aus einer linearen Kette von Tasks bestehen:
 
@@ -18,7 +18,7 @@ Task 1 – Task 2 – Task 3 – Task n
 ----
 
 Beispiel: Datenimport aus einer [.acronym]#INTERLIS#-Datei, Datenumbau und Datenexport
-nach Shapefile.
+nach [.product]#Shapefile#.
 
 Ein Job kann sich nach einem Task auf mehrere weitere Tasks verzweigen:
 
@@ -44,8 +44,8 @@ Task 2 –
 
 == Systemanforderungen
 
-Für GRETL Modular werden Java 17 und Gradle 7.6.4 verwendet. Die empfohlenen
-Builds verwenden den eingecheckten Gradle Wrapper:
+Für [.product]#GRETL# Modular werden [.product]#Java# 17 und [.product]#Gradle# 7.6.4 verwendet. Die empfohlenen
+Builds verwenden den eingecheckten [.product]#Gradle# Wrapper:
 
 [source,bash]
 ----
@@ -54,17 +54,17 @@ Builds verwenden den eingecheckten Gradle Wrapper:
 
 == Installation
 
-GRETL Modular wird als Gradle-Plugin verwendet. Für einen Job werden die
-benötigten Plugin-Repositories im +pluginManagement+-Block des Settings-Files
+[.product]#GRETL# Modular wird als [.product]#Gradle#-Plugin verwendet. Für einen Job werden die
+benötigten Plugin-Repositories im [.dsl-method]#`pluginManagement`#-Block des Settings-Files
 und das passende Plugin im Build-File konfiguriert.
 
 Für lokale Entwicklung kann der aktuelle Snapshot aus dem Repository verwendet
-werden. Veröffentlichte Versionen werden über das GRETL-Maven-Repository
+werden. Veröffentlichte Versionen werden über das [.product]#GRETL#-[.product]#Maven#-Repository
 bezogen.
 
 == Kleines Beispiel
 
-Das folgende Build-File führt SQL-Dateien gegen eine SQLite-Datenbank aus und
+Das folgende Build-File führt [.acronym]#SQL#-Dateien gegen eine [.product]#SQLite#-Datenbank aus und
 komprimiert anschliessend eine Datei:
 
 [source,gradle,linenums]
@@ -89,14 +89,14 @@ tasks.register('compressXml', Gzip) {
 
 == Ausführen
 
-Ein Job wird im Verzeichnis mit seinem Gradle-Build ausgeführt:
+Ein Job wird im Verzeichnis mit seinem [.product]#Gradle#-Build ausgeführt:
 
 [source,bash]
 ----
 ./gradlew
 ----
 
-Alternativ kann ein Job aus einem beliebigen Verzeichnis mit +--project-dir+
+Alternativ kann ein Job aus einem beliebigen Verzeichnis mit [.cli-option]#`--project-dir`#
 gestartet werden:
 
 [source,bash]
@@ -104,7 +104,7 @@ gestartet werden:
 ./gradlew --project-dir /pfad/zum/job
 ----
 
-Zusätzliche Gradle-Properties können für parametrisierte Jobs übergeben
+Zusätzliche [.product]#Gradle#-Properties können für parametrisierte Jobs übergeben
 werden, zum Beispiel:
 
 [source,bash]
@@ -116,41 +116,42 @@ werden, zum Beispiel:
 
 Die folgenden Abschnitte bestimmen die redaktionelle Reihenfolge und erklären
 die Aufgabe der einzelnen Task-Typen. Die jeweils aktuelle Tabelle der
-öffentlichen DSL-Methoden wird aus den Task-Annotationen und Javadocs erzeugt.
+öffentlichen [.acronym]#DSL#-Methoden wird aus den Task-Annotationen und Javadocs erzeugt.
 
 Die Beispiele setzen voraus, dass die verwendeten Task-Klassen im Build-File
-importiert wurden, zum Beispiel mit +import ch.so.agi.gretl.tasks.*+.
+importiert wurden, zum Beispiel mit [.code-fragment]#`import ch.so.agi.gretl.tasks.*`#.
 
 .Hinweis zur Schreibweise
 [NOTE]
 ====
-Die Spalte «DSL-Methode» zeigt die Parametertypen der öffentlichen Methode.
-Strings werden in Groovy in Anführungszeichen angegeben, Wahrheitswerte und
+Die Spalte «[.acronym]#DSL#-Methode» zeigt die Parametertypen der öffentlichen Methode.
+[.java-type]##`String`##s werden in [.product]#Groovy# in Anführungszeichen angegeben, Wahrheitswerte und
 Zahlen ohne Anführungszeichen.
 
-Bei `Object path` kann ein Pfad direkt als String geschrieben werden, zum
-Beispiel `dataFile 'fubar.xtf'`; Gradle-Ausdrücke wie
-`dataFile file('fubar.xtf')` werden ebenfalls akzeptiert. `Object... paths`
-erlaubt einen oder mehrere Pfade sowie Gradle-Dateisammlungen wie `files(...)`
-oder `fileTree(...)`.
+Bei [.java-type]#`Object`# [.parameter]#`path`# kann ein Pfad direkt als String geschrieben werden,
+zum Beispiel [.code-fragment]#`dataFile 'fubar.xtf'`#; [.product]#Gradle#-Ausdrücke wie
+[.code-fragment]#`dataFile file('fubar.xtf')`# werden ebenfalls akzeptiert.
+[.java-type]#`Object\...`# [.parameter]#`paths`# erlaubt einen oder mehrere Pfade sowie
+[.product]#Gradle#-Dateisammlungen wie [.dsl-method]#`files(\...)`# oder
+[.dsl-method]#`fileTree(\...)`#.
 ====
 
 === Av2ch
 
-Transformiert eine [.acronym]##INTERLIS##1-Transferdatei im kantonalen AV-DM01-Modell in das
+Transformiert eine [.acronym]#INTERLIS#-1-Transferdatei im kantonalen [.acronym]#AV#-[.domain-id]#`DM01`#-Modell in das
 Bundesmodell. Unterstützt werden die Sprachen _Deutsch_ und _Italienisch_ und
-der Bezugsrahmen _LV95_. Getestet wurde der Task mit Daten aus den Kantonen
+der Bezugsrahmen [.domain-id]#`LV95`#. Getestet wurde der Task mit Daten aus den Kantonen
 Solothurn, Glarus und Tessin. Weitere Informationen sind in der
-Basisbibliothek link:https://github.com/sogis/av2ch[av2ch] zu finden.
+Basisbibliothek [.product]#link:https://github.com/sogis/av2ch[av2ch]# zu finden.
 
-Das Bundes-ITF hat denselben Namen wie das Kantons-ITF.
+Das Bundes-[.acronym]#ITF# hat denselben Namen wie das Kantons-[.acronym]#ITF#.
 
 Aufgrund der sehr vielen Logging-Meldungen einer verwendeten Bibliothek wird
-der +System.err+-Output nach +/dev/null+ umgeleitet. Die relevante Stelle ist
+der [.code-fragment]#`System.err`#-Output nach [.path]#`/dev/null`# umgeleitet. Die relevante Stelle ist
 im link:https://github.com/sogis/av2ch/blob/master/src/main/java/ch/so/agi/av/Av2ch.java#L75[Quellcode]
 dokumentiert.
 
-Eine einzelne Datei kann mit +inputFiles+ transformiert werden:
+Eine einzelne Datei kann mit [.dsl-method]#`inputFiles`# transformiert werden:
 
 [source,groovy]
 ----
@@ -176,16 +177,16 @@ include::generated/task-av2ch.adoc[]
 
 === Av2geobau
 
-Av2geobau konvertiert eine [.acronym]#INTERLIS#-Transferdatei (ITF) in eine DXF-GeoBau-
-Datei. Av2geobau funktioniert ohne Datenbank.
+[.task-type]#`Av2geobau`# konvertiert eine [.acronym]#INTERLIS#-Transferdatei ([.acronym]#ITF#) in eine
+[.acronym]#DXF#-[.product]#GeoBau#-Datei. [.task-type]#`Av2geobau`# funktioniert ohne Datenbank.
 
-Die ITF-Datei muss dem Modell +DM01AVCH24LV95D+ entsprechen. Die Daten werden
+Die [.acronym]#ITF#-Datei muss dem Modell [.domain-id]#`DM01AVCH24LV95D`# entsprechen. Die Daten werden
 nicht validiert.
 
-Die Datenstruktur der DXF-Datei ist im Prinzip einfach: Die verschiedenen
-Informationen aus dem Datenmodell DM01 werden in verschiedene DXF-Layer
-abgebildet, zum Beispiel die begehbaren LFP1 in den Layer +01111+ oder die
-Gebäude in den Layer +01211+.
+Die Datenstruktur der [.acronym]#DXF#-Datei ist im Prinzip einfach: Die verschiedenen
+Informationen aus dem Datenmodell [.domain-id]#`DM01`# werden in verschiedene [.acronym]#DXF#-Layer
+abgebildet, zum Beispiel die begehbaren [.domain-id]#`LFP1`# in den Layer [.domain-id]#`01111`# oder die
+Gebäude in den Layer [.domain-id]#`01211`#.
 
 Der Datenumbau ist nicht konfigurierbar.
 
@@ -213,12 +214,12 @@ include::generated/task-av2geobau.adoc[]
 
 === Csv2Excel
 
-Konvertiert eine CSV-Datei in eine Excel-Datei (+.xlsx+). Datentypen werden
+Konvertiert eine [.acronym]#CSV#-Datei in eine [.product]#Excel#-Datei ([.file-ext]#`.xlsx`#). Datentypen werden
 anhand eines [.acronym]#INTERLIS#-Modells ermittelt. Fehlt das Modell, wird alles als Text
 gespeichert. Die Daten werden vollständig im Speicher vorgehalten. Bei grossen
-Dateien kann das zu Problemen führen. Falls die Datei +outputFile+ bereits
+Dateien kann das zu Problemen führen. Falls die Datei [.dsl-method]#`outputFile`# bereits
 existiert, wird ein neues Sheet erstellt; die Datei wird nicht überschrieben.
-Der Sheet-Name entspricht dem normalisierten Namen der CSV-Datei. Ein Fehler
+Der Sheet-Name entspricht dem normalisierten Namen der [.acronym]#CSV#-Datei. Ein Fehler
 wird gemeldet, falls der Sheet-Name bereits existiert.
 
 [source,groovy]
@@ -238,7 +239,7 @@ include::generated/task-csv2excel.adoc[]
 
 === CsvExport
 
-Daten aus einer bestehenden Datenbanktabelle werden in eine CSV-Datei
+Daten aus einer bestehenden Datenbanktabelle werden in eine [.acronym]#CSV#-Datei
 exportiert. Geometriespalten können nicht exportiert werden.
 
 [source,groovy]
@@ -261,15 +262,15 @@ include::generated/task-csvexport.adoc[]
 
 === CsvImport
 
-Daten aus einer CSV-Datei werden in eine bestehende Datenbanktabelle
+Daten aus einer [.acronym]#CSV#-Datei werden in eine bestehende Datenbanktabelle
 importiert.
 
-Die Tabelle kann weitere Spalten enthalten, die in der CSV-Datei nicht
-vorkommen. Sie müssen aber +NULLable+ sein oder einen Default-Wert definiert
+Die Tabelle kann weitere Spalten enthalten, die in der [.acronym]#CSV#-Datei nicht
+vorkommen. Sie müssen aber [.literal]#`NULLable`# sein oder einen Default-Wert definiert
 haben.
 
 Geometriespalten können nicht importiert werden. Die Gross-/Kleinschreibung
-der CSV-Spaltennamen wird für die Zuordnung zu den DB-Spalten ignoriert.
+der [.acronym]#CSV#-Spaltennamen wird für die Zuordnung zu den [.acronym]#DB#-Spalten ignoriert.
 
 [source,groovy]
 ----
@@ -290,9 +291,9 @@ include::generated/task-csvimport.adoc[]
 
 === CsvValidator
 
-Prüft eine CSV-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
-link:https://github.com/claeis/ilivalidator[ilivalidator]. Das Datenmodell darf
-die OID nicht als +INTERLIS.UUIDOID+ modellieren.
+Prüft eine [.acronym]#CSV#-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
+[.product]#link:https://github.com/claeis/ilivalidator[ilivalidator]#. Das Datenmodell darf
+die [.acronym]#OID# nicht als [.domain-id]#`INTERLIS.UUIDOID`# modellieren.
 
 Beispiele:
 
@@ -317,25 +318,25 @@ tasks.register('validateFahrzeugbestandCsv', CsvValidator) {
 }
 ----
 
-Falls die CSV-Datei eine Header-Zeile mit den Spaltennamen enthält, wird im
+Falls die [.acronym]#CSV#-Datei eine Header-Zeile mit den Spaltennamen enthält, wird im
 gegebenen Modell eine Klasse gesucht, welche die Header-Spaltennamen enthält.
 Gross-/Kleinschreibung sowie optionale Spalten der Modell-Klasse werden
 ignoriert. Wird keine solche Klasse gefunden, gilt das als Validierungsfehler.
 
-Falls die CSV-Datei keine Header-Zeile enthält, wird im gegebenen Modell eine
+Falls die [.acronym]#CSV#-Datei keine Header-Zeile enthält, wird im gegebenen Modell eine
 Klasse mit derselben Anzahl Attribute gesucht. Wird keine solche Klasse
 gefunden, gilt das als Validierungsfehler.
 
-Die Prüfung mehrerer CSV-Dateien im selben Task kann zu Fehlermeldungen wie
-+OID o3158 of object <Modelname>.<Topicname>.<Klassenname> already exists in ...+
-führen. Beim Öffnen und Lesen einer CSV-Datei wird der interne OID-Zähler
-zurückgesetzt. Deshalb kann pro Task nur eine CSV-Datei geprüft werden.
+Die Prüfung mehrerer [.acronym]#CSV#-Dateien im selben Task kann zu Fehlermeldungen wie
+[.code-fragment]#`OID o3158 of object <Modelname>.<Topicname>.<Klassenname> already exists in ...`#
+führen. Beim Öffnen und Lesen einer [.acronym]#CSV#-Datei wird der interne [.acronym]#OID#-Zähler
+zurückgesetzt. Deshalb kann pro Task nur eine [.acronym]#CSV#-Datei geprüft werden.
 
 include::generated/task-csvvalidator.adoc[]
 
 === Curl
 
-Simuliert mit einem +HttpClient+ einige Curl-Befehle.
+Simuliert mit einem [.java-type]#`HttpClient`# einige [.product]#Curl#-Befehle.
 
 [source,groovy]
 ----
@@ -438,25 +439,25 @@ include::generated/task-curl.adoc[]
 
 === Db2Db
 
-Der Task +Db2Db+ ist prinzipiell eine 1:1-Datenkopie. Es findet kein
+Der Task [.task-type]#`Db2Db`# ist prinzipiell eine 1:1-Datenkopie. Es findet kein
 Datenumbau statt; Quell- und Zieltabelle haben jeweils identische Attribute.
-In der Regel werden auf der Quellseite einfache SELECT-Queries ausgeführt und
+In der Regel werden auf der Quellseite einfache [.code-fragment]#`SELECT`#-Queries ausgeführt und
 die Resultate in Tabellen der Ziel-Datenbank eingefügt. Unter bestimmten
 Bedingungen kann der Task auch für einen wenig komplexen Datenumbau verwendet
 werden.
 
-Die Queries können auf mehrere +.sql+-Dateien verteilt werden. Jede SQL-Datei
+Die Queries können auf mehrere [.file-ext]#`.sql`#-Dateien verteilt werden. Jede [.acronym]#SQL#-Datei
 liefert genau ein Resultset zurück, das in die konfigurierte Zieltabelle
 geschrieben wird. Der Task verarbeitet innerhalb einer Transaktion ein oder
 mehrere Resultsets.
 
-Die Reihenfolge der SQL-Dateien ist relevant. Alle SELECT-Statements werden in
+Die Reihenfolge der [.acronym]#SQL#-Dateien ist relevant. Alle [.code-fragment]#`SELECT`#-Statements werden in
 einer Transaktion ausgeführt, damit ein konsistenter Datenstand gelesen wird.
-Alle INSERT-Statements werden ebenfalls in einer Transaktion ausgeführt, damit
+Alle [.code-fragment]#`INSERT`#-Statements werden ebenfalls in einer Transaktion ausgeführt, damit
 bei einem Fehler kein unvollständiger Import zurückbleibt.
 
-Parameter innerhalb einer SQL-Datei werden mit der Syntax
-+${paramName}+ verwendet:
+Parameter innerhalb einer [.acronym]#SQL#-Datei werden mit der Syntax
+[.placeholder]#`${paramName}`# verwendet:
 
 [source,groovy]
 ----
@@ -485,10 +486,10 @@ tasks.register('transferSomeData', Db2Db) {
 }
 ----
 
-Ein Transfer besteht aus einer SQL-Datei, dem Namen der Zieltabelle und der
-Angabe, ob vor dem INSERT alle Datensätze gelöscht werden sollen. Optional
-können Geometriespalten angegeben werden, um einen WKT-String in eine
-PostGIS-Geometrie umzuwandeln:
+Ein Transfer besteht aus einer [.acronym]#SQL#-Datei, dem Namen der Zieltabelle und der
+Angabe, ob vor dem [.code-fragment]#`INSERT`# alle Datensätze gelöscht werden sollen. Optional
+können Geometriespalten angegeben werden, um einen [.acronym]#WKT#-String in eine
+[.product]#PostGIS#-Geometrie umzuwandeln:
 
 [source,groovy]
 ----
@@ -498,29 +499,29 @@ transfer 'untersuchungseinheit.sql',
     'geom:wkt:2056'
 ----
 
-+geom+ ist der Name der verwendeten Geometriespalte. Ein SQL-Auszug zur
-Erzeugung des WKT-Strings mittels Konkatenation:
+[.domain-id]#`geom`# ist der Name der verwendeten Geometriespalte. Ein [.acronym]#SQL#-Auszug zur
+Erzeugung des [.acronym]#WKT#-Strings mittels Konkatenation:
 
 [source,sql]
 ----
 'Point(' || ue.koordinate_x::text || ' ' || ue.koordinate_y::text || ')' AS geom
 ----
 
-Unterstützte Datenbanken sind PostgreSQL, SQLite, Oracle, Derby und DuckDB.
+Unterstützte Datenbanken sind [.product]#PostgreSQL#, [.product]#SQLite#, [.product]#Oracle#, [.product]#Derby# und [.product]#DuckDB#.
 
 include::generated/task-db2db.adoc[]
 
 === DuckDbSqlExecutor
 
-Der modulare Task +DuckDbSqlExecutor+ führt SQL in einer vorbereiteten
-DuckDB-Föderationssitzung aus. Die verfügbaren Methoden und ihre Defaults
+Der modulare Task [.task-type]#`DuckDbSqlExecutor`# führt [.acronym]#SQL# in einer vorbereiteten
+[.product]#DuckDB#-Föderationssitzung aus. Die verfügbaren Methoden und ihre Defaults
 stehen in der generierten Tabelle.
 
 include::generated/task-duckdbsqlexecutor.adoc[]
 
 === FtpDelete
 
-Löscht Daten auf einem FTP-Server.
+Löscht Daten auf einem [.acronym]#FTP#-Server.
 
 Beispiel zum Löschen aller Dateien eines bestimmten Musters in einem
 Verzeichnis:
@@ -622,7 +623,7 @@ include::generated/task-ftplist.adoc[]
 
 === FtpUpload
 
-Lädt eine Datei auf einen FTP-Server hoch.
+Lädt eine Datei auf einen [.acronym]#FTP#-Server hoch.
 
 [source,groovy]
 ----
@@ -641,15 +642,15 @@ include::generated/task-ftpupload.adoc[]
 
 === Gpkg2Dxf
 
-Exportiert alle Tabellen einer GeoPackage-Datei in DXF-Dateien. Als Input wird
-eine von _ili2gpkg_ erzeugte GeoPackage-Datei benötigt.
+Exportiert alle Tabellen einer [.product]#GeoPackage#-Datei in [.acronym]#DXF#-Dateien. Als Input wird
+eine von [.product]#ili2gpkg# erzeugte [.product]#GeoPackage#-Datei benötigt.
 
-Es werden alle [.acronym]#INTERLIS#-Klassen exportiert. Der eigentliche SELECT-Befehl ist
-komplexer, weil für das Layern der einzelnen DXF-Objekte das [.acronym]#INTERLIS#-
-Metaattribut +!!@dxflayer="true"+ ausgelesen wird. Gibt es kein solches
-Metaattribut, wird alles in den gleichen DXF-Layer (+default+) geschrieben.
+Es werden alle [.acronym]#INTERLIS#-Klassen exportiert. Der eigentliche [.code-fragment]#`SELECT`#-Befehl ist
+komplexer, weil für das Layern der einzelnen [.acronym]#DXF#-Objekte das [.acronym]#INTERLIS#-
+Metaattribut [.code-fragment]#`!!@dxflayer="true"`# ausgelesen wird. Gibt es kein solches
+Metaattribut, wird alles in den gleichen [.acronym]#DXF#-Layer ([.literal]#`default`#) geschrieben.
 
-Die DXF-Dateien sind +ISO-8859-1+ encodiert. Der Task sollte bei Bedarf noch
+Die [.acronym]#DXF#-Dateien sind [.literal]#`ISO-8859-1`# encodiert. Der Task sollte bei Bedarf noch
 weiter verbessert werden.
 
 [source,groovy]
@@ -664,16 +665,16 @@ include::generated/task-gpkg2dxf.adoc[]
 
 === Gpkg2Shp
 
-Exportiert alle Tabellen einer GeoPackage-Datei in Shapefiles. Als Input wird
-eine von _ili2gpkg_ erzeugte GeoPackage-Datei benötigt.
+Exportiert alle Tabellen einer [.product]#GeoPackage#-Datei in [.product]##Shapefile##s. Als Input wird
+eine von [.product]#ili2gpkg# erzeugte [.product]#GeoPackage#-Datei benötigt.
 
 Es werden alle [.acronym]#INTERLIS#-Klassen exportiert. Je nach den bei der Erstellung der
-GeoPackage-Datei verwendeten Parametern muss die Query angepasst werden. Für
+[.product]#GeoPackage#-Datei verwendeten Parametern muss die Query angepasst werden. Für
 den vorgesehenen Anwendungsfall einfacher, flacher Modelle reicht eine Query
 für alle Datensätze.
 
-Die Shapefiles werden mit +UTF-8+ encodiert. Der frühere Standard
-+ISO-8859-1+ funktioniert insbesondere in QGIS nicht immer korrekt mit
+Die [.product]##Shapefile##s werden mit [.literal]#`UTF-8`# encodiert. Der frühere Standard
+[.literal]#`ISO-8859-1`# funktioniert insbesondere in [.product]#QGIS# nicht immer korrekt mit
 Umlauten.
 
 [source,groovy]
@@ -688,7 +689,7 @@ include::generated/task-gpkg2shp.adoc[]
 
 === GpkgExport
 
-Daten aus einer bestehenden Datenbanktabelle werden in eine GeoPackage-Datei
+Daten aus einer bestehenden Datenbanktabelle werden in eine [.product]#GeoPackage#-Datei
 exportiert.
 
 Beispiele:
@@ -723,13 +724,13 @@ include::generated/task-gpkgexport.adoc[]
 
 === GpkgImport
 
-Daten aus einer GeoPackage-Datei werden in eine bestehende Datenbanktabelle
+Daten aus einer [.product]#GeoPackage#-Datei werden in eine bestehende Datenbanktabelle
 importiert.
 
-Die Tabelle kann weitere Spalten enthalten, die in der GeoPackage-Datei nicht
-vorkommen. Sie müssen aber +NULLable+ sein oder einen Default-Wert definiert
-haben. Die Gross-/Kleinschreibung der GeoPackage-Spaltennamen wird für die
-Zuordnung zu den DB-Spalten ignoriert.
+Die Tabelle kann weitere Spalten enthalten, die in der [.product]#GeoPackage#-Datei nicht
+vorkommen. Sie müssen aber [.literal]#`NULLable`# sein oder einen Default-Wert definiert
+haben. Die Gross-/Kleinschreibung der [.product]#GeoPackage#-Spaltennamen wird für die
+Zuordnung zu den [.acronym]#DB#-Spalten ignoriert.
 
 [source,groovy]
 ----
@@ -750,8 +751,8 @@ include::generated/task-gpkgimport.adoc[]
 
 === GpkgValidator
 
-Prüft eine GeoPackage-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert
-auf dem link:https://github.com/claeis/ilivalidator[ilivalidator].
+Prüft eine [.product]#GeoPackage#-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert
+auf dem [.product]#link:https://github.com/claeis/ilivalidator[ilivalidator]#.
 
 [source,groovy]
 ----
@@ -766,7 +767,7 @@ include::generated/task-gpkgvalidator.adoc[]
 
 === Gzip
 
-Komprimiert eine einzelne Datei mit GZIP. Für mehrere Dateien kann vorab ein
+Komprimiert eine einzelne Datei mit [.acronym]#GZIP#. Für mehrere Dateien kann vorab ein
 Archiv erzeugt werden.
 
 [source,groovy]
@@ -781,7 +782,7 @@ include::generated/task-gzip.adoc[]
 
 === Ili2duckdbExport
 
-Exportiert Daten aus einer DuckDB-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
+Exportiert Daten aus einer [.product]#DuckDB#-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
 
 [source,groovy]
 ----
@@ -797,10 +798,10 @@ include::generated/task-ili2duckdbexport.adoc[]
 
 === Ili2duckdbImport
 
-Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine DuckDB-Datenbank.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine [.product]#DuckDB#-Datenbank.
 
-Das Property +transferFiles+ kann mehrere Dateien aufnehmen. Für Dateien aus
-einem ilidata-Repository können zusätzlich Repository-IDs angegeben werden.
+Das Property [.dsl-method]#`transferFiles`# kann mehrere Dateien aufnehmen. Für Dateien aus
+einem [.product]#ilidata#-Repository können zusätzlich Repository-[.acronym]##ID##s angegeben werden.
 
 [source,groovy]
 ----
@@ -816,10 +817,10 @@ include::generated/task-ili2duckdbimport.adoc[]
 
 === Ili2duckdbImportSchema
 
-Erstellt die Tabellenstruktur in der DuckDB-Datenbank anhand eines [.acronym]#INTERLIS#-
-Modells. Fremdschlüssel werden nicht unterstützt, weil die +ADD CONSTRAINT+-
-Syntax nicht unterstützt wird. Es muss +--strokeArcs+ verwendet werden.
-Räumliche Indizes von DuckDB sind noch rudimentär umgesetzt.
+Erstellt die Tabellenstruktur in der [.product]#DuckDB#-Datenbank anhand eines [.acronym]#INTERLIS#-
+Modells. Fremdschlüssel werden nicht unterstützt, weil die [.code-fragment]#`ADD CONSTRAINT`#-
+Syntax nicht unterstützt wird. Es muss [.cli-option]#`--strokeArcs`# verwendet werden.
+Räumliche Indizes von [.product]#DuckDB# sind noch rudimentär umgesetzt.
 
 [source,groovy]
 ----
@@ -835,15 +836,15 @@ include::generated/task-ili2duckdbimportschema.adoc[]
 
 === Ili2gpkgImport
 
-Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine GeoPackage-Datei.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine [.product]#GeoPackage#-Datei.
 
 Die Tabellen werden implizit angelegt, falls sie noch nicht vorhanden sind.
 Falls die Tabellen in der Datenbank bereits vorhanden sind, können sie
 zusätzliche Spalten enthalten, welche beim Import leer bleiben.
 
-Falls beim Import ein Datensatz-Identifikator (+dataset+) definiert wird, darf
+Falls beim Import ein Datensatz-Identifikator ([.dsl-method]#`dataset`#) definiert wird, darf
 dieser Datensatz-Identifikator in der Datenbank noch nicht vorhanden sein. Die
-Option +--doSchemaImport+ wird automatisch gesetzt.
+Option [.cli-option]#`--doSchemaImport`# wird automatisch gesetzt.
 
 [source,groovy]
 ----
@@ -854,17 +855,17 @@ tasks.register('importData', Ili2gpkgImport) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2gpkg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2gpkg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2gpkgimport.adoc[]
 
 === Ili2pgDelete
 
-Löscht einen oder mehrere Datensätze in PostgreSQL anhand eines Datensatz-
+Löscht einen oder mehrere Datensätze in [.product]#PostgreSQL# anhand eines Datensatz-
 Identifikators. Diese Funktion bedingt, dass das Datenbankschema mit der
-Option +createBasketCol+ erstellt wurde, etwa mit
-+Ili2pgImportSchema+. Der Task kann über +dataset+ auch mit mehreren
+Option [.dsl-method]#`createBasketCol`# erstellt wurde, etwa mit
+[.task-type]#`Ili2pgImportSchema`#. Der Task kann über [.dsl-method]#`dataset`# auch mit mehreren
 Datensätzen konfiguriert werden.
 
 [source,groovy]
@@ -890,21 +891,21 @@ tasks.register('deleteDatasets', Ili2pgDelete) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgdelete.adoc[]
 
 === Ili2pgExport
 
-Exportiert Daten aus der PostgreSQL-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
-Mit +models+, +topics+, +baskets+ oder +dataset+ wird definiert, welche Daten
+Exportiert Daten aus der [.product]#PostgreSQL#-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
+Mit [.dsl-method]#`models`#, [.dsl-method]#`topics`#, [.dsl-method]#`baskets`# oder [.dsl-method]#`dataset`# wird definiert, welche Daten
 exportiert werden.
 
-Ob die Daten im [.acronym]#INTERLIS#-1-, [.acronym]#INTERLIS#-2- oder GML-Format geschrieben werden,
+Ob die Daten im [.acronym]#INTERLIS#-1-, [.acronym]#INTERLIS#-2- oder [.acronym]#GML#-Format geschrieben werden,
 ergibt sich aus der Dateinamenserweiterung der Ausgabedatei. Für eine
-[.acronym]#INTERLIS#-1-Transferdatei muss die Erweiterung +.itf+ verwendet werden; für
-eine GML-Transferdatei +.gml+.
+[.acronym]#INTERLIS#-1-Transferdatei muss die Erweiterung [.file-ext]#`.itf`# verwendet werden; für
+eine [.acronym]#GML#-Transferdatei [.file-ext]#`.gml`#.
 
 [source,groovy]
 ----
@@ -933,23 +934,23 @@ tasks.register('exportData', Ili2pgExport) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgexport.adoc[]
 
 === Ili2pgImport
 
-Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in die PostgreSQL-Datenbank.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in die [.product]#PostgreSQL#-Datenbank.
 Falls die Tabellen bereits vorhanden sind, können sie zusätzliche Spalten
 enthalten, welche beim Import leer bleiben.
 
-Falls beim Import ein Datensatz-Identifikator (+dataset+) definiert wird, darf
+Falls beim Import ein Datensatz-Identifikator ([.dsl-method]#`dataset`#) definiert wird, darf
 dieser Datensatz-Identifikator in der Datenbank noch nicht vorhanden sein.
 
-Das Property +transferFiles+ kann mehrere lokale Dateien aufnehmen. Für Daten
-aus einem ilidata-Repository können zusätzlich Repository-IDs angegeben
-werden. Um bereits importierte Daten zu ersetzen, kann +Ili2pgReplace+
+Das Property [.dsl-method]#`transferFiles`# kann mehrere lokale Dateien aufnehmen. Für Daten
+aus einem [.product]#ilidata#-Repository können zusätzlich Repository-[.acronym]##ID##s angegeben
+werden. Um bereits importierte Daten zu ersetzen, kann [.task-type]#`Ili2pgReplace`#
 verwendet werden.
 
 Beispiel:
@@ -967,7 +968,7 @@ tasks.register('importData', Ili2pgImport) {
 }
 ----
 
-Beim Import der AV-Daten kann die BFS-Nummer aus den ersten vier Zeichen des
+Beim Import der [.acronym]#AV#-Daten kann die [.acronym]#BFS#-Nummer aus den ersten vier Zeichen des
 Dateinamens als Dataset verwendet werden:
 
 [source,groovy]
@@ -985,15 +986,15 @@ tasks.register('importData', Ili2pgImport) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgimport.adoc[]
 
 === Ili2pgImportSchema
 
-Erstellt die Tabellenstruktur in der PostgreSQL-Datenbank anhand eines
-[.acronym]#INTERLIS#-Modells. Der Parameter +iliFile+ oder +models+ muss gesetzt werden.
+Erstellt die Tabellenstruktur in der [.product]#PostgreSQL#-Datenbank anhand eines
+[.acronym]#INTERLIS#-Modells. Der Parameter [.dsl-method]#`iliFile`# oder [.dsl-method]#`models`# muss gesetzt werden.
 
 [source,groovy]
 ----
@@ -1009,17 +1010,17 @@ tasks.register('importSchema', Ili2pgImportSchema) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgimportschema.adoc[]
 
 === Ili2pgReplace
 
-Ersetzt die Daten in der PostgreSQL-Datenbank anhand eines Datensatz-
-Identifikators (+dataset+) mit den Daten aus einer [.acronym]#INTERLIS#-Transferdatei.
+Ersetzt die Daten in der [.product]#PostgreSQL#-Datenbank anhand eines Datensatz-
+Identifikators ([.dsl-method]#`dataset`#) mit den Daten aus einer [.acronym]#INTERLIS#-Transferdatei.
 Diese Funktion bedingt, dass das Datenbankschema mit der Option
-+createBasketCol+ erstellt wurde.
+[.dsl-method]#`createBasketCol`# erstellt wurde.
 
 [source,groovy]
 ----
@@ -1054,20 +1055,20 @@ tasks.register('replaceData', Ili2pgReplace) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgreplace.adoc[]
 
 === Ili2pgUpdate
 
-Aktualisiert die Daten in der PostgreSQL-Datenbank anhand einer [.acronym]#INTERLIS#-
+Aktualisiert die Daten in der [.product]#PostgreSQL#-Datenbank anhand einer [.acronym]#INTERLIS#-
 Transferdatei: neue Objekte werden eingefügt, bestehende Objekte aktualisiert
 und nicht mehr vorhandene Objekte gelöscht.
 
 Diese Funktion bedingt, dass das Datenbankschema mit der Option
-+createBasketCol+ erstellt wurde und dass die Klassen und Topics eine stabile
-OID haben.
+[.dsl-method]#`createBasketCol`# erstellt wurde und dass die Klassen und Topics eine stabile
+[.acronym]#OID# haben.
 
 [source,groovy]
 ----
@@ -1083,18 +1084,18 @@ tasks.register('updateData', Ili2pgUpdate) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgupdate.adoc[]
 
 === Ili2pgValidate
 
 Prüft Daten, ohne sie in eine Datei zu exportieren. Der Task ist erfolgreich,
-wenn keine Fehler gefunden werden. Mit +failOnError false+ bleibt der Task
+wenn keine Fehler gefunden werden. Mit [.code-fragment]#`failOnError false`# bleibt der Task
 auch bei Validierungsfehlern erfolgreich.
 
-Mit +models+, +topics+, +baskets+ oder +dataset+ wird definiert, welche Daten
+Mit [.dsl-method]#`models`#, [.dsl-method]#`topics`#, [.dsl-method]#`baskets`# oder [.dsl-method]#`dataset`# wird definiert, welche Daten
 geprüft werden.
 
 [source,groovy]
@@ -1112,16 +1113,16 @@ tasks.register('validate', Ili2pgValidate) {
 }
 ----
 
-Für die Beschreibung der einzelnen ili2pg-Optionen siehe die
-link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[ili2db-Dokumentation].
+Für die Beschreibung der einzelnen [.product]#ili2pg#-Optionen siehe
+[.product]#ili2db#: link:https://github.com/claeis/ili2db/blob/ili2db-4.6.0/docs/ili2db.rst#aufruf-syntax[Dokumentation].
 
 include::generated/task-ili2pgvalidate.adoc[]
 
 === IliValidator
 
-Prüft eine [.acronym]#INTERLIS#-Datei (+.itf+ oder +.xtf+) gegenüber einem [.acronym]#INTERLIS#-Modell
-(+.ili+). Der Task basiert auf dem
-link:https://github.com/claeis/ilivalidator[ilivalidator].
+Prüft eine [.acronym]#INTERLIS#-Datei ([.file-ext]#`.itf`# oder [.file-ext]#`.xtf`#) gegenüber einem [.acronym]#INTERLIS#-Modell
+([.file-ext]#`.ili`#). Der Task basiert auf dem
+[.product]#link:https://github.com/claeis/ilivalidator[ilivalidator]#.
 
 [source,groovy]
 ----
@@ -1131,7 +1132,7 @@ tasks.register('validate', IliValidator) {
 }
 ----
 
-Die +pluginFolder+-Option für Custom Functions ist derzeit ohne Wirkung. Die
+Die [.dsl-method]#`pluginFolder`#-Option für Custom Functions ist derzeit ohne Wirkung. Die
 Zusatzfunktionen werden als normale Abhängigkeit definiert und in der
 Validator-Implementierung registriert.
 
@@ -1139,8 +1140,8 @@ include::generated/task-ilivalidator.adoc[]
 
 === JsonImport
 
-Importiert eine JSON-Datei in eine Datenbanktabelle. Die gesamte JSON-Datei
-(UTF-8) wird als Text in eine Spalte importiert. Ist das JSON-Objekt in der
+Importiert eine [.acronym]#JSON#-Datei in eine Datenbanktabelle. Die gesamte [.acronym]#JSON#-Datei
+([.literal]#`UTF-8`#) wird als Text in eine Spalte importiert. Ist das [.acronym]#JSON#-Objekt in der
 Datei ein Top-Level-Array, wird für jedes Element ein Datensatz erzeugt.
 
 [source,groovy]
@@ -1157,14 +1158,14 @@ include::generated/task-jsonimport.adoc[]
 
 === JsonValidator
 
-Prüft eine JSON-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf
-dem _ilivalidator_. Der verwendete JSON-Reader unterstützt viele
-Sprachfeatures von [.acronym]#INTERLIS# und erwartet unter anderem +@type+, +@bid+, +@id+
-und +@topic+. Für den aktuellen Anwendungsfall reicht die Information des
+Prüft eine [.acronym]#JSON#-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf
+dem [.product]#ilivalidator#. Der verwendete [.acronym]#JSON#-Reader unterstützt viele
+Sprachfeatures von [.acronym]#INTERLIS# und erwartet unter anderem [.domain-id]#`@type`#, [.domain-id]#`@bid`#, [.domain-id]#`@id`#
+und [.domain-id]#`@topic`#. Für den aktuellen Anwendungsfall reicht die Information des
 Typs; die übrigen Attribute und ein Top-Level-Array werden bei Bedarf vor der
 Validierung ergänzt.
 
-Ein strikter Modus zur Abbildung des ursprünglichen JSON-Reader-Verhaltens
+Ein strikter Modus zur Abbildung des ursprünglichen [.acronym]#JSON#-Reader-Verhaltens
 kann später ergänzt werden.
 
 [source,groovy]
@@ -1175,7 +1176,7 @@ tasks.register('validate', JsonValidator) {
 }
 ----
 
-Beispiel für eine JSON-Datei:
+Beispiel für eine [.acronym]#JSON#-Datei:
 
 [source,json]
 ----
@@ -1248,7 +1249,7 @@ include::generated/task-s3bucket2bucket.adoc[]
 
 === S3Delete
 
-Löscht ein Objekt in einem S3-Bucket oder den ganzen Inhalt des S3-Buckets.
+Löscht ein Objekt in einem [.acronym]#S3#-Bucket oder den ganzen Inhalt des [.acronym]#S3#-Buckets.
 
 [source,groovy]
 ----
@@ -1277,7 +1278,7 @@ include::generated/task-s3delete.adoc[]
 
 === S3Download
 
-Lädt ein Objekt aus einem S3-Bucket oder den ganzen Inhalt des S3-Buckets
+Lädt ein Objekt aus einem [.acronym]#S3#-Bucket oder den ganzen Inhalt des [.acronym]#S3#-Buckets
 herunter.
 
 [source,groovy]
@@ -1309,11 +1310,11 @@ include::generated/task-s3download.adoc[]
 
 === S3Upload
 
-Lädt ein Dokument (+sourceFile+) oder alle Dokumente in einem Verzeichnis
-(+sourceDir+) in einen S3-Bucket (+bucketName+) hoch.
+Lädt ein Dokument ([.dsl-method]#`sourceFile`#) oder alle Dokumente in einem Verzeichnis
+([.dsl-method]#`sourceDir`#) in einen [.acronym]#S3#-Bucket ([.dsl-method]#`bucketName`#) hoch.
 
 Mit dem passenden Content-Type kann man das Verhalten des Browsers steuern.
-Der Default +application/octet-stream+ führt dazu, dass die Datei immer
+Der Default [.literal]#`application/octet-stream`# führt dazu, dass die Datei immer
 heruntergeladen wird. Für die direkte Anzeige eines PDFs oder Bildes muss der
 korrekte Content-Type gesetzt werden.
 
@@ -1335,7 +1336,7 @@ include::generated/task-s3upload.adoc[]
 
 === ShpExport
 
-Daten aus einer bestehenden Datenbanktabelle werden in eine SHP-Datei
+Daten aus einer bestehenden Datenbanktabelle werden in eine [.acronym]#SHP#-Datei
 exportiert.
 
 [source,groovy]
@@ -1356,14 +1357,14 @@ include::generated/task-shpexport.adoc[]
 
 === ShpImport
 
-Daten aus einer SHP-Datei werden in eine bestehende Datenbanktabelle
+Daten aus einer [.acronym]#SHP#-Datei werden in eine bestehende Datenbanktabelle
 importiert.
 
-Die Tabelle kann weitere Spalten enthalten, die in der SHP-Datei nicht
-vorkommen. Sie müssen aber +NULLable+ sein oder einen Default-Wert definiert
+Die Tabelle kann weitere Spalten enthalten, die in der [.acronym]#SHP#-Datei nicht
+vorkommen. Sie müssen aber [.literal]#`NULLable`# sein oder einen Default-Wert definiert
 haben. Die Tabelle muss eine Geometriespalte enthalten; deren Name kann frei
-gewählt werden. Die Gross-/Kleinschreibung der SHP-Spaltennamen wird für die
-Zuordnung zu den DB-Spalten ignoriert.
+gewählt werden. Die Gross-/Kleinschreibung der [.acronym]#SHP#-Spaltennamen wird für die
+Zuordnung zu den [.acronym]#DB#-Spalten ignoriert.
 
 [source,groovy]
 ----
@@ -1383,18 +1384,18 @@ include::generated/task-shpimport.adoc[]
 
 === ShpValidator
 
-Prüft eine SHP-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
-link:https://github.com/claeis/ilivalidator[ilivalidator].
+Prüft eine [.acronym]#SHP#-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
+[.product]#link:https://github.com/claeis/ilivalidator[ilivalidator]#.
 
 Im gegebenen Modell wird eine Klasse gesucht, die genau die Attributnamen wie
-in der SHP-Datei enthält; die Gross-/Kleinschreibung wird ignoriert, die
+in der [.acronym]#SHP#-Datei enthält; die Gross-/Kleinschreibung wird ignoriert, die
 Attributtypen werden nicht berücksichtigt. Wird keine solche Klasse gefunden,
 gilt das als Validierungsfehler.
 
-Die Prüfung mehrerer Shapefiles im selben Task kann zu Fehlermeldungen wie
-+OID o3158 of object <Modelname>.<Topicname>.<Klassenname> already exists in ...+
-führen. Beim Öffnen und Lesen eines Shapefiles wird der interne OID-Zähler
-zurückgesetzt. Deshalb kann pro Task nur ein Shapefile geprüft werden.
+Die Prüfung mehrerer [.product]##Shapefile##s im selben Task kann zu Fehlermeldungen wie
+[.code-fragment]#`OID o3158 of object <Modelname>.<Topicname>.<Klassenname> already exists in ...`#
+führen. Beim Öffnen und Lesen eines [.product]##Shapefile##s wird der interne [.acronym]#OID#-Zähler
+zurückgesetzt. Deshalb kann pro Task nur ein [.product]#Shapefile# geprüft werden.
 
 [source,groovy]
 ----
@@ -1408,22 +1409,22 @@ include::generated/task-shpvalidator.adoc[]
 
 === SqlExecutor
 
-Der +SqlExecutor+-Task dient dazu, Datenumbauten auszuführen. Er wird
+Der [.task-type]#`SqlExecutor`#-Task dient dazu, Datenumbauten auszuführen. Er wird
 allgemein verwendet, wenn der Umbau komplex ist, die Quell-Datenbank keine
-PostgreSQL-Datenbank ist oder Quell- und Zielschema in derselben Datenbank
+[.product]#PostgreSQL#-Datenbank ist oder Quell- und Zielschema in derselben Datenbank
 liegen.
 
 In den ersten beiden Fällen werden Stagingtabellen beziehungsweise ein
-Stagingschema benötigt, in welche ein vorheriger +Db2Db+-Task die Daten zuerst
-1:1 schreibt. Der +SqlExecutor+-Task liest die Daten, baut sie um und schreibt
-sie in das Zielschema. Die SQL-Anweisungen können in einer oder mehreren
-SQL-Dateien liegen. Die Reihenfolge der Dateien ist relevant.
+Stagingschema benötigt, in welche ein vorheriger [.task-type]#`Db2Db`#-Task die Daten zuerst
+1:1 schreibt. Der [.task-type]#`SqlExecutor`#-Task liest die Daten, baut sie um und schreibt
+sie in das Zielschema. Die [.acronym]#SQL#-Anweisungen können in einer oder mehreren
+[.acronym]#SQL#-Dateien liegen. Die Reihenfolge der Dateien ist relevant.
 
 Neben Updates ganzer Tabellen unterstützt der Task auch Updates von Teilen
-einer Tabelle. Parameter innerhalb einer SQL-Datei werden mit
-+${paramName}+ geschrieben und beim Task konfiguriert. Unterstützte
-Datenbanken sind PostgreSQL, SQLite, Oracle, Derby und DuckDB. Für weitere
-Datenbanken muss der JDBC-Treiber als Abhängigkeit definiert werden.
+einer Tabelle. Parameter innerhalb einer [.acronym]#SQL#-Datei werden mit
+[.placeholder]#`${paramName}`# geschrieben und beim Task konfiguriert. Unterstützte
+Datenbanken sind [.product]#PostgreSQL#, [.product]#SQLite#, [.product]#Oracle#, [.product]#Derby# und [.product]#DuckDB#. Für weitere
+Datenbanken muss der [.acronym]#JDBC#-Treiber als Abhängigkeit definiert werden.
 
 [source,groovy]
 ----
@@ -1454,9 +1455,9 @@ include::generated/task-sqlexecutor.adoc[]
 
 === XslTransformer
 
-Transformiert eine oder mehrere XML-Dateien mit einer XSLT-Transformation.
-Mit +xslResource+ wird eine Stylesheet-Ressource aus dem Klassenpfad verwendet;
-mit +xslFile+ kann eine lokale Datei angegeben werden.
+Transformiert eine oder mehrere [.acronym]#XML#-Dateien mit einer [.acronym]#XSLT#-Transformation.
+Mit [.dsl-method]#`xslResource`# wird eine Stylesheet-Ressource aus dem Klassenpfad verwendet;
+mit [.dsl-method]#`xslFile`# kann eine lokale Datei angegeben werden.
 
 [source,groovy]
 ----
@@ -1476,7 +1477,7 @@ tasks.register('transform', XslTransformer) {
 }
 ----
 
-Es können auch mehrere XML-Dateien angegeben werden:
+Es können auch mehrere [.acronym]#XML#-Dateien angegeben werden:
 
 [source,groovy]
 ----
@@ -1493,7 +1494,7 @@ include::generated/task-xsltransformer.adoc[]
 
 == Modulare Ergänzungen
 
-Die folgenden Tasks gehören zur modularen GRETL-DSL, waren aber in der
+Die folgenden Tasks gehören zur modularen [.product]#GRETL#-[.acronym]#DSL#, waren aber in der
 upstream-Referenz noch nicht enthalten. Ihre aktuelle Kurzbeschreibung und
 die technische Property-Tabelle werden bereits dokumentiert; ausführliche
 redaktionelle Beispiele werden bei Bedarf ergänzt.
@@ -1506,13 +1507,13 @@ include::generated/task-rasterreclassify.adoc[]
 
 === ReadShapefile
 
-Liest ein Shapefile über die GeoTools-Worker-Laufzeitumgebung und protokolliert
+Liest ein [.product]#Shapefile# über die [.product]#GeoTools#-Worker-Laufzeitumgebung und protokolliert
 grundlegende Diagnosedaten.
 
 include::generated/task-readshapefile.adoc[]
 
 === Vectorize
 
-Vektorisiert ausgewählte Rasterzellenwerte in ein GeoPackage.
+Vektorisiert ausgewählte Rasterzellenwerte in ein [.product]#GeoPackage#.
 
 include::generated/task-vectorize.adoc[]

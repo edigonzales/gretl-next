@@ -5,6 +5,11 @@ Property-Tabellen unter [generated/](generated/) werden aus den öffentlichen
 GRETL-Task-Annotationen erzeugt und eingecheckt. Diese Dateien werden nicht
 manuell bearbeitet.
 
+Die [Typografie und technischen Schreibweisen](STYLE_GUIDE.md) sind für
+redaktionelle und generierte Referenzinhalte verbindlich. Die Richtlinie ist
+eine Autorenunterlage und wird nicht in die öffentliche Seitennavigation
+aufgenommen.
+
 ## Task-Dokumentation aktualisieren
 
 Nach Änderungen an Task-Klassen, `@GretlTaskDoc` oder `@GretlDslMethod`:
@@ -12,11 +17,14 @@ Nach Änderungen an Task-Klassen, `@GretlTaskDoc` oder `@GretlDslMethod`:
 ```bash
 ./gradlew generateTaskDocs
 ./gradlew verifyTaskDocs
+./gradlew verifyReferenceStyle
 ```
 
-`verifyTaskDocs` ist Teil von `check` und schlägt fehl, wenn die eingecheckten
-Dateien nicht mehr dem aktuellen Code entsprechen oder ein Task in
-`reference.adoc` nicht eingebunden ist.
+`verifyTaskDocs` und `verifyReferenceStyle` sind Teil von `check`.
+`verifyTaskDocs` schlägt fehl, wenn die eingecheckten Dateien nicht mehr dem
+aktuellen Code entsprechen oder ein Task in `reference.adoc` nicht eingebunden
+ist. `verifyReferenceStyle` prüft die Rollen-Whitelist und verbietet
+`+…+`-Auszeichnung ausserhalb von Source-Blöcken.
 
 ## Thoth Biblios lokal starten
 

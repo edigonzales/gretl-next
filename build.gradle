@@ -285,6 +285,83 @@ tasks.register('verifyTaskDocs') {
     }
 }
 
+def referenceStyleRoles = [
+        'product',
+        'acronym',
+        'task-type',
+        'task-name',
+        'dsl-method',
+        'dsl-signature',
+        'java-type',
+        'parameter',
+        'file-name',
+        'file-ext',
+        'path',
+        'glob',
+        'command',
+        'cli-option',
+        'config-key',
+        'env-var',
+        'literal',
+        'domain-id',
+        'placeholder',
+        'code-fragment',
+        'required',
+        'optional'
+] as Set
+
+tasks.register('verifyReferenceStyle') {
+    group = 'verification'
+    description = 'Verifies semantic typography in the hand-maintained GRETL reference.'
+
+    inputs.file(layout.projectDirectory.file('docs/reference/reference.adoc'))
+
+    doLast {
+        File referenceFile = layout.projectDirectory.file('docs/reference/reference.adoc').asFile
+        List<String> violations = []
+        boolean sourceBlockPending = false
+        boolean inSourceBlock = false
+
+        referenceFile.readLines('UTF-8').eachWithIndex { String line, int index ->
+            int lineNumber = index + 1
+            String trimmed = line.trim()
+
+            if (!inSourceBlock && trimmed ==~ /\[source(?:,[^\]]*)?\]/) {
+                sourceBlockPending = true
+            } else if (trimmed == '----' && sourceBlockPending) {
+                inSourceBlock = true
+                sourceBlockPending = false
+                return
+            } else if (trimmed == '----' && inSourceBlock) {
+                inSourceBlock = false
+                return
+            }
+
+            if (inSourceBlock) {
+                return
+            }
+
+            if (line =~ /(?<!\\)\+[^+\n]+\+/) {
+                violations.add("${referenceFile}:${lineNumber}: '+...+' is not allowed; use backticks and a semantic role")
+            }
+
+            def roleMatcher = line =~ /\[\.([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*)\]/
+            roleMatcher.each { match ->
+                match[1].split(/\./).each { String role ->
+                    if (!referenceStyleRoles.contains(role)) {
+                        violations.add("${referenceFile}:${lineNumber}: undocumented semantic role '${role}'")
+                    }
+                }
+            }
+        }
+
+        if (!violations.isEmpty()) {
+            throw new GradleException(
+                    "Reference style violations:\n" + violations.join('\n'))
+        }
+    }
+}
+
 tasks.register('generateLspMetadata', Javadoc) {
     group = 'documentation'
     description = 'Generates GRETL LSP metadata JSON file from task DSL annotations.'
@@ -353,4 +430,5 @@ gradle.projectsEvaluated {
 
 tasks.named('check') {
     dependsOn tasks.named('verifyTaskDocs')
+    dependsOn tasks.named('verifyReferenceStyle')
 }

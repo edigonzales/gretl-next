@@ -1,21 +1,21 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `breaks(Number... values)`
+| [.dsl-signature]#*breaks*(Number\... values)#
 | Gibt die streng monoton steigenden Klassenbruchwerte an.
-| nein
+| [.optional]#nein#
 
-| `inputRaster(Object path)`
+| [.dsl-signature]#*inputRaster*(Object path)#
 | Konfiguriert die Eingabe-Rasterdatei.
-| ja
+| [.required]#ja#
 
-| `noData(Number value)`
+| [.dsl-signature]#*noData*(Number value)#
 | Legt den No-Data-Wert für das Ausgabe-Raster fest.
-| nein
+| [.optional]#nein#
 
-| `outputRaster(Object path)`
+| [.dsl-signature]#*outputRaster*(Object path)#
 | Konfiguriert die Ausgabe-Rasterdatei.
-| ja
+| [.required]#ja#
 
 |===

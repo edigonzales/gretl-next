@@ -7,10 +7,13 @@ import java.util.stream.Collectors;
 
 public final class MethodSignatureRenderer {
     public String render(DslMethodDescriptor method) {
-        String parameters = method.parameters().stream()
+        return method.name() + "(" + renderParameters(method) + ")";
+    }
+
+    String renderParameters(DslMethodDescriptor method) {
+        return method.parameters().stream()
                 .map(this::renderParameter)
                 .collect(Collectors.joining(", "));
-        return method.name() + "(" + parameters + ")";
     }
 
     private String renderParameter(ParameterDescriptor parameter) {

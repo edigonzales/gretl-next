@@ -35,7 +35,7 @@ class GretlDocletTest {
         String actual = Files.readString(tempDir.resolve("task-fixturetask.adoc"));
         String expected = Files.readString(Path.of("src/test/resources/ch/so/agi/gretl/doclet/expected-fixturetask_de.adoc"));
         assertEquals(normalize(expected), normalize(actual));
-        assertTrue(actual.contains("| DSL-Methode | Beschreibung | Erforderlich"));
+        assertTrue(actual.contains("| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich"));
         assertFalse(actual.contains("| Standard"));
         assertFalse(actual.contains("\n| 7\n"));
     }
@@ -46,16 +46,16 @@ class GretlDocletTest {
                 Path.of("src/test/java/ch/so/agi/gretl/doclet/fixtures/InheritedFixtureTask.java")));
 
         String actual = Files.readString(tempDir.resolve("task-inheritedfixturetask.adoc"));
-        assertTrue(actual.contains("`inheritedInput(String value)`"));
-        assertTrue(actual.contains("`inheritedOption(String value)`"));
-        assertTrue(actual.contains("`inheritedOption(String value, int count)`"));
-        assertTrue(actual.contains("`localMethod(String value)`"));
+        assertTrue(actual.contains("[.dsl-signature]#*inheritedInput*(String value)#"));
+        assertTrue(actual.contains("[.dsl-signature]#*inheritedOption*(String value)#"));
+        assertTrue(actual.contains("[.dsl-signature]#*inheritedOption*(String value, int count)#"));
+        assertTrue(actual.contains("[.dsl-signature]#*localMethod*(String value)#"));
         assertTrue(actual.contains("Configures the derived override."));
         assertEquals(1, actual.lines()
-                .filter(line -> line.startsWith("| `overridden("))
+                .filter(line -> line.startsWith("| [.dsl-signature]#*overridden*("))
                 .count());
-        assertFalse(actual.contains("`hidden("));
-        assertFalse(actual.contains("`internalHelper("));
+        assertFalse(actual.contains("*hidden*("));
+        assertFalse(actual.contains("*internalHelper*("));
     }
 
     @Test
@@ -93,15 +93,17 @@ class GretlDocletTest {
         assertTrue(index.contains("include::task-rasterreclassify.adoc[]"));
 
         String sqlExecutor = Files.readString(tempDir.resolve("task-sqlexecutor.adoc"));
-        assertTrue(sqlExecutor.contains("`database(String jdbcUrl)`"));
-        assertTrue(sqlExecutor.contains("`sqlFiles(Object... paths)`"));
+        assertTrue(sqlExecutor.contains("[.dsl-signature]#*database*(String jdbcUrl)#"));
+        assertTrue(sqlExecutor.contains("[.dsl-signature]#*sqlFiles*(Object\\... paths)#"));
+        assertTrue(sqlExecutor.contains(
+                "[.dsl-signature]#*sqlParameterSets*(Map<String, ?>\\... parameterSets)#"));
         assertFalse(sqlExecutor.contains("getJdbcUrl"));
         assertFalse(sqlExecutor.contains("getPassword"));
         assertFalse(sqlExecutor.contains("coreService"));
         assertFalse(sqlExecutor.contains("executeSQLExecutor"));
 
         String vectorize = Files.readString(tempDir.resolve("task-vectorize.adoc"));
-        assertTrue(vectorize.contains("`cellValues(Number... values)`"));
+        assertTrue(vectorize.contains("[.dsl-signature]#*cellValues*(Number\\... values)#"));
         assertFalse(vectorize.contains("workerClasspath"));
         assertFalse(vectorize.contains("geoToolsService"));
         assertFalse(vectorize.contains("execute()"));
@@ -125,23 +127,23 @@ class GretlDocletTest {
                     .filter(path -> !path.getFileName().toString().equals("task-reference.adoc"))
                     .toList()) {
                 String taskDoc = Files.readString(taskFile);
-                assertTrue(taskDoc.contains("| `"),
+                assertTrue(taskDoc.contains("| [.dsl-signature]#*"),
                         taskFile.getFileName() + " should contain at least one DSL method");
             }
         }
 
         String csvValidator = Files.readString(tempDir.resolve("task-csvvalidator.adoc"));
-        assertTrue(csvValidator.contains("`dataFiles(Object... paths)`"));
-        assertTrue(csvValidator.contains("`models(String value)`"));
+        assertTrue(csvValidator.contains("[.dsl-signature]#*dataFiles*(Object\\... paths)#"));
+        assertTrue(csvValidator.contains("[.dsl-signature]#*models*(String value)#"));
 
         String ili2pgImport = Files.readString(tempDir.resolve("task-ili2pgimport.adoc"));
-        assertTrue(ili2pgImport.contains("`database(String jdbcUrl)`"));
-        assertTrue(ili2pgImport.contains("`schema(String name)`"));
-        assertTrue(ili2pgImport.contains("`transferFiles(Object... paths)`"));
+        assertTrue(ili2pgImport.contains("[.dsl-signature]#*database*(String jdbcUrl)#"));
+        assertTrue(ili2pgImport.contains("[.dsl-signature]#*schema*(String name)#"));
+        assertTrue(ili2pgImport.contains("[.dsl-signature]#*transferFiles*(Object\\... paths)#"));
 
         String gpkgValidator = Files.readString(tempDir.resolve("task-gpkgvalidator.adoc"));
-        assertTrue(gpkgValidator.contains("`dataFiles(Object... paths)`"));
-        assertTrue(gpkgValidator.contains("`tableName(String value)`"));
+        assertTrue(gpkgValidator.contains("[.dsl-signature]#*dataFiles*(Object\\... paths)#"));
+        assertTrue(gpkgValidator.contains("[.dsl-signature]#*tableName*(String value)#"));
     }
 
     private void generate(Path outputDirectory, List<Path> sources) {

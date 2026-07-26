@@ -1,45 +1,45 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `batchSize(int value)`
-| Legt die JDBC-Batch-Grösse für Zieleinfügungen fest.
-| nein
+| [.dsl-signature]#*batchSize*(int value)#
+| Legt die [.acronym]#JDBC#-Batch-Grösse für Zieleinfügungen fest.
+| [.optional]#nein#
 
-| `fetchSize(int value)`
-| Legt die JDBC-Fetch-Grösse für Quell-Lesevorgänge fest.
-| nein
+| [.dsl-signature]#*fetchSize*(int value)#
+| Legt die [.acronym]#JDBC#-Fetch-Grösse für Quell-Lesevorgänge fest.
+| [.optional]#nein#
 
-| `sourceDatabase(String jdbcUrl)`
-| Konfiguriert die Quell-Datenbankverbindung mit einer JDBC-URL.
-| ja
+| [.dsl-signature]#*sourceDatabase*(String jdbcUrl)#
+| Konfiguriert die Quell-Datenbankverbindung mit einer [.acronym]#JDBC#-URL.
+| [.required]#ja#
 
-| `sourceDatabase(String jdbcUrl, String username, String password)`
-| Konfiguriert die Quell-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
-| ja
+| [.dsl-signature]#*sourceDatabase*(String jdbcUrl, String username, String password)#
+| Konfiguriert die Quell-Datenbankverbindung mit [.acronym]#JDBC#-URL, Benutzername und Passwort.
+| [.required]#ja#
 
-| `sqlParameterSets(Map<String, ?>... parameterSets)`
-| Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle Transfers in Reihenfolge ausgeführt.
-| nein
+| [.dsl-signature]#*sqlParameterSets*(Map<String, ?>\... parameterSets)#
+| Gibt mehrere [.acronym]#SQL#-Parameter-Maps an. Für jede Map werden alle Transfers in Reihenfolge ausgeführt.
+| [.optional]#nein#
 
-| `sqlParameters(Map<String, ?> parameters)`
-| Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller Transfers fest.
-| nein
+| [.dsl-signature]#*sqlParameters*(Map<String, ?> parameters)#
+| Legt eine [.acronym]#SQL#-Parameter-Map für eine einzelne Ausführung aller Transfers fest.
+| [.optional]#nein#
 
-| `targetDatabase(String jdbcUrl)`
-| Konfiguriert die Ziel-Datenbankverbindung mit einer JDBC-URL.
-| ja
+| [.dsl-signature]#*targetDatabase*(String jdbcUrl)#
+| Konfiguriert die Ziel-Datenbankverbindung mit einer [.acronym]#JDBC#-URL.
+| [.required]#ja#
 
-| `targetDatabase(String jdbcUrl, String username, String password)`
-| Konfiguriert die Ziel-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
-| ja
+| [.dsl-signature]#*targetDatabase*(String jdbcUrl, String username, String password)#
+| Konfiguriert die Ziel-Datenbankverbindung mit [.acronym]#JDBC#-URL, Benutzername und Passwort.
+| [.required]#ja#
 
-| `transfer(Action<TransferConfig> action)`
-| Gibt einen Transfer mit verschachtelter Konfiguration an: sqlFile(...), targetTable(...), deleteAllRows(...) und geometryColumns(...).
-| ja
+| [.dsl-signature]#*transfer*(Action<TransferConfig> action)#
+| Gibt einen Transfer mit verschachtelter Konfiguration an: [.dsl-method]#`sqlFile(\...)`#, [.dsl-method]#`targetTable(\...)`#, [.dsl-method]#`deleteAllRows(\...)`# und [.dsl-method]#`geometryColumns(\...)`#.
+| [.required]#ja#
 
-| `transfer(Object sqlFile, String targetTable, boolean deleteAllRows, String... geometryColumns)`
-| Gibt einen Transfer aus einer SQL-Datei in eine Zieltabelle an.
-| ja
+| [.dsl-signature]#*transfer*(Object sqlFile, String targetTable, boolean deleteAllRows, String\... geometryColumns)#
+| Gibt einen Transfer aus einer [.acronym]#SQL#-Datei in eine Zieltabelle an.
+| [.required]#ja#
 
 |===

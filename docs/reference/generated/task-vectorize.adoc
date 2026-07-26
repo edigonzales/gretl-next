@@ -1,21 +1,21 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `band(int band)`
+| [.dsl-signature]#*band*(int band)#
 | Legt den zu lesenden Raster-Band-Index fest.
-| nein
+| [.optional]#nein#
 
-| `cellValues(Number... values)`
+| [.dsl-signature]#*cellValues*(Number\... values)#
 | Gibt die zu vektorisierenden Rasterzellenwerte an.
-| ja
+| [.required]#ja#
 
-| `inputRaster(Object path)`
+| [.dsl-signature]#*inputRaster*(Object path)#
 | Konfiguriert die Eingabe-Rasterdatei.
-| ja
+| [.required]#ja#
 
-| `outputGeopackage(Object path)`
+| [.dsl-signature]#*outputGeopackage*(Object path)#
 | Konfiguriert die Ausgabe-GeoPackage-Datei.
-| ja
+| [.required]#ja#
 
 |===

@@ -1,49 +1,49 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `configFile(Object path)`
+| [.dsl-signature]#*configFile*(Object path)#
 | Verwendet eine lokale Validierungskonfigurationsdatei.
-| nein
+| [.optional]#nein#
 
-| `configRepositoryId(String id)`
+| [.dsl-signature]#*configRepositoryId*(String id)#
 | Verwendet eine Validierungskonfiguration aus einer ilidata-Repository-ID.
-| nein
+| [.optional]#nein#
 
-| `dataFiles(Object... paths)`
+| [.dsl-signature]#*dataFiles*(Object\... paths)#
 | Gibt die zu validierenden Datendateien an.
-| ja
+| [.required]#ja#
 
-| `logFile(Object path)`
+| [.dsl-signature]#*logFile*(Object path)#
 | Schreibt Validator-Protokollmeldungen in eine Textdatei.
-| nein
+| [.optional]#nein#
 
-| `metaConfigFile(Object path)`
+| [.dsl-signature]#*metaConfigFile*(Object path)#
 | Verwendet eine lokale Metakonfigurationsdatei.
-| nein
+| [.optional]#nein#
 
-| `metaConfigRepositoryId(String id)`
+| [.dsl-signature]#*metaConfigRepositoryId*(String id)#
 | Verwendet eine Metakonfiguration aus einer ilidata-Repository-ID.
-| nein
+| [.optional]#nein#
 
-| `modelDirectories(String... entries)`
+| [.dsl-signature]#*modelDirectories*(String\... entries)#
 | Gibt die Modellverzeichnis- oder Repository-Einträge an.
-| nein
+| [.optional]#nein#
 
-| `modelNames(String... names)`
-| Gibt die INTERLIS-Modellnamen an.
-| nein
+| [.dsl-signature]#*modelNames*(String\... names)#
+| Gibt die [.acronym]#INTERLIS#-Modellnamen an.
+| [.optional]#nein#
 
-| `modeldir(String value)`
+| [.dsl-signature]#*modeldir*(String value)#
 | Alias für die Konfiguration der Validator-Option modeldir.
-| nein
+| [.optional]#nein#
 
-| `models(String value)`
+| [.dsl-signature]#*models*(String value)#
 | Alias für die Konfiguration der Validator-Modelle.
-| nein
+| [.optional]#nein#
 
-| `xtfLogFile(Object path)`
+| [.dsl-signature]#*xtfLogFile*(Object path)#
 | Schreibt IliVErrors-Protokollmeldungen in eine Datei.
-| nein
+| [.optional]#nein#
 
 |===
