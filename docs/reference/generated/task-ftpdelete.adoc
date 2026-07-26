@@ -1,49 +1,40 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `controlKeepAliveTimeout(long controlKeepAliveTimeout)`
-|
 | Konfiguriert das FTP-Control-Keep-Alive-Timeout in Sekunden.
 | nein
 
 | `fileSeparator(String fileSeparator)`
-|
 | Konfiguriert das Pfadtrennzeichen auf dem FTP-Server.
 | nein
 
 | `passiveMode(boolean passiveMode)`
-|
 | Konfiguriert den passiven FTP-Modus.
 | nein
 
 | `password(String password)`
-|
 | Konfiguriert das FTP-Passwort.
 | ja
 
 | `remoteDir(String remoteDir)`
-|
 | Legt das entfernte FTP-Verzeichnis fest.
 | ja
 
 | `remoteFile(Object remoteFile)`
-|
 | Konfiguriert einen oder mehrere entfernte Dateinamen oder Wildcard-Muster.
 | nein
 
 | `server(String server)`
-|
 | Konfiguriert den FTP-Server-Host, optional host:port.
 | ja
 
 | `systemType(String systemType)`
-|
 | Konfiguriert den FTP-Server-Systemtyp.
 | nein
 
 | `user(String user)`
-|
 | Konfiguriert den FTP-Benutzernamen.
 | ja
 

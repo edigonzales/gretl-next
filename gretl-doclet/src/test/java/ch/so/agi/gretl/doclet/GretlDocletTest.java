@@ -35,7 +35,9 @@ class GretlDocletTest {
         String actual = Files.readString(tempDir.resolve("task-fixturetask.adoc"));
         String expected = Files.readString(Path.of("src/test/resources/ch/so/agi/gretl/doclet/expected-fixturetask_de.adoc"));
         assertEquals(normalize(expected), normalize(actual));
-        assertTrue(actual.contains("| DSL-Methode | Standard | Beschreibung | Erforderlich"));
+        assertTrue(actual.contains("| DSL-Methode | Beschreibung | Erforderlich"));
+        assertFalse(actual.contains("| Standard"));
+        assertFalse(actual.contains("\n| 7\n"));
     }
 
     @Test

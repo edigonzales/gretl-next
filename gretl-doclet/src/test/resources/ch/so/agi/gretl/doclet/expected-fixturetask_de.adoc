@@ -1,24 +1,20 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `count(int value)`
-| 7
 | Setzt den Zaehlwert.
 | nein
 
 | `fallback(String value)`
-|
 | Uses javadoc `fallback`.
 | nein
 
 | `inputFile(Object path)`
-|
 | Konfiguriert den `input`-Pfad.
 | ja
 
 | `labels(String... values)`
-|
 | Setzt die Beschriftungen.
 | ja
 

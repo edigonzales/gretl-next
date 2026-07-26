@@ -1,19 +1,16 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `database(String jdbcUrl)`
-|
 | Konfiguriert die Datenbankverbindung mit einer JDBC-URL.
 | ja
 
 | `database(String jdbcUrl, String username, String password)`
-|
 | Konfiguriert die Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
 | ja
 
 | `jsonFile(Object path)`
-|
 | Legt die zu importierende JSON-Datei fest.
 | ja
 

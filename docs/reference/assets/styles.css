@@ -769,12 +769,14 @@ body[data-single-page-mode="true"] .sidebar-nav .nav-toggle-chevron--leaf {
     width: 100%;
     margin: var(--space-5) 0;
     border-collapse: collapse;
-    border: 1px solid var(--color-border);
+    border: 0;
+    border-top: 1px solid var(--color-border);
 }
 
 .doc-content table.tableblock th,
 .doc-content table.tableblock td {
-    border: 1px solid var(--color-border);
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
     padding: 0.3rem 0.45rem;
     line-height: 1.35;
     text-align: left;
@@ -1233,14 +1235,21 @@ mark.search-highlight {
         width: 100%;
         min-width: 0;
     }
+    .doc-content table.tableblock {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 
 /* GRETL next brand refinements ------------------------------------------------ */
 
 .doc-content table.tableblock th {
-    background: var(--ng-100);
+    background: transparent;
     color: var(--color-text);
+    font-family: var(--font-navbar);
     font-weight: 600;
 }
 

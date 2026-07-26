@@ -1,54 +1,44 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `batchSize(int value)`
-| 5000
 | Legt die JDBC-Batch-Grösse für Zieleinfügungen fest.
 | nein
 
 | `fetchSize(int value)`
-| 5000
 | Legt die JDBC-Fetch-Grösse für Quell-Lesevorgänge fest.
 | nein
 
 | `sourceDatabase(String jdbcUrl)`
-|
 | Konfiguriert die Quell-Datenbankverbindung mit einer JDBC-URL.
 | ja
 
 | `sourceDatabase(String jdbcUrl, String username, String password)`
-|
 | Konfiguriert die Quell-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
 | ja
 
 | `sqlParameterSets(Map<String, ?>... parameterSets)`
-|
 | Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle Transfers in Reihenfolge ausgeführt.
 | nein
 
 | `sqlParameters(Map<String, ?> parameters)`
-|
 | Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller Transfers fest.
 | nein
 
 | `targetDatabase(String jdbcUrl)`
-|
 | Konfiguriert die Ziel-Datenbankverbindung mit einer JDBC-URL.
 | ja
 
 | `targetDatabase(String jdbcUrl, String username, String password)`
-|
 | Konfiguriert die Ziel-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
 | ja
 
 | `transfer(Action<TransferConfig> action)`
-|
 | Gibt einen Transfer mit verschachtelter Konfiguration an: sqlFile(...), targetTable(...), deleteAllRows(...) und geometryColumns(...).
 | ja
 
 | `transfer(Object sqlFile, String targetTable, boolean deleteAllRows, String... geometryColumns)`
-|
 | Gibt einen Transfer aus einer SQL-Datei in eine Zieltabelle an.
 | ja
 

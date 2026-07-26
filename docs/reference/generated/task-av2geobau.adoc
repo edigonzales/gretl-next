@@ -1,19 +1,16 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `dxfDirectory(Object path)`
-|
 | Legt das DXF-Ausgabeverzeichnis fest.
 | ja
 
 | `itfFiles(Object... paths)`
-|
 | Gibt die zu konvertierenden ITF-Dateien an.
 | ja
 
 | `logFile(Object path)`
-|
 | Legt die optionale Konvertierungs-Protokolldatei fest.
 | nein
 

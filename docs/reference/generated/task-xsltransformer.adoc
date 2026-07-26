@@ -1,29 +1,24 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `fileExtension(String fileExtension)`
-| xtf
 | Legt die Ausgabedatei-Erweiterung ohne führenden Punkt fest.
 | nein
 
 | `outDirectory(Object path)`
-|
 | Konfiguriert das Ausgabeverzeichnis.
 | ja
 
 | `xmlFiles(Object... paths)`
-|
 | Gibt die zu transformierenden XML-Eingabedateien an.
 | ja
 
 | `xslFile(Object path)`
-|
 | Konfiguriert eine Stylesheet-Datei. Verwenden Sie entweder xslFile(...) oder xslResource(...).
 | ja
 
 | `xslResource(String resourceName)`
-|
 | Konfiguriert eine Stylesheet-Klassenpfad-Ressource. Verwenden Sie entweder xslFile(...) oder xslResource(...).
 | ja
 

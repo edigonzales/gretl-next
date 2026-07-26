@@ -17,10 +17,6 @@ final class Messages {
         return german ? "Erforderlich" : "Required";
     }
 
-    String defaultColumn() {
-        return german ? "Standard" : "Default";
-    }
-
     String description() {
         return german ? "Beschreibung" : "Description";
     }

@@ -1,24 +1,20 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL method | Default | Description | Required
+| DSL method | Description | Required
 
 | `count(int value)`
-| 7
 | Sets count.
 | no
 
 | `fallback(String value)`
-|
 | Uses javadoc `fallback`.
 | no
 
 | `inputFile(Object path)`
-|
 | Configures `input` path.
 | yes
 
 | `labels(String... values)`
-|
 | Sets labels.
 | yes
 

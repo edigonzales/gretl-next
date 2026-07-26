@@ -121,6 +121,20 @@ die Aufgabe der einzelnen Task-Typen. Die jeweils aktuelle Tabelle der
 Die Beispiele setzen voraus, dass die verwendeten Task-Klassen im Build-File
 importiert wurden, zum Beispiel mit +import ch.so.agi.gretl.tasks.*+.
 
+.Hinweis zur Schreibweise
+[NOTE]
+====
+Die Spalte «DSL-Methode» zeigt die Parametertypen der öffentlichen Methode.
+Strings werden in Groovy in Anführungszeichen angegeben, Wahrheitswerte und
+Zahlen ohne Anführungszeichen.
+
+Bei `Object path` kann ein Pfad direkt als String geschrieben werden, zum
+Beispiel `dataFile 'fubar.xtf'`; Gradle-Ausdrücke wie
+`dataFile file('fubar.xtf')` werden ebenfalls akzeptiert. `Object... paths`
+erlaubt einen oder mehrere Pfade sowie Gradle-Dateisammlungen wie `files(...)`
+oder `fileTree(...)`.
+====
+
 === Av2ch
 
 Transformiert eine [.acronym]##INTERLIS##1-Transferdatei im kantonalen AV-DM01-Modell in das

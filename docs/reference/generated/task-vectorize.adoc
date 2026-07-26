@@ -1,24 +1,20 @@
-[cols="4,1,5,1", options="header"]
+[cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Standard | Beschreibung | Erforderlich
+| DSL-Methode | Beschreibung | Erforderlich
 
 | `band(int band)`
-| 0
 | Legt den zu lesenden Raster-Band-Index fest.
 | nein
 
 | `cellValues(Number... values)`
-|
 | Gibt die zu vektorisierenden Rasterzellenwerte an.
 | ja
 
 | `inputRaster(Object path)`
-|
 | Konfiguriert die Eingabe-Rasterdatei.
 | ja
 
 | `outputGeopackage(Object path)`
-|
 | Konfiguriert die Ausgabe-GeoPackage-Datei.
 | ja
 

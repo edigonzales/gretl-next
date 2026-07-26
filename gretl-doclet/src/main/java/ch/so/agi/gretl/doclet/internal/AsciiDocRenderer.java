@@ -42,15 +42,13 @@ public final class AsciiDocRenderer {
 
     public String renderTaskTable(TaskDescriptor task) {
         StringBuilder out = new StringBuilder();
-        out.append("[cols=\"4,1,5,1\", options=\"header\"]\n");
+        out.append("[cols=\"4,6,1\", options=\"header\"]\n");
         out.append("|===\n");
         out.append("| ").append(messages.dslMethod())
-                .append(" | ").append(messages.defaultColumn())
                 .append(" | ").append(messages.description())
                 .append(" | ").append(messages.required()).append("\n\n");
         for (DslMethodDescriptor method : task.methods()) {
             out.append("| `").append(escapeInline(signatures.render(method))).append("`\n");
-            appendCell(out, method.defaultValue().isBlank() ? "" : escapeCell(method.defaultValue()));
             appendCell(out, method.description().isBlank() ? "" : escapeCell(method.description()));
             out.append("| ").append(method.required() ? messages.yes() : messages.no()).append("\n");
             out.append("\n");
