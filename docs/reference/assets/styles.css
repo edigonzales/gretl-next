@@ -727,6 +727,10 @@ body[data-single-page-mode="true"] .sidebar-nav .nav-toggle-chevron--leaf {
 .doc-content h4 { font-size: 1.125rem; margin: 1.25rem 0 0.5rem; }
 .doc-content h5 { font-size: 1rem; margin: 1rem 0 0.5rem; }
 .doc-content h6 { font-size: 0.9375rem; margin: 1rem 0 0.5rem; }
+.doc-content .acronym {
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0;
+}
 .doc-content .sectnum {
     color: #1f63aa;
     font-weight: 600;

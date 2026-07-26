@@ -17,7 +17,7 @@ Ein Job kann aus einer linearen Kette von Tasks bestehen:
 Task 1 – Task 2 – Task 3 – Task n
 ----
 
-Beispiel: Datenimport aus einer INTERLIS-Datei, Datenumbau und Datenexport
+Beispiel: Datenimport aus einer [.acronym]#INTERLIS#-Datei, Datenumbau und Datenexport
 nach Shapefile.
 
 Ein Job kann sich nach einem Task auf mehrere weitere Tasks verzweigen:
@@ -29,7 +29,7 @@ Task 1 –
        – Task 4 – Task 5 – Task m
 ----
 
-Beispiel: Datenimport aus einer INTERLIS-Datei, anschliessender Datenumbau in
+Beispiel: Datenimport aus einer [.acronym]#INTERLIS#-Datei, anschliessender Datenumbau in
 Zielschema 1 und ein zweiter Datenumbau in Zielschema 2.
 
 Es ist auch möglich, dass zuerst mehrere Tasks unabhängig voneinander
@@ -123,7 +123,7 @@ importiert wurden, zum Beispiel mit +import ch.so.agi.gretl.tasks.*+.
 
 === Av2ch
 
-Transformiert eine INTERLIS1-Transferdatei im kantonalen AV-DM01-Modell in das
+Transformiert eine [.acronym]##INTERLIS##1-Transferdatei im kantonalen AV-DM01-Modell in das
 Bundesmodell. Unterstützt werden die Sprachen _Deutsch_ und _Italienisch_ und
 der Bezugsrahmen _LV95_. Getestet wurde der Task mit Daten aus den Kantonen
 Solothurn, Glarus und Tessin. Weitere Informationen sind in der
@@ -162,7 +162,7 @@ include::generated/task-av2ch.adoc[]
 
 === Av2geobau
 
-Av2geobau konvertiert eine INTERLIS-Transferdatei (ITF) in eine DXF-GeoBau-
+Av2geobau konvertiert eine [.acronym]#INTERLIS#-Transferdatei (ITF) in eine DXF-GeoBau-
 Datei. Av2geobau funktioniert ohne Datenbank.
 
 Die ITF-Datei muss dem Modell +DM01AVCH24LV95D+ entsprechen. Die Daten werden
@@ -200,7 +200,7 @@ include::generated/task-av2geobau.adoc[]
 === Csv2Excel
 
 Konvertiert eine CSV-Datei in eine Excel-Datei (+.xlsx+). Datentypen werden
-anhand eines INTERLIS-Modells ermittelt. Fehlt das Modell, wird alles als Text
+anhand eines [.acronym]#INTERLIS#-Modells ermittelt. Fehlt das Modell, wird alles als Text
 gespeichert. Die Daten werden vollständig im Speicher vorgehalten. Bei grossen
 Dateien kann das zu Problemen führen. Falls die Datei +outputFile+ bereits
 existiert, wird ein neues Sheet erstellt; die Datei wird nicht überschrieben.
@@ -276,7 +276,7 @@ include::generated/task-csvimport.adoc[]
 
 === CsvValidator
 
-Prüft eine CSV-Datei gegenüber einem INTERLIS-Modell. Der Task basiert auf dem
+Prüft eine CSV-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
 link:https://github.com/claeis/ilivalidator[ilivalidator]. Das Datenmodell darf
 die OID nicht als +INTERLIS.UUIDOID+ modellieren.
 
@@ -630,8 +630,8 @@ include::generated/task-ftpupload.adoc[]
 Exportiert alle Tabellen einer GeoPackage-Datei in DXF-Dateien. Als Input wird
 eine von _ili2gpkg_ erzeugte GeoPackage-Datei benötigt.
 
-Es werden alle INTERLIS-Klassen exportiert. Der eigentliche SELECT-Befehl ist
-komplexer, weil für das Layern der einzelnen DXF-Objekte das INTERLIS-
+Es werden alle [.acronym]#INTERLIS#-Klassen exportiert. Der eigentliche SELECT-Befehl ist
+komplexer, weil für das Layern der einzelnen DXF-Objekte das [.acronym]#INTERLIS#-
 Metaattribut +!!@dxflayer="true"+ ausgelesen wird. Gibt es kein solches
 Metaattribut, wird alles in den gleichen DXF-Layer (+default+) geschrieben.
 
@@ -653,7 +653,7 @@ include::generated/task-gpkg2dxf.adoc[]
 Exportiert alle Tabellen einer GeoPackage-Datei in Shapefiles. Als Input wird
 eine von _ili2gpkg_ erzeugte GeoPackage-Datei benötigt.
 
-Es werden alle INTERLIS-Klassen exportiert. Je nach den bei der Erstellung der
+Es werden alle [.acronym]#INTERLIS#-Klassen exportiert. Je nach den bei der Erstellung der
 GeoPackage-Datei verwendeten Parametern muss die Query angepasst werden. Für
 den vorgesehenen Anwendungsfall einfacher, flacher Modelle reicht eine Query
 für alle Datensätze.
@@ -736,7 +736,7 @@ include::generated/task-gpkgimport.adoc[]
 
 === GpkgValidator
 
-Prüft eine GeoPackage-Datei gegenüber einem INTERLIS-Modell. Der Task basiert
+Prüft eine GeoPackage-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert
 auf dem link:https://github.com/claeis/ilivalidator[ilivalidator].
 
 [source,groovy]
@@ -767,7 +767,7 @@ include::generated/task-gzip.adoc[]
 
 === Ili2duckdbExport
 
-Exportiert Daten aus einer DuckDB-Datenbank in eine INTERLIS-Transferdatei.
+Exportiert Daten aus einer DuckDB-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
 
 [source,groovy]
 ----
@@ -783,7 +783,7 @@ include::generated/task-ili2duckdbexport.adoc[]
 
 === Ili2duckdbImport
 
-Importiert Daten aus einer INTERLIS-Transferdatei in eine DuckDB-Datenbank.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine DuckDB-Datenbank.
 
 Das Property +transferFiles+ kann mehrere Dateien aufnehmen. Für Dateien aus
 einem ilidata-Repository können zusätzlich Repository-IDs angegeben werden.
@@ -802,7 +802,7 @@ include::generated/task-ili2duckdbimport.adoc[]
 
 === Ili2duckdbImportSchema
 
-Erstellt die Tabellenstruktur in der DuckDB-Datenbank anhand eines INTERLIS-
+Erstellt die Tabellenstruktur in der DuckDB-Datenbank anhand eines [.acronym]#INTERLIS#-
 Modells. Fremdschlüssel werden nicht unterstützt, weil die +ADD CONSTRAINT+-
 Syntax nicht unterstützt wird. Es muss +--strokeArcs+ verwendet werden.
 Räumliche Indizes von DuckDB sind noch rudimentär umgesetzt.
@@ -821,7 +821,7 @@ include::generated/task-ili2duckdbimportschema.adoc[]
 
 === Ili2gpkgImport
 
-Importiert Daten aus einer INTERLIS-Transferdatei in eine GeoPackage-Datei.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in eine GeoPackage-Datei.
 
 Die Tabellen werden implizit angelegt, falls sie noch nicht vorhanden sind.
 Falls die Tabellen in der Datenbank bereits vorhanden sind, können sie
@@ -883,13 +883,13 @@ include::generated/task-ili2pgdelete.adoc[]
 
 === Ili2pgExport
 
-Exportiert Daten aus der PostgreSQL-Datenbank in eine INTERLIS-Transferdatei.
+Exportiert Daten aus der PostgreSQL-Datenbank in eine [.acronym]#INTERLIS#-Transferdatei.
 Mit +models+, +topics+, +baskets+ oder +dataset+ wird definiert, welche Daten
 exportiert werden.
 
-Ob die Daten im INTERLIS-1-, INTERLIS-2- oder GML-Format geschrieben werden,
+Ob die Daten im [.acronym]#INTERLIS#-1-, [.acronym]#INTERLIS#-2- oder GML-Format geschrieben werden,
 ergibt sich aus der Dateinamenserweiterung der Ausgabedatei. Für eine
-INTERLIS-1-Transferdatei muss die Erweiterung +.itf+ verwendet werden; für
+[.acronym]#INTERLIS#-1-Transferdatei muss die Erweiterung +.itf+ verwendet werden; für
 eine GML-Transferdatei +.gml+.
 
 [source,groovy]
@@ -926,7 +926,7 @@ include::generated/task-ili2pgexport.adoc[]
 
 === Ili2pgImport
 
-Importiert Daten aus einer INTERLIS-Transferdatei in die PostgreSQL-Datenbank.
+Importiert Daten aus einer [.acronym]#INTERLIS#-Transferdatei in die PostgreSQL-Datenbank.
 Falls die Tabellen bereits vorhanden sind, können sie zusätzliche Spalten
 enthalten, welche beim Import leer bleiben.
 
@@ -979,7 +979,7 @@ include::generated/task-ili2pgimport.adoc[]
 === Ili2pgImportSchema
 
 Erstellt die Tabellenstruktur in der PostgreSQL-Datenbank anhand eines
-INTERLIS-Modells. Der Parameter +iliFile+ oder +models+ muss gesetzt werden.
+[.acronym]#INTERLIS#-Modells. Der Parameter +iliFile+ oder +models+ muss gesetzt werden.
 
 [source,groovy]
 ----
@@ -1003,7 +1003,7 @@ include::generated/task-ili2pgimportschema.adoc[]
 === Ili2pgReplace
 
 Ersetzt die Daten in der PostgreSQL-Datenbank anhand eines Datensatz-
-Identifikators (+dataset+) mit den Daten aus einer INTERLIS-Transferdatei.
+Identifikators (+dataset+) mit den Daten aus einer [.acronym]#INTERLIS#-Transferdatei.
 Diese Funktion bedingt, dass das Datenbankschema mit der Option
 +createBasketCol+ erstellt wurde.
 
@@ -1047,7 +1047,7 @@ include::generated/task-ili2pgreplace.adoc[]
 
 === Ili2pgUpdate
 
-Aktualisiert die Daten in der PostgreSQL-Datenbank anhand einer INTERLIS-
+Aktualisiert die Daten in der PostgreSQL-Datenbank anhand einer [.acronym]#INTERLIS#-
 Transferdatei: neue Objekte werden eingefügt, bestehende Objekte aktualisiert
 und nicht mehr vorhandene Objekte gelöscht.
 
@@ -1105,7 +1105,7 @@ include::generated/task-ili2pgvalidate.adoc[]
 
 === IliValidator
 
-Prüft eine INTERLIS-Datei (+.itf+ oder +.xtf+) gegenüber einem INTERLIS-Modell
+Prüft eine [.acronym]#INTERLIS#-Datei (+.itf+ oder +.xtf+) gegenüber einem [.acronym]#INTERLIS#-Modell
 (+.ili+). Der Task basiert auf dem
 link:https://github.com/claeis/ilivalidator[ilivalidator].
 
@@ -1143,9 +1143,9 @@ include::generated/task-jsonimport.adoc[]
 
 === JsonValidator
 
-Prüft eine JSON-Datei gegenüber einem INTERLIS-Modell. Der Task basiert auf
+Prüft eine JSON-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf
 dem _ilivalidator_. Der verwendete JSON-Reader unterstützt viele
-Sprachfeatures von INTERLIS und erwartet unter anderem +@type+, +@bid+, +@id+
+Sprachfeatures von [.acronym]#INTERLIS# und erwartet unter anderem +@type+, +@bid+, +@id+
 und +@topic+. Für den aktuellen Anwendungsfall reicht die Information des
 Typs; die übrigen Attribute und ein Top-Level-Array werden bei Bedarf vor der
 Validierung ergänzt.
@@ -1187,7 +1187,7 @@ Beispiel für eine JSON-Datei:
 }
 ----
 
-Das dazugehörige INTERLIS-Modell:
+Das dazugehörige [.acronym]#INTERLIS#-Modell:
 
 [source,interlis]
 ----
@@ -1369,7 +1369,7 @@ include::generated/task-shpimport.adoc[]
 
 === ShpValidator
 
-Prüft eine SHP-Datei gegenüber einem INTERLIS-Modell. Der Task basiert auf dem
+Prüft eine SHP-Datei gegenüber einem [.acronym]#INTERLIS#-Modell. Der Task basiert auf dem
 link:https://github.com/claeis/ilivalidator[ilivalidator].
 
 Im gegebenen Modell wird eine Klasse gesucht, die genau die Attributnamen wie
