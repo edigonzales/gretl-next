@@ -13,7 +13,7 @@ ui:
   show_version_badge: true
   show_edit_link: false
   show_source_link: false
-  content_toc: on
+  content_toc: off
   content_section_numbers: on
   sidebar_toc_depth: 3
 
@@ -30,3 +30,4 @@ content:
       start_page: reference.adoc
       render_mode: single_page
       master_file: reference.adoc
+      sidebar_toc_numbers: on
