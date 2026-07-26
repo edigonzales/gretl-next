@@ -100,13 +100,4 @@ Schedule jobs, route them to workers and keep run history without replacing Grad
 :::
 
 :::
-
-::: {.landing-cta}
-::: {.landing-cta-copy}
-<p class="eyebrow">Start small</p>
-## Your first GRETL job is only a few lines away.
-:::
-[Read the getting-started guide](getting-started.qmd){.text-link}
-:::
-
 :::
