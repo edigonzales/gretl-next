@@ -1,17 +1,17 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `dxfDirectory(Object path)`
-| Legt das DXF-Ausgabeverzeichnis fest.
-| ja
+| [.dsl-signature]#*dxfDirectory*(Object path)#
+| Legt das [.acronym]#DXF#-Ausgabeverzeichnis fest.
+| [.required]#ja#
 
-| `itfFiles(Object... paths)`
-| Gibt die zu konvertierenden ITF-Dateien an.
-| ja
+| [.dsl-signature]#*itfFiles*(Object\... paths)#
+| Gibt die zu konvertierenden [.acronym]#ITF#-Dateien an.
+| [.required]#ja#
 
-| `logFile(Object path)`
+| [.dsl-signature]#*logFile*(Object path)#
 | Legt die optionale Konvertierungs-Protokolldatei fest.
-| nein
+| [.optional]#nein#
 
 |===

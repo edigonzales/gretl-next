@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -54,6 +55,8 @@ class LspMetadataBuilderTest {
         assertEquals("stable", sqlExecutor.get("status").asText());
         assertNotNull(sqlExecutor.get("description"));
         assertTrue(sqlExecutor.get("description").asText().length() > 0);
+        assertFalse(root.toString().contains("[."),
+                "LSP metadata must not contain AsciiDoc semantic roles");
 
         JsonNode properties = sqlExecutor.get("properties");
         assertTrue(properties.isArray());

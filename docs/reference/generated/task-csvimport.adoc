@@ -1,17 +1,17 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `dataFile(Object path)`
-| Legt die zu importierende CSV-Datei fest.
-| ja
+| [.dsl-signature]#*dataFile*(Object path)#
+| Legt die zu importierende [.acronym]#CSV#-Datei fest.
+| [.required]#ja#
 
-| `database(String jdbcUrl)`
-| Konfiguriert die Datenbankverbindung mit einer JDBC-URL.
-| ja
+| [.dsl-signature]#*database*(String jdbcUrl)#
+| Konfiguriert die Datenbankverbindung mit einer [.acronym]#JDBC#-URL.
+| [.required]#ja#
 
-| `database(String jdbcUrl, String username, String password)`
-| Konfiguriert die Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
-| ja
+| [.dsl-signature]#*database*(String jdbcUrl, String username, String password)#
+| Konfiguriert die Datenbankverbindung mit [.acronym]#JDBC#-URL, Benutzername und Passwort.
+| [.required]#ja#
 
 |===

@@ -89,7 +89,7 @@
     --font-code: "Recursive", monospace;
     --font-weight-body: 400;
     --font-weight-sidebar-toc: 400;
-    --font-weight-chapter-headings: 800;
+    --font-weight-chapter-headings: 900;
     --font-weight-navbar: 400;
     --font-weight-index-page: 400;
     --font-weight-breadcrumb: 400;
@@ -727,10 +727,206 @@ body[data-single-page-mode="true"] .sidebar-nav .nav-toggle-chevron--leaf {
 .doc-content h4 { font-size: 1.125rem; margin: 1.25rem 0 0.5rem; }
 .doc-content h5 { font-size: 1rem; margin: 1rem 0 0.5rem; }
 .doc-content h6 { font-size: 0.9375rem; margin: 1rem 0 0.5rem; }
+
+.doc-content .product {
+    font-family: var(--font-body);
+    font-style: normal;
+    font-weight: inherit;
+}
+
 .doc-content .acronym {
     font-variant-caps: all-small-caps;
-    letter-spacing: 0;
+    letter-spacing: 0.04em;
 }
+
+.doc-content :is(
+    .task-type,
+    .task-name,
+    .dsl-method,
+    .dsl-signature,
+    .java-type,
+    .parameter,
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment
+),
+.doc-content :is(
+    .task-type,
+    .task-name,
+    .dsl-method,
+    .dsl-signature,
+    .java-type,
+    .parameter,
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment
+) code {
+    font-family: var(--font-code);
+    font-variation-settings: "MONO" 1;
+    font-style: normal;
+    color: inherit;
+}
+
+.doc-content :is(.task-type, .task-name, .dsl-method, .dsl-signature, .java-type, .parameter),
+.doc-content :is(.task-type, .task-name, .dsl-method, .dsl-signature, .java-type, .parameter) code {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.doc-content .task-type,
+.doc-content .task-type code {
+    font-weight: 650;
+}
+
+.doc-content .dsl-method,
+.doc-content .dsl-method code {
+    font-weight: 600;
+}
+
+.doc-content :is(.task-name, .java-type, .parameter),
+.doc-content :is(.task-name, .java-type, .parameter) code {
+    font-weight: 400;
+}
+
+.doc-content :is(
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment
+),
+.doc-content :is(
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment
+) code {
+    padding: 0.05em 0.22em;
+    border-radius: 0.18rem;
+    background: var(--ng-100);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.doc-content .env-var,
+.doc-content .env-var code {
+    font-weight: 650;
+}
+
+.doc-content .placeholder,
+.doc-content .placeholder code {
+    font-style: italic;
+}
+
+.doc-content .dsl-signature {
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+
+.doc-content .dsl-signature strong {
+    font-weight: 600;
+}
+
+.doc-content :is(.path, .glob, .command, .code-fragment),
+.doc-content :is(.path, .glob, .command, .code-fragment) code {
+    overflow-wrap: anywhere;
+}
+
+.doc-content .required {
+    font-weight: 650;
+}
+
+.doc-content .optional {
+    color: var(--ng-400);
+    font-weight: 400;
+}
+
+.doc-content a,
+.doc-content a :is(
+    .product,
+    .acronym,
+    .task-type,
+    .task-name,
+    .dsl-method,
+    .dsl-signature,
+    .java-type,
+    .parameter,
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment,
+    .required,
+    .optional
+),
+.doc-content :is(
+    .product,
+    .acronym,
+    .task-type,
+    .task-name,
+    .dsl-method,
+    .dsl-signature,
+    .java-type,
+    .parameter,
+    .file-name,
+    .file-ext,
+    .path,
+    .glob,
+    .command,
+    .cli-option,
+    .config-key,
+    .env-var,
+    .literal,
+    .domain-id,
+    .placeholder,
+    .code-fragment,
+    .required,
+    .optional
+) a {
+    color: var(--color-link);
+}
+
 .doc-content .sectnum {
     color: #1f63aa;
     font-weight: 600;
@@ -1236,10 +1432,22 @@ mark.search-highlight {
         min-width: 0;
     }
     .doc-content table.tableblock {
-        display: block;
+        display: table;
+        table-layout: fixed;
         max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    }
+    .doc-content table.tableblock col:nth-child(1) {
+        width: 38% !important;
+    }
+    .doc-content table.tableblock col:nth-child(2) {
+        width: 42% !important;
+    }
+    .doc-content table.tableblock col:nth-child(3) {
+        width: 20% !important;
+    }
+    .doc-content table.tableblock th,
+    .doc-content table.tableblock td {
+        overflow-wrap: anywhere;
     }
 }
 
@@ -1250,7 +1458,7 @@ mark.search-highlight {
     background: transparent;
     color: var(--color-text);
     font-family: var(--font-navbar);
-    font-weight: 600;
+    font-weight: 900;
 }
 
 .doc-content table.tableblock th code {

@@ -23,9 +23,9 @@ pre[class*="language-"] > code,
     font-variation-settings: "MONO" 1 !important;
 }
 
-/* Inline code inside tables should not have a background. */
-.doc-content table :not(pre) > code[class*="language-"],
-.doc-content table :not(pre) > code {
+/* Inline code inside reference tables should not have a background. */
+.doc-content table.tableblock :not(pre) > code[class*="language-"],
+.doc-content table.tableblock :not(pre) > code {
     background: transparent;
 }
 

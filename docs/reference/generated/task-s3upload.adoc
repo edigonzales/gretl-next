@@ -1,49 +1,49 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `accessKey(String accessKey)`
-| Konfiguriert den S3-Zugriffsschlüssel.
-| ja
+| [.dsl-signature]#*accessKey*(String accessKey)#
+| Konfiguriert den [.acronym]#S3#-Zugriffsschlüssel.
+| [.required]#ja#
 
-| `acl(String acl)`
-| Konfiguriert die S3-Canned-ACL.
-| ja
+| [.dsl-signature]#*acl*(String acl)#
+| Konfiguriert die [.acronym]#S3#-Canned-ACL.
+| [.required]#ja#
 
-| `bucketName(String bucketName)`
-| Konfiguriert den S3-Bucket-Namen.
-| ja
+| [.dsl-signature]#*bucketName*(String bucketName)#
+| Konfiguriert den [.acronym]#S3#-Bucket-Namen.
+| [.required]#ja#
 
-| `contentType(String contentType)`
+| [.dsl-signature]#*contentType*(String contentType)#
 | Konfiguriert den Content-Type der hochgeladenen Objekte.
-| nein
+| [.optional]#nein#
 
-| `endpoint(String endpoint)`
-| Konfiguriert den S3-Endpunkt.
-| nein
+| [.dsl-signature]#*endpoint*(String endpoint)#
+| Konfiguriert den [.acronym]#S3#-Endpunkt.
+| [.optional]#nein#
 
-| `metadata(Map<String, String> metadata)`
-| Konfiguriert S3-Objekt-Metadaten.
-| nein
+| [.dsl-signature]#*metadata*(Map<String, String> metadata)#
+| Konfiguriert [.acronym]#S3#-Objekt-Metadaten.
+| [.optional]#nein#
 
-| `region(String region)`
-| Konfiguriert die S3-Region.
-| nein
+| [.dsl-signature]#*region*(String region)#
+| Konfiguriert die [.acronym]#S3#-Region.
+| [.optional]#nein#
 
-| `secretKey(String secretKey)`
-| Konfiguriert den geheimen S3-Schlüssel.
-| ja
+| [.dsl-signature]#*secretKey*(String secretKey)#
+| Konfiguriert den geheimen [.acronym]#S3#-Schlüssel.
+| [.required]#ja#
 
-| `sourceDir(Object sourceDir)`
+| [.dsl-signature]#*sourceDir*(Object sourceDir)#
 | Legt ein Verzeichnis fest, dessen direkte Dateien hochgeladen werden.
-| nein
+| [.optional]#nein#
 
-| `sourceFile(Object sourceFile)`
+| [.dsl-signature]#*sourceFile*(Object sourceFile)#
 | Legt eine hochzuladende Datei fest.
-| nein
+| [.optional]#nein#
 
-| `sourceFiles(Object sourceFiles)`
+| [.dsl-signature]#*sourceFiles*(Object sourceFiles)#
 | Legt eine Dateisammlung zum Hochladen fest.
-| nein
+| [.optional]#nein#
 
 |===

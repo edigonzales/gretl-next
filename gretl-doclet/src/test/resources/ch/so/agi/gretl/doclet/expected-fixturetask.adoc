@@ -1,21 +1,21 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL method | Description | Required
+| [.acronym]#DSL# method | Description | Required
 
-| `count(int value)`
+| [.dsl-signature]#*count*(int value)#
 | Sets count.
-| no
+| [.optional]#no#
 
-| `fallback(String value)`
+| [.dsl-signature]#*fallback*(String value)#
 | Uses javadoc `fallback`.
-| no
+| [.optional]#no#
 
-| `inputFile(Object path)`
+| [.dsl-signature]#*inputFile*(Object path)#
 | Configures `input` path.
-| yes
+| [.required]#yes#
 
-| `labels(String... values)`
+| [.dsl-signature]#*labels*(String\... values)#
 | Sets labels.
-| yes
+| [.required]#yes#
 
 |===

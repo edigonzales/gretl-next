@@ -1,29 +1,29 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `accessKey(String accessKey)`
-| Konfiguriert den S3-Zugriffsschlüssel.
-| ja
+| [.dsl-signature]#*accessKey*(String accessKey)#
+| Konfiguriert den [.acronym]#S3#-Zugriffsschlüssel.
+| [.required]#ja#
 
-| `bucketName(String bucketName)`
-| Konfiguriert den S3-Bucket-Namen.
-| ja
+| [.dsl-signature]#*bucketName*(String bucketName)#
+| Konfiguriert den [.acronym]#S3#-Bucket-Namen.
+| [.required]#ja#
 
-| `endpoint(String endpoint)`
-| Konfiguriert den S3-Endpunkt.
-| nein
+| [.dsl-signature]#*endpoint*(String endpoint)#
+| Konfiguriert den [.acronym]#S3#-Endpunkt.
+| [.optional]#nein#
 
-| `key(String key)`
-| Konfiguriert den S3-Objekt-Schlüssel. Wenn nicht angegeben, werden alle Objekte gelöscht.
-| nein
+| [.dsl-signature]#*key*(String key)#
+| Konfiguriert den [.acronym]#S3#-Objekt-Schlüssel. Wenn nicht angegeben, werden alle Objekte gelöscht.
+| [.optional]#nein#
 
-| `region(String region)`
-| Konfiguriert die S3-Region.
-| nein
+| [.dsl-signature]#*region*(String region)#
+| Konfiguriert die [.acronym]#S3#-Region.
+| [.optional]#nein#
 
-| `secretKey(String secretKey)`
-| Konfiguriert den geheimen S3-Schlüssel.
-| ja
+| [.dsl-signature]#*secretKey*(String secretKey)#
+| Konfiguriert den geheimen [.acronym]#S3#-Schlüssel.
+| [.required]#ja#
 
 |===

@@ -1,17 +1,17 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `inputFile(Object... paths)`
-| Alias für die Angabe zu konvertierender ITF-Dateien.
-| nein
+| [.dsl-signature]#*inputFile*(Object\... paths)#
+| Alias für die Angabe zu konvertierender [.acronym]#ITF#-Dateien.
+| [.optional]#nein#
 
-| `inputFiles(Object... paths)`
-| Gibt die zu konvertierenden ITF-Dateien an.
-| ja
+| [.dsl-signature]#*inputFiles*(Object\... paths)#
+| Gibt die zu konvertierenden [.acronym]#ITF#-Dateien an.
+| [.required]#ja#
 
-| `outputDirectory(Object path)`
+| [.dsl-signature]#*outputDirectory*(Object path)#
 | Legt das Ausgabeverzeichnis fest.
-| ja
+| [.required]#ja#
 
 |===

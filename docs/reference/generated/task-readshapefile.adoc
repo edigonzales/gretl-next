@@ -1,13 +1,13 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `crsCode(String crsCode)`
-| Konfiguriert den CRS-Code zum Lesen des Shapefiles.
-| nein
+| [.dsl-signature]#*crsCode*(String crsCode)#
+| Konfiguriert den [.acronym]#CRS#-Code zum Lesen des Shapefiles.
+| [.optional]#nein#
 
-| `shapefile(Object path)`
+| [.dsl-signature]#*shapefile*(Object path)#
 | Konfiguriert das Eingabe-Shapefile.
-| ja
+| [.required]#ja#
 
 |===

@@ -1,41 +1,41 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `database(Object file)`
+| [.dsl-signature]#*database*(Object file)#
 | Konfiguriert die DuckDB-Datenbankdatei.
-| ja
+| [.required]#ja#
 
-| `exports(Action<ExportsConfig> action)`
-| Konfiguriert Exporte, die nach den SQL-Dateien ausgeführt werden.
-| nein
+| [.dsl-signature]#*exports*(Action<ExportsConfig> action)#
+| Konfiguriert Exporte, die nach den [.acronym]#SQL#-Dateien ausgeführt werden.
+| [.optional]#nein#
 
-| `inMemoryDatabase()`
+| [.dsl-signature]#*inMemoryDatabase*()#
 | Verwendet eine In-Memory-DuckDB-Datenbank anstelle einer Datenbankdatei.
-| nein
+| [.optional]#nein#
 
-| `installExtensions(boolean value)`
+| [.dsl-signature]#*installExtensions*(boolean value)#
 | Installiert erforderliche DuckDB-Erweiterungen vor dem Laden. Für die lokale Entwicklung vorgesehen.
-| nein
+| [.optional]#nein#
 
-| `sources(Action<SourcesConfig> action)`
+| [.dsl-signature]#*sources*(Action<SourcesConfig> action)#
 | Konfiguriert föderierte Quellen.
-| ja
+| [.required]#ja#
 
-| `sqlFiles(Object... paths)`
-| Gibt SQL-Dateien an. Pfade werden relativ zum Gradle-Projekt aufgelöst.
-| ja
+| [.dsl-signature]#*sqlFiles*(Object\... paths)#
+| Gibt [.acronym]#SQL#-Dateien an. Pfade werden relativ zum Gradle-Projekt aufgelöst.
+| [.required]#ja#
 
-| `sqlParameterSets(Map<String, ?>... parameterSets)`
-| Gibt mehrere SQL-Parameter-Maps an. Für jede Map werden alle SQL-Dateien in Reihenfolge ausgeführt.
-| nein
+| [.dsl-signature]#*sqlParameterSets*(Map<String, ?>\... parameterSets)#
+| Gibt mehrere [.acronym]#SQL#-Parameter-Maps an. Für jede Map werden alle [.acronym]#SQL#-Dateien in Reihenfolge ausgeführt.
+| [.optional]#nein#
 
-| `sqlParameters(Map<String, ?> parameters)`
-| Legt eine SQL-Parameter-Map für eine einzelne Ausführung aller SQL-Dateien fest.
-| nein
+| [.dsl-signature]#*sqlParameters*(Map<String, ?> parameters)#
+| Legt eine [.acronym]#SQL#-Parameter-Map für eine einzelne Ausführung aller [.acronym]#SQL#-Dateien fest.
+| [.optional]#nein#
 
-| `targets(Action<TargetsConfig> action)`
-| Konfiguriert beschreibbare Ziele für SQL und Exporte.
-| nein
+| [.dsl-signature]#*targets*(Action<TargetsConfig> action)#
+| Konfiguriert beschreibbare Ziele für [.acronym]#SQL# und Exporte.
+| [.optional]#nein#
 
 |===

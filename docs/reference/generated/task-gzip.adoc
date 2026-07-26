@@ -1,13 +1,13 @@
 [cols="4,6,1", options="header"]
 |===
-| DSL-Methode | Beschreibung | Erforderlich
+| [.acronym]#DSL#-Methode | Beschreibung | Erforderlich
 
-| `dataFile(Object path)`
+| [.dsl-signature]#*dataFile*(Object path)#
 | Legt die zu komprimierende Eingabedatei fest.
-| ja
+| [.required]#ja#
 
-| `gzipFile(Object path)`
-| Legt die GZIP-Ausgabedatei fest.
-| ja
+| [.dsl-signature]#*gzipFile*(Object path)#
+| Legt die [.acronym]#GZIP#-Ausgabedatei fest.
+| [.required]#ja#
 
 |===
