@@ -1,7 +1,7 @@
 site:
   title: GRETL-Referenzdokumentation
   default_language: de
-  default_component: gretl-modular
+  default_component: gretl-next
   default_version: main
 
 output:
@@ -19,8 +19,8 @@ ui:
 
 content:
   sources:
-    - id: gretl-modular
-      display_name: GRETL Modular
+    - id: gretl-next
+      display_name: GRETL next
       url: https://codeberg.org/edigonzales/gretl.git
       branches:
         - name: main
