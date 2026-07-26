@@ -307,6 +307,12 @@ pre {
   color: #667085;
 }
 
+/* Quarto's generated hover icons use a fixed colored data URI. */
+.hero-code .code-copy-button:hover > .bi::before,
+.hero-code .code-copy-button.code-copy-button-checked:hover > .bi::before {
+  filter: grayscale(100%);
+}
+
 .hero-glow {
   position: absolute;
   z-index: 0;

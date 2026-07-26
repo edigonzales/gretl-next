@@ -70,7 +70,7 @@ div.code-toolbar > .toolbar .toolbar-item > button.copy-to-clipboard-button::bef
     height: 1rem;
     display: inline-block;
     flex: 0 0 auto;
-    background-color: #1f63aa;
+    background-color: #667085;
     -webkit-mask-image: url("icons/bootstrap-copy.svg");
     mask-image: url("icons/bootstrap-copy.svg");
     -webkit-mask-repeat: no-repeat;
