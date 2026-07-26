@@ -106,7 +106,7 @@ Public job syntax and migration guidance are documented separately:
 
 - [Migration from original GRETL](migration-from-gretl.md)
 - [Kotlin DSL examples](kotlin-dsl.md)
-- [Task reference](task-reference.md)
+- [Task reference](reference/reference.adoc)
 
 GeoTools worker code cannot depend on Gradle logging APIs because the worker
 runtime is meant to remain movable between `classLoaderIsolation`,

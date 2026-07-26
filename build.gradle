@@ -221,10 +221,68 @@ tasks.named('check') {
 tasks.register('generateTaskDocs', Javadoc) {
     group = 'documentation'
     description = 'Generates AsciiDoc task reference files from GRETL task DSL annotations.'
-    destinationDir = layout.buildDirectory.dir('generated-docs/tasks').get().asFile
+    destinationDir = layout.projectDirectory.dir('docs/reference/generated').asFile
     failOnError = true
     options.doclet = 'ch.so.agi.gretl.doclet.GretlDoclet'
+    options.addStringOption('docletlocale', 'de_CH')
     options.quiet()
+}
+
+def taskDocsVerificationDirectory = layout.buildDirectory.dir('generated-docs/tasks-verification')
+
+tasks.register('generateTaskDocsVerification', Javadoc) {
+    group = 'verification'
+    description = 'Generates task documentation into a temporary directory for freshness verification.'
+    destinationDir = taskDocsVerificationDirectory.get().asFile
+    failOnError = true
+    options.doclet = 'ch.so.agi.gretl.doclet.GretlDoclet'
+    options.addStringOption('docletlocale', 'de_CH')
+    options.quiet()
+}
+
+tasks.register('verifyTaskDocs') {
+    group = 'verification'
+    description = 'Verifies that checked-in task documentation matches the current GRETL DSL.'
+    dependsOn tasks.named('generateTaskDocsVerification')
+
+    doLast {
+        File checkedInDirectory = layout.projectDirectory.dir('docs/reference/generated').asFile
+        File verificationDirectory = taskDocsVerificationDirectory.get().asFile
+
+        def readGeneratedFiles = { File directory ->
+            fileTree(directory).matching { include '**/*.adoc' }.files.collectEntries { File generatedFile ->
+                String relativePath = directory.toPath().relativize(generatedFile.toPath()).toString()
+                [(relativePath): generatedFile.getText('UTF-8')]
+            }
+        }
+
+        Map<String, String> checkedInFiles = readGeneratedFiles(checkedInDirectory)
+        Map<String, String> verificationFiles = readGeneratedFiles(verificationDirectory)
+        Set<String> allFiles = new TreeSet<>(checkedInFiles.keySet())
+        allFiles.addAll(verificationFiles.keySet())
+        List<String> differences = allFiles.findAll { String path ->
+            checkedInFiles[path] != verificationFiles[path]
+        }.toList()
+
+        if (!differences.isEmpty()) {
+            throw new GradleException(
+                    "Checked-in task documentation is stale. Run './gradlew generateTaskDocs' and commit the result. " +
+                            "Differences: " + differences.join(', '))
+        }
+
+        File masterFile = layout.projectDirectory.file('docs/reference/reference.adoc').asFile
+        String masterContent = masterFile.getText('UTF-8')
+        List<String> missingIncludes = verificationFiles.keySet()
+                .findAll { String path -> path.startsWith('task-') && path != 'task-reference.adoc' }
+                .findAll { String path -> !masterContent.contains("include::generated/${path}[]") }
+                .sort()
+                .toList()
+        if (!missingIncludes.isEmpty()) {
+            throw new GradleException(
+                    "The hand-maintained reference is missing generated task includes: " +
+                            missingIncludes.join(', '))
+        }
+    }
 }
 
 tasks.register('generateLspMetadata', Javadoc) {
@@ -237,30 +295,32 @@ tasks.register('generateLspMetadata', Javadoc) {
 }
 
 gradle.projectsEvaluated {
-    tasks.named('generateTaskDocs', Javadoc).configure { task ->
-        def docletProject = project(':gretl-doclet')
-        def coreProject = project(':gretl-core')
-        def geotoolsProject = project(':gretl-geotools')
+    ['generateTaskDocs', 'generateTaskDocsVerification'].each { taskName ->
+        tasks.named(taskName, Javadoc).configure { task ->
+            def docletProject = project(':gretl-doclet')
+            def coreProject = project(':gretl-core')
+            def geotoolsProject = project(':gretl-geotools')
 
-        task.dependsOn docletProject.tasks.named('jar')
-        task.dependsOn coreProject.tasks.named('classes')
-        task.dependsOn geotoolsProject.tasks.named('classes')
+            task.dependsOn docletProject.tasks.named('jar')
+            task.dependsOn coreProject.tasks.named('classes')
+            task.dependsOn geotoolsProject.tasks.named('classes')
 
-        task.source = files(
+            task.source = files(
                 coreProject.fileTree('src/main/java') {
                     include 'ch/so/agi/gretl/tasks/*.java'
                 },
                 geotoolsProject.fileTree('src/main/java') {
                     include 'ch/so/agi/gretl/geotools/tasks/*.java'
                 }
-        )
-        task.classpath = files(
+            )
+            task.classpath = files(
                 coreProject.sourceSets.main.output,
                 coreProject.sourceSets.main.compileClasspath,
                 geotoolsProject.sourceSets.main.output,
                 geotoolsProject.sourceSets.main.compileClasspath
-        )
-        task.options.docletpath = files(docletProject.tasks.named('jar')).files.toList()
+            )
+            task.options.docletpath = files(docletProject.tasks.named('jar')).files.toList()
+        }
     }
 
     tasks.named('generateLspMetadata', Javadoc).configure { task ->
@@ -289,4 +349,8 @@ gradle.projectsEvaluated {
         task.options.docletpath = files(docletProject.tasks.named('jar')).files.toList()
         task.options.addStringOption('lspoutput', docletProject.layout.buildDirectory.dir('generated/gretl-lsp-metadata').get().asFile.absolutePath)
     }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyTaskDocs')
 }

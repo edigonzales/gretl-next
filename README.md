@@ -136,6 +136,6 @@ tasks.register('vectorizeRaster', Vectorize) {
 - [Documentation index](docs/index.md)
 - [Migration from original GRETL](docs/migration-from-gretl.md)
 - [Kotlin DSL examples](docs/kotlin-dsl.md)
-- [Task reference](docs/task-reference.md)
+- [Task reference](docs/reference/reference.adoc)
 - [Architecture](docs/architecture.md)
 - [Control Plane](docs/control-plane.md)

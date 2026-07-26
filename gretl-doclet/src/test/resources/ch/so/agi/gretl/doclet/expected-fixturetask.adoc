@@ -1,30 +1,25 @@
-[[task-fixturetask]]
-== FixtureTask
-
-Fixture description with `code`.
-
-[cols="4,1,1,5", options="header"]
+[cols="4,1,5,1", options="header"]
 |===
-| DSL method | Required | Default | Description
+| DSL method | Default | Description | Required
 
 | `count(int value)`
-| no
 | 7
 | Sets count.
+| no
 
 | `fallback(String value)`
-| no
 |
 | Uses javadoc `fallback`.
+| no
 
 | `inputFile(Object path)`
-| yes
 |
 | Configures `input` path.
+| yes
 
 | `labels(String... values)`
-| yes
 |
 | Sets labels.
+| yes
 
 |===

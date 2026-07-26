@@ -1,0 +1,60 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `data(String data)`
+|
+| Configures a text request body.
+| nein
+
+| `dataBinary(Object dataBinary)`
+|
+| Configures a binary request body file.
+| nein
+
+| `expectedBody(String expectedBody)`
+|
+| Konfiguriert einen im Antwort-Body erwarteten Text.
+| nein
+
+| `expectedStatusCode(int expectedStatusCode)`
+|
+| Konfiguriert den erwarteten HTTP-Statuscode.
+| ja
+
+| `formData(Map<String, Object> formData)`
+|
+| Configures multipart form data.
+| nein
+
+| `headers(Map<String, String> headers)`
+|
+| Configures request headers.
+| nein
+
+| `method(MethodType method)`
+|
+| Konfiguriert die HTTP-Methode.
+| nein
+
+| `outputFile(Object outputFile)`
+|
+| Configures the file receiving the response body.
+| nein
+
+| `password(String password)`
+|
+| Configures basic-auth password.
+| nein
+
+| `serverUrl(String serverUrl)`
+|
+| Konfiguriert die Anfrage-URL.
+| ja
+
+| `user(String user)`
+|
+| Configures basic-auth username.
+| nein
+
+|===

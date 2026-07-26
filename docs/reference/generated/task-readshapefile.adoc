@@ -1,0 +1,15 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `crsCode(String crsCode)`
+|
+| Konfiguriert den CRS-Code zum Lesen des Shapefiles.
+| nein
+
+| `shapefile(Object path)`
+|
+| Konfiguriert das Eingabe-Shapefile.
+| ja
+
+|===

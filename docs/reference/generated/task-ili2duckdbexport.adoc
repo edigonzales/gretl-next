@@ -1,0 +1,115 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `baskets(String value)`
+|
+| Konfiguriert ili2db-Baskets.
+| nein
+
+| `dataFiles(Object... paths)`
+|
+| Gibt die INTERLIS-Transfer-Ausgabedateien an.
+| ja
+
+| `database(String jdbcUrl)`
+|
+| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit einer JDBC-URL.
+| ja
+
+| `database(String jdbcUrl, String username, String password)`
+|
+| Konfiguriert die PostgreSQL/PostGIS-Datenbankverbindung mit JDBC-URL, Benutzername und Passwort.
+| ja
+
+| `databaseFile(Object path)`
+|
+| Konfiguriert eine dateibasierte ili2db-Datenbank.
+| ja
+
+| `dataset(Object dataset)`
+|
+| Konfiguriert einen oder mehrere ili2db-Dataset-Namen.
+| nein
+
+| `datasetNameSlice(int start)`
+|
+| Verwendet einen Substring ab start für abgeleitete Dataset-Namen.
+| nein
+
+| `datasetNameSlice(int start, int endExclusive)`
+|
+| Verwendet den Substring [start, endExclusive) für abgeleitete Dataset-Namen.
+| nein
+
+| `datasetNames(String... names)`
+|
+| Gibt die expliziten Dataset-Namen an.
+| nein
+
+| `datasetNamesFromFiles(Object... paths)`
+|
+| Leitet Dataset-Namen aus den angegebenen Dateien ab.
+| nein
+
+| `datasetNamesFromTransferFiles()`
+|
+| Leitet Dataset-Namen aus den konfigurierten Transferdateien ab.
+| nein
+
+| `datasetSubstring(Integer... datasetSubstring)`
+|
+| Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.
+| nein
+
+| `datasetSubstring(Iterable<Integer> datasetSubstring)`
+|
+| Konfiguriert Substring-Indizes zur Ableitung von Legacy-Dataset-Namen.
+| nein
+
+| `dbschema(String name)`
+|
+| Alias für schema(...).
+| nein
+
+| `exportModels(String... names)`
+|
+| Beschränkt den Export auf die angegebenen INTERLIS-Modelle.
+| nein
+
+| `logFile(Object path)`
+|
+| Schreibt ili2db-Protokollmeldungen in eine Textdatei.
+| nein
+
+| `modelDirectories(String... entries)`
+|
+| Gibt die Modellverzeichnis- oder Repository-Einträge an.
+| nein
+
+| `modelNames(String... names)`
+|
+| Gibt die INTERLIS-Modellnamen an.
+| nein
+
+| `modeldir(String value)`
+|
+| Alias für die Konfiguration der ili2db-Option modeldir.
+| nein
+
+| `models(String value)`
+|
+| Alias für die Konfiguration der ili2db-Option models.
+| nein
+
+| `schema(String name)`
+|
+| Legt den ili2db-Schemanamen fest.
+| nein
+
+| `topics(String value)`
+|
+| Konfiguriert ili2db-Topics.
+| nein
+
+|===

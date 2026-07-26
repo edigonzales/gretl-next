@@ -1,0 +1,45 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `accessKey(String accessKey)`
+|
+| Konfiguriert den S3-Zugriffsschlüssel.
+| ja
+
+| `acl(String acl)`
+|
+| Konfiguriert die S3-Canned-ACL.
+| ja
+
+| `endpoint(String endpoint)`
+|
+| Konfiguriert den S3-Endpunkt.
+| nein
+
+| `metadata(Map<String, String> metadata)`
+|
+| Konfiguriert Ersatz-Metadaten für kopierte Objekte.
+| nein
+
+| `region(String region)`
+|
+| Konfiguriert die S3-Region.
+| nein
+
+| `secretKey(String secretKey)`
+|
+| Konfiguriert den geheimen S3-Schlüssel.
+| ja
+
+| `sourceBucket(String sourceBucket)`
+|
+| Konfiguriert den Quell-S3-Bucket.
+| ja
+
+| `targetBucket(String targetBucket)`
+|
+| Konfiguriert den Ziel-S3-Bucket.
+| ja
+
+|===

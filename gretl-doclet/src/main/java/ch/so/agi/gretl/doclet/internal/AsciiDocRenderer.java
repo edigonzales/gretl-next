@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 public final class AsciiDocRenderer {
     private final MethodSignatureRenderer signatures = new MethodSignatureRenderer();
@@ -21,33 +22,37 @@ public final class AsciiDocRenderer {
 
     public void render(Path outputDirectory, List<TaskDescriptor> tasks) throws IOException {
         Files.createDirectories(outputDirectory);
+        clearGeneratedFiles(outputDirectory);
         List<TaskDescriptor> sortedTasks = tasks.stream()
                 .sorted(Comparator.comparing(TaskDescriptor::name))
                 .toList();
         for (TaskDescriptor task : sortedTasks) {
-            Files.writeString(outputDirectory.resolve(fileName(task)), renderTask(task), StandardCharsets.UTF_8);
+            Files.writeString(outputDirectory.resolve(fileName(task)), renderTaskTable(task), StandardCharsets.UTF_8);
         }
         Files.writeString(outputDirectory.resolve("task-reference.adoc"), renderIndex(sortedTasks), StandardCharsets.UTF_8);
     }
 
-    public String renderTask(TaskDescriptor task) {
-        StringBuilder out = new StringBuilder();
-        out.append("[[").append(anchor(task)).append("]]\n");
-        out.append("== ").append(task.name()).append("\n\n");
-        if (!task.description().isBlank()) {
-            out.append(task.description()).append("\n\n");
+    private static void clearGeneratedFiles(Path outputDirectory) throws IOException {
+        try (Stream<Path> files = Files.list(outputDirectory)) {
+            for (Path file : files.filter(path -> path.getFileName().toString().endsWith(".adoc")).toList()) {
+                Files.deleteIfExists(file);
+            }
         }
-        out.append("[cols=\"4,1,1,5\", options=\"header\"]\n");
+    }
+
+    public String renderTaskTable(TaskDescriptor task) {
+        StringBuilder out = new StringBuilder();
+        out.append("[cols=\"4,1,5,1\", options=\"header\"]\n");
         out.append("|===\n");
         out.append("| ").append(messages.dslMethod())
-                .append(" | ").append(messages.required())
                 .append(" | ").append(messages.defaultColumn())
-                .append(" | ").append(messages.description()).append("\n\n");
+                .append(" | ").append(messages.description())
+                .append(" | ").append(messages.required()).append("\n\n");
         for (DslMethodDescriptor method : task.methods()) {
             out.append("| `").append(escapeInline(signatures.render(method))).append("`\n");
-            out.append("| ").append(method.required() ? messages.yes() : messages.no()).append("\n");
             appendCell(out, method.defaultValue().isBlank() ? "" : escapeCell(method.defaultValue()));
             appendCell(out, method.description().isBlank() ? "" : escapeCell(method.description()));
+            out.append("| ").append(method.required() ? messages.yes() : messages.no()).append("\n");
             out.append("\n");
         }
         out.append("|===\n");
@@ -65,9 +70,14 @@ public final class AsciiDocRenderer {
     private String renderIndex(List<TaskDescriptor> tasks) {
         StringBuilder out = new StringBuilder("= ").append(messages.taskReference()).append("\n\n");
         for (TaskDescriptor task : tasks) {
+            out.append("[[").append(anchor(task)).append("]]\n");
+            out.append("== ").append(task.name()).append("\n\n");
+            if (!task.description().isBlank()) {
+                out.append(task.description()).append("\n\n");
+            }
             out.append("include::").append(fileName(task)).append("[]\n\n");
         }
-        return out.toString();
+        return out.toString().stripTrailing() + "\n";
     }
 
     public String fileName(TaskDescriptor task) {

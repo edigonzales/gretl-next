@@ -1,0 +1,20 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `inputFile(Object... paths)`
+|
+| Alias für die Angabe zu konvertierender ITF-Dateien.
+| nein
+
+| `inputFiles(Object... paths)`
+|
+| Gibt die zu konvertierenden ITF-Dateien an.
+| ja
+
+| `outputDirectory(Object path)`
+|
+| Legt das Ausgabeverzeichnis fest.
+| ja
+
+|===

@@ -225,29 +225,11 @@ liefert für den Vergleichscommit aber kein erfolgreiches Release-Signal.
 
 ### Nachgewiesene Lücken
 
-Die eingecheckte [Task-Referenz](task-reference.md) beschreibt nur 28 der 45
-Task-Typen. Es fehlen dort:
-
-- `Curl`;
-- `FtpDelete`, `FtpDownload`, `FtpList`, `FtpUpload`;
-- `S3Bucket2Bucket`, `S3Delete`, `S3Download`, `S3Upload`;
-- `Ili2gpkgImport`;
-- `Ili2pgDelete`, `Ili2pgExport`, `Ili2pgImport`, `Ili2pgImportSchema`,
-  `Ili2pgReplace`, `Ili2pgUpdate`, `Ili2pgValidate`.
-
-`generateTaskDocs` erzeugt zwar 45 Task-Dateien, bei 15 davon werden wegen
-geerbter DSL-Methoden keine Properties dokumentiert:
-
-- `CsvValidator`;
-- `Ili2duckdbExport`, `Ili2duckdbImport`, `Ili2duckdbImportSchema`;
-- `Ili2gpkgImport`;
-- `Ili2pgDelete`, `Ili2pgExport`, `Ili2pgImport`, `Ili2pgImportSchema`,
-  `Ili2pgReplace`, `Ili2pgUpdate`, `Ili2pgValidate`;
-- `IliValidator`, `JsonValidator`, `ShpValidator`.
-
-Dasselbe Problem reicht in die LSP-Metadaten hinein: Diese 15 Tasks werden
-erkannt, besitzen dort aber null Properties. Dadurch können Completion und
-DSL-Diagnostik für gerade diese Tasks unvollständig oder falsch sein.
+Die frühere kompakte [Task-Referenz](task-reference.md) wurde durch eine
+redaktionelle AsciiDoc-Referenz mit eingecheckten Doclet-Tabellen ersetzt:
+[GRETL-Referenzdokumentation](reference/reference.adoc). Sie umfasst alle 45
+aktuellen Task-Typen. Der `verifyTaskDocs`-Check stellt sicher, dass die
+Tabellen aktuell bleiben und jeder Task in der Master-Datei eingebunden ist.
 
 Weitere Befunde:
 
@@ -256,8 +238,8 @@ Weitere Befunde:
   [geplant](index.md#planned-documentation-areas).
 - Der [LSP-Phasenstatus](lsp/PHASE_STATUS.md) nennt CI/VSIX-Paketierung noch
   `not-started`, obwohl inzwischen ein VS-Code-Publish-Workflow existiert.
-- Es gibt keine CI, die generierte Dokumentation gegen die öffentliche API
-  prüft oder publiziert.
+- Die CI prüft die eingecheckten Task-Tabellen gegen die öffentliche API; die
+  Thoth-Website bleibt ein separater Preview-/Release-Schritt.
 
 Das Original besitzt für alle 44 Tasks generierte Referenzseiten, separate
 Publisher-Dokumentation und eine Quarto-Publikationsstrecke. Der Workflow ist am

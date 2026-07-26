@@ -1,0 +1,15 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `csvFile(Object path)`
+|
+| Legt die zu konvertierende CSV-Datei fest.
+| ja
+
+| `outputFile(Object path)`
+|
+| Legt die XLSX-Ausgabedatei fest.
+| ja
+
+|===

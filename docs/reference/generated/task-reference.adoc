@@ -1,0 +1,316 @@
+= Task-Referenz
+
+[[task-av2ch]]
+== Av2ch
+
+Konvertiert Schweizer AV-ITF-Dateien ins Bundes-AV-Modell.
+
+include::task-av2ch.adoc[]
+
+[[task-av2geobau]]
+== Av2geobau
+
+Konvertiert AV-ITF-Dateien in GeoBau-DXF-Dateien.
+
+include::task-av2geobau.adoc[]
+
+[[task-csv2excel]]
+== Csv2Excel
+
+Konvertiert eine CSV-Datei in eine XLSX-Arbeitsmappe.
+
+include::task-csv2excel.adoc[]
+
+[[task-csvexport]]
+== CsvExport
+
+Exportiert eine Datenbank-Tabelle in eine CSV-Datei.
+
+include::task-csvexport.adoc[]
+
+[[task-csvimport]]
+== CsvImport
+
+Importiert eine CSV-Datei in eine Datenbank-Tabelle.
+
+include::task-csvimport.adoc[]
+
+[[task-csvvalidator]]
+== CsvValidator
+
+Validiert eine CSV-Datei mit ilivalidator und dem CSV-Reader-Adapter.
+
+include::task-csvvalidator.adoc[]
+
+[[task-curl]]
+== Curl
+
+Führt eine HTTP-Anfrage aus und validiert die Antwort.
+
+include::task-curl.adoc[]
+
+[[task-db2db]]
+== Db2Db
+
+Kopiert ausgewählte Zeilen aus einer Quell-Datenbank in eine Zieltabelle.
+
+include::task-db2db.adoc[]
+
+[[task-duckdbsqlexecutor]]
+== DuckDbSqlExecutor
+
+Führt SQL in einer vorbereiteten DuckDB-Föderationssitzung aus.
+
+include::task-duckdbsqlexecutor.adoc[]
+
+[[task-ftpdelete]]
+== FtpDelete
+
+Löscht Dateien von einem FTP-Server.
+
+include::task-ftpdelete.adoc[]
+
+[[task-ftpdownload]]
+== FtpDownload
+
+Lädt Dateien von einem FTP-Server herunter.
+
+include::task-ftpdownload.adoc[]
+
+[[task-ftplist]]
+== FtpList
+
+Listet Dateien in einem FTP-Verzeichnis auf.
+
+include::task-ftplist.adoc[]
+
+[[task-ftpupload]]
+== FtpUpload
+
+Lädt eine lokale Datei auf einen FTP-Server hoch.
+
+include::task-ftpupload.adoc[]
+
+[[task-gpkg2dxf]]
+== Gpkg2Dxf
+
+Konvertiert ili2gpkg-GeoPackage-Tabellen in DXF-Dateien.
+
+include::task-gpkg2dxf.adoc[]
+
+[[task-gpkg2shp]]
+== Gpkg2Shp
+
+Konvertiert ili2gpkg-GeoPackage-Tabellen in Shapefiles.
+
+include::task-gpkg2shp.adoc[]
+
+[[task-gpkgexport]]
+== GpkgExport
+
+Exportiert eine oder mehrere Datenbank-Tabellen in ein GeoPackage.
+
+include::task-gpkgexport.adoc[]
+
+[[task-gpkgimport]]
+== GpkgImport
+
+Importiert eine GeoPackage-Tabelle in eine Datenbank-Tabelle.
+
+include::task-gpkgimport.adoc[]
+
+[[task-gpkgvalidator]]
+== GpkgValidator
+
+Validiert GeoPackage-Dateien mit ilivalidator und dem GeoPackage-Reader-Adapter.
+
+include::task-gpkgvalidator.adoc[]
+
+[[task-gzip]]
+== Gzip
+
+Schreibt eine GZIP-komprimierte Kopie einer Datei.
+
+include::task-gzip.adoc[]
+
+[[task-ili2duckdbexport]]
+== Ili2duckdbExport
+
+Exportiert INTERLIS-Transferdateien aus einer DuckDB-Datenbank mit ili2duckdb.
+
+include::task-ili2duckdbexport.adoc[]
+
+[[task-ili2duckdbimport]]
+== Ili2duckdbImport
+
+Importiert INTERLIS-Transferdateien oder ilidata-Repository-IDs in eine DuckDB-Datenbank mit ili2duckdb.
+
+include::task-ili2duckdbimport.adoc[]
+
+[[task-ili2duckdbimportschema]]
+== Ili2duckdbImportSchema
+
+Importiert ein INTERLIS-Schema in eine DuckDB-Datenbank mit ili2duckdb.
+
+include::task-ili2duckdbimportschema.adoc[]
+
+[[task-ili2gpkgimport]]
+== Ili2gpkgImport
+
+Importiert INTERLIS-Transferdateien in ein GeoPackage.
+
+include::task-ili2gpkgimport.adoc[]
+
+[[task-ili2pgdelete]]
+== Ili2pgDelete
+
+Löscht einen oder mehrere Datasets aus PostgreSQL/PostGIS.
+
+include::task-ili2pgdelete.adoc[]
+
+[[task-ili2pgexport]]
+== Ili2pgExport
+
+Exportiert PostgreSQL/PostGIS-Daten in INTERLIS-Transferdateien.
+
+include::task-ili2pgexport.adoc[]
+
+[[task-ili2pgimport]]
+== Ili2pgImport
+
+Importiert INTERLIS-Transferdateien in PostgreSQL/PostGIS.
+
+include::task-ili2pgimport.adoc[]
+
+[[task-ili2pgimportschema]]
+== Ili2pgImportSchema
+
+Importiert ein INTERLIS-Schema in eine PostgreSQL/PostGIS-Datenbank.
+
+include::task-ili2pgimportschema.adoc[]
+
+[[task-ili2pgreplace]]
+== Ili2pgReplace
+
+Ersetzt Datasets in PostgreSQL/PostGIS mit INTERLIS-Transferdateien.
+
+include::task-ili2pgreplace.adoc[]
+
+[[task-ili2pgupdate]]
+== Ili2pgUpdate
+
+Aktualisiert PostgreSQL/PostGIS-Daten aus INTERLIS-Transferdateien.
+
+include::task-ili2pgupdate.adoc[]
+
+[[task-ili2pgvalidate]]
+== Ili2pgValidate
+
+Validiert Daten in PostgreSQL/PostGIS mit ili2pg.
+
+include::task-ili2pgvalidate.adoc[]
+
+[[task-ilivalidator]]
+== IliValidator
+
+Validiert INTERLIS-Transferdateien mit ilivalidator.
+
+include::task-ilivalidator.adoc[]
+
+[[task-jsonimport]]
+== JsonImport
+
+Importiert ein JSON-Dokument in eine Datenbank-Textspalte.
+
+include::task-jsonimport.adoc[]
+
+[[task-jsonvalidator]]
+== JsonValidator
+
+Validiert JSON-Dateien mit ilivalidator und dem JSON-Reader-Adapter.
+
+include::task-jsonvalidator.adoc[]
+
+[[task-rasterreclassify]]
+== RasterReclassify
+
+Reclassifiziert Rasterwerte in ein neues Raster.
+
+include::task-rasterreclassify.adoc[]
+
+[[task-readshapefile]]
+== ReadShapefile
+
+Liest ein Shapefile über die GeoTools-Worker-Laufzeitumgebung und protokolliert grundlegende Diagnosedaten.
+
+include::task-readshapefile.adoc[]
+
+[[task-s3bucket2bucket]]
+== S3Bucket2Bucket
+
+Kopiert alle Objekte von einem S3-Bucket in einen anderen.
+
+include::task-s3bucket2bucket.adoc[]
+
+[[task-s3delete]]
+== S3Delete
+
+Löscht ein Objekt oder alle Objekte aus einem S3-Bucket.
+
+include::task-s3delete.adoc[]
+
+[[task-s3download]]
+== S3Download
+
+Lädt ein Objekt oder einen ganzen Bucket von S3 herunter.
+
+include::task-s3download.adoc[]
+
+[[task-s3upload]]
+== S3Upload
+
+Lädt Dateien in einen S3-Bucket hoch.
+
+include::task-s3upload.adoc[]
+
+[[task-shpexport]]
+== ShpExport
+
+Exportiert eine Datenbank-Tabelle in ein Shapefile.
+
+include::task-shpexport.adoc[]
+
+[[task-shpimport]]
+== ShpImport
+
+Importiert ein Shapefile in eine Datenbank-Tabelle.
+
+include::task-shpimport.adoc[]
+
+[[task-shpvalidator]]
+== ShpValidator
+
+Validiert ein Shapefile mit ilivalidator und dem Shapefile-Reader-Adapter.
+
+include::task-shpvalidator.adoc[]
+
+[[task-sqlexecutor]]
+== SqlExecutor
+
+Führt eine oder mehrere SQL-Dateien gegen eine Datenbank aus.
+
+include::task-sqlexecutor.adoc[]
+
+[[task-vectorize]]
+== Vectorize
+
+Vektorisiert ausgewählte Rasterzellenwerte in ein GeoPackage.
+
+include::task-vectorize.adoc[]
+
+[[task-xsltransformer]]
+== XslTransformer
+
+Transformiert eine oder mehrere XML-Dateien mit einem XSLT-Stylesheet.
+
+include::task-xsltransformer.adoc[]

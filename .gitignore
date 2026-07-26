@@ -11,3 +11,6 @@ vscode/gretl-vscode/node_modules/
 vscode/gretl-vscode/dist/
 vscode/gretl-vscode/*.vsix
 vscode/gretl-vscode/server/*.jar
+docs/reference/.thoth/
+docs/reference/biblios.local.yml
+.thoth/

@@ -1,0 +1,15 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `dataFile(Object path)`
+|
+| Legt die zu komprimierende Eingabedatei fest.
+| ja
+
+| `gzipFile(Object path)`
+|
+| Legt die GZIP-Ausgabedatei fest.
+| ja
+
+|===

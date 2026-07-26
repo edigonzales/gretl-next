@@ -1,0 +1,15 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `dataFile(Object path)`
+|
+| Legt die zu konvertierende GeoPackage-Datei fest.
+| ja
+
+| `outputDir(Object path)`
+|
+| Legt das DXF-Ausgabeverzeichnis fest.
+| ja
+
+|===

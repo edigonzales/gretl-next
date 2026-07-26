@@ -1,0 +1,25 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `breaks(Number... values)`
+| 0, 55, 60, 65, 70, 500
+| Gibt die streng monoton steigenden Klassenbruchwerte an.
+| nein
+
+| `inputRaster(Object path)`
+|
+| Konfiguriert die Eingabe-Rasterdatei.
+| ja
+
+| `noData(Number value)`
+| -100
+| Legt den No-Data-Wert für das Ausgabe-Raster fest.
+| nein
+
+| `outputRaster(Object path)`
+|
+| Konfiguriert die Ausgabe-Rasterdatei.
+| ja
+
+|===

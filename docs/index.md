@@ -7,7 +7,7 @@ points.
 ## Start Here
 
 - Writing jobs: use the compact examples in the [README](../README.md) and the
-  task overview in [Task reference](task-reference.md).
+  task overview in the [Task reference](reference/reference.adoc).
 - Federated DuckDB SQL jobs: read
   [DuckDbSqlExecutor](duckdb-sql-executor.md).
 - Migrating old jobs: read [Migration from original GRETL](migration-from-gretl.md).
@@ -25,7 +25,8 @@ points.
 The current documentation is intentionally small and structured so more detail
 can be added without changing the entry points.
 
-- Task reference: complete properties, validation errors and examples per task.
+- Task reference: complete properties, validation errors and examples per task
+  in [reference/reference.adoc](reference/reference.adoc).
 - Migration guide: more original GRETL job patterns and equivalent modular DSL.
 - Testing guide: fixture strategy, TestKit conventions and Testcontainers setup.
 - CI guide: fast checks, Docker-backed integration tests and runtime image build.

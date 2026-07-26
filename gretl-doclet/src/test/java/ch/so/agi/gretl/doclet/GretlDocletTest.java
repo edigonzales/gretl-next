@@ -25,6 +25,7 @@ class GretlDocletTest {
         String actual = Files.readString(tempDir.resolve("task-fixturetask.adoc"));
         String expected = Files.readString(Path.of("src/test/resources/ch/so/agi/gretl/doclet/expected-fixturetask.adoc"));
         assertEquals(normalize(expected), normalize(actual));
+        assertFalse(actual.contains("== FixtureTask"));
     }
 
     @Test
@@ -34,6 +35,7 @@ class GretlDocletTest {
         String actual = Files.readString(tempDir.resolve("task-fixturetask.adoc"));
         String expected = Files.readString(Path.of("src/test/resources/ch/so/agi/gretl/doclet/expected-fixturetask_de.adoc"));
         assertEquals(normalize(expected), normalize(actual));
+        assertTrue(actual.contains("| DSL-Methode | Standard | Beschreibung | Erforderlich"));
     }
 
     @Test
@@ -61,6 +63,15 @@ class GretlDocletTest {
 
         String actual = Files.readString(tempDir.resolve("task-inheritedfixturetask.adoc"));
         assertTrue(actual.contains("Konfiguriert eine geerbte Eingabe."));
+    }
+
+    @Test
+    void removesStaleGeneratedAsciiDocFiles(@TempDir Path tempDir) throws IOException {
+        Files.writeString(tempDir.resolve("task-stale.adoc"), "stale");
+
+        generate(tempDir, List.of(Path.of("src/test/java/ch/so/agi/gretl/doclet/fixtures/FixtureTask.java")));
+
+        assertFalse(Files.exists(tempDir.resolve("task-stale.adoc")));
     }
 
     @Test

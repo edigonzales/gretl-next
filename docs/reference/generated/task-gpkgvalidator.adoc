@@ -1,0 +1,65 @@
+[cols="4,1,5,1", options="header"]
+|===
+| DSL-Methode | Standard | Beschreibung | Erforderlich
+
+| `configFile(Object path)`
+|
+| Verwendet eine lokale Validierungskonfigurationsdatei.
+| nein
+
+| `configRepositoryId(String id)`
+|
+| Verwendet eine Validierungskonfiguration aus einer ilidata-Repository-ID.
+| nein
+
+| `dataFiles(Object... paths)`
+|
+| Gibt die zu validierenden Datendateien an.
+| ja
+
+| `logFile(Object path)`
+|
+| Schreibt Validator-Protokollmeldungen in eine Textdatei.
+| nein
+
+| `metaConfigFile(Object path)`
+|
+| Verwendet eine lokale Metakonfigurationsdatei.
+| nein
+
+| `metaConfigRepositoryId(String id)`
+|
+| Verwendet eine Metakonfiguration aus einer ilidata-Repository-ID.
+| nein
+
+| `modelDirectories(String... entries)`
+|
+| Gibt die Modellverzeichnis- oder Repository-Einträge an.
+| nein
+
+| `modelNames(String... names)`
+|
+| Gibt die INTERLIS-Modellnamen an.
+| nein
+
+| `modeldir(String value)`
+|
+| Alias für die Konfiguration der Validator-Option modeldir.
+| nein
+
+| `models(String value)`
+|
+| Alias für die Konfiguration der Validator-Modelle.
+| nein
+
+| `tableName(String value)`
+|
+| Legt den Namen der zu validierenden GeoPackage-Tabelle fest.
+| ja
+
+| `xtfLogFile(Object path)`
+|
+| Schreibt IliVErrors-Protokollmeldungen in eine Datei.
+| nein
+
+|===
