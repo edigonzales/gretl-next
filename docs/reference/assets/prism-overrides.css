@@ -9,7 +9,8 @@ pre[class*="language-"] > code,
 .doc-content pre > code {
     background: var(--color-sidebarblock-bg);
     font-size: 0.95rem;
-    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace !important;
+    font-family: var(--font-code) !important;
+    font-variation-settings: "MONO" 1 !important;
 }
 
 /* Inline code */
@@ -18,7 +19,8 @@ pre[class*="language-"] > code,
 .doc-content :not(pre) > code {
     background: var(--color-sidebarblock-bg);
     font-size: 0.95rem;
-    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace !important;
+    font-family: var(--font-code) !important;
+    font-variation-settings: "MONO" 1 !important;
 }
 
 /* Inline code inside tables should not have a background. */
