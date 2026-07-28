@@ -799,7 +799,7 @@ body[data-single-page-mode="true"] .sidebar-nav .nav-toggle-chevron--leaf {
 
 .doc-content .dsl-method,
 .doc-content .dsl-method code {
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .doc-content :is(.task-name, .java-type, .parameter),
@@ -858,7 +858,7 @@ body[data-single-page-mode="true"] .sidebar-nav .nav-toggle-chevron--leaf {
 }
 
 .doc-content .dsl-signature strong {
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .doc-content :is(.path, .glob, .command, .code-fragment),

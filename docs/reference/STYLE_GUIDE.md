@@ -93,7 +93,7 @@ Referenztabellen und behalten die normale Inline-Code-Darstellung.
 
 Dokumentüberschriften aller Ebenen und Tabellenüberschriften verwenden
 Recursive mit Schriftgewicht `900`. Alle DSL-Methodennamen werden mit
-Schriftgewicht `600` gesetzt: sowohl
+Schriftgewicht `700` gesetzt: sowohl
 `dsl-method`-Tokens im Fliesstext als auch der starke Methodenname innerhalb
 einer `dsl-signature`. Typen und Parameter innerhalb der Signatur bleiben bei
 Schriftgewicht `400`.
