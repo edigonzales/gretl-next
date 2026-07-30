@@ -34,6 +34,7 @@ toolchains.
 ./gradlew --version
 ./gradlew clean check
 ./gradlew :gretl-core:integrationTest
+./gradlew publishedArtifactTest
 ./gradlew stageRuntimeImage
 ./gradlew :gretl-control-server:bootRun
 ./gradlew :gretl-control-worker:bootRun
@@ -42,6 +43,19 @@ toolchains.
 `./gradlew clean check` is the fast local check and does not require Docker.
 The `:gretl-core:integrationTest` task starts PostgreSQL/PostGIS containers with
 Testcontainers and is run separately.
+
+The normal `test` and `integrationTest` tasks execute Gradle TestKit projects
+with the source plugin classpath. `:gretl-core:publishedFunctionalTest`,
+`:gretl-core:publishedIntegrationTest` and
+`:gretl-geotools:publishedFunctionalTest` instead resolve the real plugin
+markers from the isolated Maven repository under
+`build/published-test/maven-repo`. The aggregate `publishedArtifactTest` task
+publishes and verifies both plugins before running those black-box consumer
+projects. It is the published-artifact release gate; it does not test the
+Docker runtime image or full offline operation. The runtime-image level remains
+a separate, future deployment test after the source-classpath and
+published-artifact checks. The generated consumer settings do not use
+`mavenLocal()`.
 
 `stageRuntimeImage` creates a Docker build context under
 `build/runtime-image/docker`. If Docker is available, the local runtime image can

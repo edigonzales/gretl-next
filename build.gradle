@@ -6,6 +6,8 @@ plugins {
 group = 'ch.so.agi'
 version = '5.0.0-SNAPSHOT'
 
+def publishedTestRepoDir = layout.buildDirectory.dir('published-test/maven-repo')
+
 def publishUsername = providers.gradleProperty('gretlPublishUsername')
         .orElse(providers.environmentVariable('GRETL_PUBLISH_USERNAME'))
 def publishPassword = providers.gradleProperty('gretlPublishPassword')
@@ -65,6 +67,10 @@ subprojects {
                     url = rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile.toURI()
                 }
                 maven {
+                    name = 'publishedTest'
+                    url = publishedTestRepoDir.get().asFile.toURI()
+                }
+                maven {
                     name = 'interlisGuruSnapshots'
                     url = uri('https://jars.interlis.guru/snapshots')
                     credentials {
@@ -116,6 +122,10 @@ tasks.register('cleanRuntimeImageRepository', Delete) {
     delete runtimeImageRepoDir
 }
 
+tasks.register('cleanPublishedTestRepository', Delete) {
+    delete publishedTestRepoDir
+}
+
 tasks.register('publishSnapshots') {
     group = 'publishing'
     description = 'Publishes all GRETL snapshot publications to the interlisGuruSnapshots repository.'
@@ -127,10 +137,237 @@ subprojects {
             dependsOn rootProject.tasks.named('cleanRuntimeImageRepository')
         }
 
+        tasks.matching { it.name.endsWith('ToPublishedTestRepository') }.configureEach {
+            dependsOn rootProject.tasks.named('cleanPublishedTestRepository')
+        }
+
         rootProject.tasks.named('publishSnapshots').configure {
             dependsOn tasks.named('publishAllPublicationsToInterlisGuruSnapshotsRepository')
         }
     }
+}
+
+tasks.register('preparePublishedTestRepository') {
+    group = 'verification'
+    description = 'Publishes GRETL Core and GeoTools plugin artifacts to an isolated local Maven repository for black-box tests.'
+
+    dependsOn ':gretl-core:publishAllPublicationsToPublishedTestRepository'
+    dependsOn ':gretl-geotools:publishAllPublicationsToPublishedTestRepository'
+}
+
+tasks.register('verifyPublishedTestRepository') {
+    group = 'verification'
+    description = 'Verifies GRETL plugin markers, implementation POMs and packaged worker runtime in the published-test repository.'
+    dependsOn tasks.named('preparePublishedTestRepository')
+    inputs.dir publishedTestRepoDir
+    inputs.property 'gretlVersion', provider { project.version.toString() }
+
+    doLast {
+        File repository = publishedTestRepoDir.get().asFile
+        String version = project.version.toString()
+
+        def coordinate = { String groupId, String artifactId, String artifactVersion ->
+            "${groupId}:${artifactId}:${artifactVersion}"
+        }
+        def artifactFile = { String groupId, String artifactId, String artifactVersion, String extension ->
+            File versionDirectory = new File(repository, "${groupId.replace('.', '/')}/${artifactId}/${artifactVersion}")
+            File baseFile = new File(versionDirectory, "${artifactId}-${artifactVersion}.${extension}")
+            if (baseFile.isFile()) {
+                return baseFile
+            }
+            // Maven repositories timestamp SNAPSHOT publications. Resolve the physical file
+            // referenced by maven-metadata.xml while retaining the logical GRETL coordinate.
+            String physicalVersion = artifactVersion.endsWith('-SNAPSHOT')
+                    ? artifactVersion.substring(0, artifactVersion.length() - '-SNAPSHOT'.length())
+                    : artifactVersion
+            List<File> timestampedFiles = versionDirectory.listFiles()?.findAll { File candidate ->
+                candidate.name.startsWith("${artifactId}-${physicalVersion}-")
+                        && candidate.name.endsWith(".${extension}")
+                        && !candidate.name.endsWith('.sha1')
+                        && !candidate.name.endsWith('.md5')
+                        && !candidate.name.endsWith('.sha256')
+                        && !candidate.name.endsWith('.sha512')
+            }?.sort { File left, File right -> left.name <=> right.name } ?: []
+            timestampedFiles.isEmpty() ? baseFile : timestampedFiles.last()
+        }
+        def requireFile = { File artifact, String description ->
+            if (!artifact.isFile()) {
+                throw new GradleException("Missing published GRETL artifact for ${description}: ${artifact}")
+            }
+            artifact
+        }
+        def parsePom = { File pomFile ->
+            new groovy.util.XmlSlurper(false, false).parse(pomFile)
+        }
+        def dependencies = { pom ->
+            pom.dependencies.dependency.collect { dependency ->
+                [
+                        group: dependency.groupId.text(),
+                        artifact: dependency.artifactId.text(),
+                        version: dependency.version.text(),
+                        scope: dependency.scope.text()
+                ]
+            }
+        }
+        def verifyImplementationPom = { String groupId, String artifactId ->
+            String implementationCoordinate = coordinate(groupId, artifactId, version)
+            File pomFile = requireFile(
+                    artifactFile(groupId, artifactId, version, 'pom'), implementationCoordinate)
+            def pom = parsePom(pomFile)
+            Map<String, String> expectedCoordinates = [groupId: groupId, artifactId: artifactId, version: version]
+            expectedCoordinates.each { String element, String expected ->
+                String actual = pom."${element}".text()
+                if (actual != expected) {
+                    throw new GradleException(
+                            "Implementation POM ${pomFile} has ${element} '${actual}'; "
+                                    + "expected '${expected}' for ${implementationCoordinate}.")
+                }
+            }
+            String pomText = pomFile.getText('UTF-8')
+            ['build/classes', 'build/libs', '/src/'].each { String forbidden ->
+                if (pomText.contains(forbidden)) {
+                    throw new GradleException(
+                            "Implementation POM ${pomFile} contains forbidden source/build reference '${forbidden}'.")
+                }
+            }
+            File moduleFile = requireFile(
+                    artifactFile(groupId, artifactId, version, 'module'), implementationCoordinate + ' module metadata')
+            String moduleText = moduleFile.getText('UTF-8')
+            ['build/classes', 'build/libs', '/src/'].each { String forbidden ->
+                if (moduleText.contains(forbidden)) {
+                    throw new GradleException(
+                            "Gradle module metadata ${moduleFile} contains forbidden source/build reference '${forbidden}'.")
+                }
+            }
+            [pom: pom, dependencies: dependencies(pom), file: pomFile]
+        }
+        def verifyMarker = { String markerGroup, String markerArtifact, String implementationGroup, String implementationArtifact ->
+            String markerCoordinate = coordinate(markerGroup, markerArtifact, version)
+            File markerPom = requireFile(
+                    artifactFile(markerGroup, markerArtifact, version, 'pom'), markerCoordinate)
+            def markerDependencies = dependencies(parsePom(markerPom))
+            if (markerDependencies.size() != 1) {
+                throw new GradleException(
+                        "Plugin marker ${markerCoordinate} must contain exactly one implementation dependency; "
+                                + "found ${markerDependencies.size()} in ${markerPom}.")
+            }
+            Map<String, String> expected = [group: implementationGroup, artifact: implementationArtifact, version: version]
+            expected.each { String element, String expectedValue ->
+                String actual = markerDependencies[0][element]
+                if (actual != expectedValue) {
+                    throw new GradleException(
+                            "Plugin marker ${markerCoordinate} points to "
+                                    + "${markerDependencies[0].group}:${markerDependencies[0].artifact}:${markerDependencies[0].version}; "
+                                    + "expected ${implementationGroup}:${implementationArtifact}:${version}. "
+                                    + "Wrong ${element} value '${actual}', expected '${expectedValue}'.")
+                }
+            }
+        }
+        def verifyPluginDescriptor = { File jarFile, String pluginId, String implementationClass ->
+            String descriptorPath = "META-INF/gradle-plugins/${pluginId}.properties"
+            new java.util.jar.JarFile(jarFile).withCloseable { jarFileHandle ->
+                def descriptorEntry = jarFileHandle.getJarEntry(descriptorPath)
+                if (descriptorEntry == null) {
+                    throw new GradleException(
+                            "Published JAR ${jarFile} is missing plugin descriptor ${descriptorPath}.")
+                }
+                Properties properties = new Properties()
+                jarFileHandle.getInputStream(descriptorEntry).withCloseable { properties.load(it) }
+                String actual = properties.getProperty('implementation-class')
+                if (actual != implementationClass) {
+                    throw new GradleException(
+                            "Plugin descriptor ${descriptorPath} in ${jarFile} has implementation-class '${actual}'; "
+                                    + "expected '${implementationClass}'.")
+                }
+            }
+        }
+
+        File coreJar = requireFile(
+                artifactFile('ch.so.agi', 'gretl-core', version, 'jar'),
+                coordinate('ch.so.agi', 'gretl-core', version))
+        File geotoolsJar = requireFile(
+                artifactFile('ch.so.agi', 'gretl-geotools', version, 'jar'),
+                coordinate('ch.so.agi', 'gretl-geotools', version))
+
+        verifyImplementationPom('ch.so.agi', 'gretl-core')
+        verifyImplementationPom('ch.so.agi', 'gretl-geotools')
+        verifyMarker('ch.so.agi.gretl', 'ch.so.agi.gretl.gradle.plugin', 'ch.so.agi', 'gretl-core')
+        verifyMarker('ch.so.agi.gretl.geotools', 'ch.so.agi.gretl.geotools.gradle.plugin', 'ch.so.agi', 'gretl-geotools')
+        verifyPluginDescriptor(coreJar, 'ch.so.agi.gretl', 'ch.so.agi.gretl.gradle.GretlPlugin')
+        verifyPluginDescriptor(geotoolsJar, 'ch.so.agi.gretl.geotools', 'ch.so.agi.gretl.geotools.GretlGeotoolsPlugin')
+
+        def coreDependencies = dependencies(parsePom(artifactFile('ch.so.agi', 'gretl-core', version, 'pom')))
+        ['commons-io:commons-io', 'org.xerial:sqlite-jdbc', 'org.postgresql:postgresql', 'org.duckdb:duckdb_jdbc'].each { String expectedCoordinate ->
+            String[] parts = expectedCoordinate.split(':')
+            def dependency = coreDependencies.find { it.group == parts[0] && it.artifact == parts[1] }
+            if (dependency == null) {
+                throw new GradleException(
+                        "Core implementation POM ${coordinate('ch.so.agi', 'gretl-core', version)} is missing dependency ${expectedCoordinate}.")
+            }
+            if (['org.xerial', 'org.postgresql', 'org.duckdb'].contains(parts[0])
+                    && dependency.scope != '' && dependency.scope != 'runtime') {
+                throw new GradleException(
+                        "Core implementation POM dependency ${expectedCoordinate} has scope '${dependency.scope}'; "
+                                + "expected runtime or an absent scope.")
+            }
+        }
+
+        new java.util.jar.JarFile(geotoolsJar).withCloseable { jarFileHandle ->
+            List<String> entries = jarFileHandle.entries().toList().collect { it.name }
+            String workerPrefix = 'gretl-geotools-worker-classpath/'
+            List<String> workerEntries = entries.findAll { it.startsWith(workerPrefix) }
+            if (workerEntries.isEmpty()) {
+                throw new GradleException(
+                        "Published gretl-geotools JAR ${geotoolsJar} has no entries under ${workerPrefix}.")
+            }
+            List<String> forbiddenWorkerEntries = workerEntries.findAll {
+                it.endsWith('-sources.jar') || it.endsWith('-javadoc.jar')
+            }
+            if (!forbiddenWorkerEntries.isEmpty()) {
+                throw new GradleException(
+                        "Published gretl-geotools JAR contains source/javadoc worker entries: "
+                                + forbiddenWorkerEntries.join(', '))
+            }
+            def requiredWorkerEntries = [
+                    ['worker runtime JAR', { it.startsWith(workerPrefix + 'gretl-geotools-') && it.endsWith('-worker-runtime.jar') }],
+                    ['gt-main', { it.startsWith(workerPrefix + 'lib/gt-main-') && it.endsWith('.jar') }],
+                    ['gt-geotiff', { it.startsWith(workerPrefix + 'lib/gt-geotiff-') && it.endsWith('.jar') }],
+                    ['gt-coverage', { it.startsWith(workerPrefix + 'lib/gt-coverage-') && it.endsWith('.jar') }],
+                    ['gt-shapefile', { it.startsWith(workerPrefix + 'lib/gt-shapefile-') && it.endsWith('.jar') }],
+                    ['gt-epsg-hsql', { it.startsWith(workerPrefix + 'lib/gt-epsg-hsql-') && it.endsWith('.jar') }]
+            ]
+            requiredWorkerEntries.each { entryDefinition ->
+                String description = entryDefinition[0]
+                Closure<Boolean> matches = entryDefinition[1]
+                List<String> matchesFound = workerEntries.findAll(matches)
+                if (matchesFound.isEmpty()) {
+                    String available = workerEntries.take(40).join(', ')
+                    throw new GradleException(
+                            "Published gretl-geotools JAR does not contain a worker dependency matching ${description}. "
+                                    + "Available worker entries: ${available}")
+                }
+                if (description == 'worker runtime JAR') {
+                    matchesFound.each { String entryName ->
+                        def entry = jarFileHandle.getJarEntry(entryName)
+                        if (entry.size <= 0) {
+                            throw new GradleException(
+                                    "Embedded GeoTools worker runtime entry ${entryName} in ${geotoolsJar} is empty.")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.register('publishedArtifactTest') {
+    group = 'verification'
+    description = 'Verifies and executes the published GRETL Core and GeoTools Gradle plugin artifacts.'
+
+    dependsOn tasks.named('verifyPublishedTestRepository')
+    dependsOn ':gretl-core:publishedFunctionalTest'
+    dependsOn ':gretl-core:publishedIntegrationTest'
+    dependsOn ':gretl-geotools:publishedFunctionalTest'
 }
 
 tasks.register('stageRuntimeImage', Sync) {

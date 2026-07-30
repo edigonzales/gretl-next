@@ -84,6 +84,7 @@ public final class Gpkg2DxfEngine {
                 """;
 
         List<DxfLayerInfo> result = new ArrayList<>();
+        Class.forName("org.sqlite.JDBC");
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + gpkgFile.toAbsolutePath());
              Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(sql)) {

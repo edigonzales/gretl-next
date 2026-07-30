@@ -1,8 +1,9 @@
 package ch.so.agi.gretl;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.io.TempDir;
+import ch.so.agi.gretl.testkit.GretlBuildExecutors;
+import ch.so.agi.gretl.testkit.GretlTestProjectSettings;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -25,25 +26,15 @@ abstract class CoreFunctionalTestSupport {
     Path projectDir;
 
     BuildResult run(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .build();
+        return GretlBuildExecutors.current().run(projectDir, arguments);
     }
 
     BuildResult runAndFail(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .buildAndFail();
+        return GretlBuildExecutors.current().runAndFail(projectDir, arguments);
     }
 
     void writeSettings() throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'core-test'\n", StandardCharsets.UTF_8);
+        GretlTestProjectSettings.write(projectDir, "core-test");
     }
 
     void writeBuild(String content) throws IOException {
@@ -133,10 +124,4 @@ abstract class CoreFunctionalTestSupport {
         return DriverManager.getConnection("jdbc:sqlite:" + path.toAbsolutePath());
     }
 
-    private String[] appendStacktrace(String[] arguments) {
-        String[] result = new String[arguments.length + 1];
-        System.arraycopy(arguments, 0, result, 0, arguments.length);
-        result[arguments.length] = "--stacktrace";
-        return result;
-    }
 }

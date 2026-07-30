@@ -2,11 +2,12 @@ package ch.so.agi.gretl;
 
 import io.floci.testcontainers.FlociContainer;
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import ch.so.agi.gretl.testkit.GretlBuildExecutors;
+import ch.so.agi.gretl.testkit.GretlTestProjectSettings;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -221,35 +222,19 @@ class S3FlociIntegrationTest {
     }
 
     private BuildResult run(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .build();
+        return GretlBuildExecutors.current().run(projectDir, arguments);
     }
 
     private BuildResult runAndFail(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .buildAndFail();
+        return GretlBuildExecutors.current().runAndFail(projectDir, arguments);
     }
 
     private void writeSettings() throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 's3-floci-test'\n", StandardCharsets.UTF_8);
+        GretlTestProjectSettings.write(projectDir, "s3-floci-test");
     }
 
     private void writeBuild(String content) throws IOException {
         Files.writeString(projectDir.resolve("build.gradle"), content, StandardCharsets.UTF_8);
     }
 
-    private String[] appendStacktrace(String[] arguments) {
-        String[] result = new String[arguments.length + 1];
-        System.arraycopy(arguments, 0, result, 0, arguments.length);
-        result[arguments.length] = "--stacktrace";
-        return result;
-    }
 }

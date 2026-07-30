@@ -31,6 +31,7 @@ dependencies {
     testImplementation sourceSets.worker.output
     testImplementation configurations.workerRuntimeClasspath
     testImplementation gradleTestKit()
+    testImplementation project(':gretl-test-support')
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 
@@ -68,4 +69,31 @@ gradlePlugin {
             description = 'GeoTools Gradle tasks for GRETL pipelines using classloader-isolated workers.'
         }
     }
+}
+
+tasks.register('publishedFunctionalTest', Test) {
+    group = 'verification'
+    description = 'Runs GeoTools plugin functional tests against the published plugin artifact.'
+
+    dependsOn rootProject.tasks.named('preparePublishedTestRepository')
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+
+    filter {
+        includeTestsMatching 'ch.so.agi.gretl.geotools.GeoToolsPluginFunctionalTest'
+    }
+
+    systemProperty 'gretl.test.executionMode', 'PUBLISHED_ARTIFACT'
+    systemProperty 'gretl.test.publishedRepository',
+            rootProject.layout.buildDirectory.dir('published-test/maven-repo').get().asFile.absolutePath
+    systemProperty 'gretl.test.pluginVersion', rootProject.version.toString()
+    systemProperty 'gretl.test.testKitDirectory',
+            layout.buildDirectory.dir('test-kit/published-functional').get().asFile.absolutePath
+
+    inputs.dir rootProject.layout.buildDirectory.dir('published-test/maven-repo')
+    inputs.property 'gretlPluginVersion', rootProject.provider { rootProject.version.toString() }
+
+    useJUnitPlatform()
 }

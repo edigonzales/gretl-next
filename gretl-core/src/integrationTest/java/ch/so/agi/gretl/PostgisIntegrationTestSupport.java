@@ -1,12 +1,13 @@
 package ch.so.agi.gretl;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.containers.PostgisContainerProvider;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import ch.so.agi.gretl.testkit.GretlBuildExecutors;
+import ch.so.agi.gretl.testkit.GretlTestProjectSettings;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,25 +41,15 @@ abstract class PostgisIntegrationTestSupport {
     Path projectDir;
 
     BuildResult run(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendDefaultArguments(arguments))
-                .forwardOutput()
-                .build();
+        return GretlBuildExecutors.current().run(projectDir, appendPostgresArguments(arguments));
     }
 
     BuildResult runAndFail(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendDefaultArguments(arguments))
-                .forwardOutput()
-                .buildAndFail();
+        return GretlBuildExecutors.current().runAndFail(projectDir, appendPostgresArguments(arguments));
     }
 
     void writeSettings() throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'postgis-test'\n", StandardCharsets.UTF_8);
+        GretlTestProjectSettings.write(projectDir, "postgis-test");
     }
 
     void writeBuild(String content) throws IOException {
@@ -169,13 +160,13 @@ abstract class PostgisIntegrationTestSupport {
                 + "title text, artist text, release_date text, publisher text, media_type text)";
     }
 
-    private String[] appendDefaultArguments(String[] arguments) {
+    private String[] appendPostgresArguments(String[] arguments) {
         String[] result = new String[arguments.length + 4];
         System.arraycopy(arguments, 0, result, 0, arguments.length);
-        result[arguments.length] = "--stacktrace";
-        result[arguments.length + 1] = "-PpgUrl=" + POSTGIS.getJdbcUrl();
-        result[arguments.length + 2] = "-PpgUser=" + POSTGIS.getUsername();
-        result[arguments.length + 3] = "-PpgPass=" + POSTGIS.getPassword();
+        result[arguments.length] = "-PpgUrl=" + POSTGIS.getJdbcUrl();
+        result[arguments.length + 1] = "-PpgUser=" + POSTGIS.getUsername();
+        result[arguments.length + 2] = "-PpgPass=" + POSTGIS.getPassword();
+        result[arguments.length + 3] = "--stacktrace";
         return result;
     }
 }

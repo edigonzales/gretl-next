@@ -309,6 +309,7 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void runsDocumentedGpkgOnlyExample() throws Exception {
         copyTree(examplePath("gpkg-only"), projectDir);
+        writeSettings();
 
         run("analyse");
 
@@ -321,6 +322,7 @@ class DuckDbSqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     @Test
     void runsDocumentedCsvXlsxParquetExample() throws Exception {
         copyTree(examplePath("csv-xlsx-parquet"), projectDir);
+        writeSettings();
 
         run("convert");
 

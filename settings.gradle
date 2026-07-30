@@ -20,6 +20,7 @@ rootProject.name = 'gretl-modular'
 
 include 'gretl-core'
 include 'gretl-geotools'
+include 'gretl-test-support'
 include 'gretl-doclet'
 include 'gretl-control-common'
 include 'gretl-control-server'

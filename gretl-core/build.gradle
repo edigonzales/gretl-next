@@ -75,6 +75,7 @@ dependencies {
     runtimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
 
     testImplementation gradleTestKit()
+    testImplementation project(':gretl-test-support')
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.mockftpserver:MockFtpServer:${mockFtpServerVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
@@ -106,6 +107,63 @@ tasks.register('integrationTest', Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     shouldRunAfter tasks.named('test')
+    useJUnitPlatform()
+}
+
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'published-artifact-only'
+    }
+}
+
+tasks.register('publishedFunctionalTest', Test) {
+    group = 'verification'
+    description = 'Runs GRETL Core functional tests against plugins resolved from the published-test Maven repository.'
+
+    dependsOn rootProject.tasks.named('preparePublishedTestRepository')
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+
+    filter {
+        includeTestsMatching 'ch.so.agi.gretl.*FunctionalTest'
+    }
+
+    systemProperty 'gretl.test.executionMode', 'PUBLISHED_ARTIFACT'
+    systemProperty 'gretl.test.publishedRepository',
+            rootProject.layout.buildDirectory.dir('published-test/maven-repo').get().asFile.absolutePath
+    systemProperty 'gretl.test.pluginVersion', rootProject.version.toString()
+    systemProperty 'gretl.test.testKitDirectory',
+            layout.buildDirectory.dir('test-kit/published-functional').get().asFile.absolutePath
+
+    inputs.dir rootProject.layout.buildDirectory.dir('published-test/maven-repo')
+    inputs.property 'gretlPluginVersion', rootProject.provider { rootProject.version.toString() }
+
+    useJUnitPlatform()
+}
+
+tasks.register('publishedIntegrationTest', Test) {
+    group = 'verification'
+    description = 'Runs Docker-backed GRETL Core integration tests against plugins resolved from the published-test Maven repository.'
+
+    dependsOn rootProject.tasks.named('preparePublishedTestRepository')
+
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter tasks.named('integrationTest')
+    shouldRunAfter tasks.named('publishedFunctionalTest')
+
+    systemProperty 'gretl.test.executionMode', 'PUBLISHED_ARTIFACT'
+    systemProperty 'gretl.test.publishedRepository',
+            rootProject.layout.buildDirectory.dir('published-test/maven-repo').get().asFile.absolutePath
+    systemProperty 'gretl.test.pluginVersion', rootProject.version.toString()
+    systemProperty 'gretl.test.testKitDirectory',
+            layout.buildDirectory.dir('test-kit/published-integration').get().asFile.absolutePath
+
+    inputs.dir rootProject.layout.buildDirectory.dir('published-test/maven-repo')
+    inputs.property 'gretlPluginVersion', rootProject.provider { rootProject.version.toString() }
+
     useJUnitPlatform()
 }
 

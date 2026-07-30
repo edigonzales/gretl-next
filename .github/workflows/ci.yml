@@ -28,8 +28,11 @@ jobs:
       - name: Build and unit test
         run: ./gradlew clean check
 
-      - name: Run integration tests
+      - name: Run integration tests from source classpath
         run: ./gradlew :gretl-core:integrationTest
+
+      - name: Test published GRETL plugin artifacts
+        run: ./gradlew publishedArtifactTest --stacktrace
 
       - name: Upload test reports
         if: always()
@@ -48,6 +51,13 @@ jobs:
           path: |
             gretl-core/build/reports/tests/
             gretl-core/build/test-results/
+
+      - name: Upload published-test repository on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-test-repository-on-failure
+          path: build/published-test/maven-repo
 
   publish:
     runs-on: ubuntu-latest

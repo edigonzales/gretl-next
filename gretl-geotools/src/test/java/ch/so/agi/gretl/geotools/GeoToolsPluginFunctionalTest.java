@@ -1,9 +1,10 @@
 package ch.so.agi.gretl.geotools;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ch.so.agi.gretl.testkit.GretlBuildExecutors;
+import ch.so.agi.gretl.testkit.GretlTestProjectSettings;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -196,32 +197,15 @@ class GeoToolsPluginFunctionalTest {
     }
 
     private BuildResult run(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .build();
+        return GretlBuildExecutors.current().run(projectDir, arguments);
     }
 
     private BuildResult runAndFail(String... arguments) {
-        return GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(appendStacktrace(arguments))
-                .forwardOutput()
-                .buildAndFail();
-    }
-
-    private String[] appendStacktrace(String[] arguments) {
-        String[] result = new String[arguments.length + 1];
-        System.arraycopy(arguments, 0, result, 0, arguments.length);
-        result[arguments.length] = "--stacktrace";
-        return result;
+        return GretlBuildExecutors.current().runAndFail(projectDir, arguments);
     }
 
     private void writeSettings() throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'geotools-test'\n", StandardCharsets.UTF_8);
+        GretlTestProjectSettings.write(projectDir, "geotools-test");
     }
 
     private void writeBuild(String content) throws IOException {

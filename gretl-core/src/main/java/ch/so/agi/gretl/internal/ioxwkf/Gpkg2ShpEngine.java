@@ -30,6 +30,7 @@ public final class Gpkg2ShpEngine {
         }
         Files.createDirectories(request.outputDirectory());
 
+        Class.forName("org.sqlite.JDBC");
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + request.gpkgFile().toAbsolutePath())) {
             DatabaseMetaData metaData = connection.getMetaData();
             for (String tableName : classTables(connection)) {
