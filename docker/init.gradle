@@ -1,56 +1,53 @@
 import java.net.URI
 
-def gretlVersion = System.getProperty('gretl.version') ?: System.getenv('GRETL_VERSION')
+def bundledGretlVersion = System.getenv('GRETL_VERSION')
+def requestedGretlVersion = System.getProperty('gretl.version')
+def gretlVersion = requestedGretlVersion ?: bundledGretlVersion
 if (!gretlVersion) {
-    throw new GradleException('GRETL version is missing. Set -Dgretl.version or GRETL_VERSION.')
+    throw new GradleException('GRETL bundled version is missing from the image.')
+}
+if (requestedGretlVersion && requestedGretlVersion != bundledGretlVersion) {
+    throw new GradleException("Requested GRETL version ${requestedGretlVersion} does not match bundled version ${bundledGretlVersion}.")
 }
 def localPluginRepository = new File(System.getProperty('gretl.mavenRepo', '/opt/gretl/maven-repository'))
 if (!localPluginRepository.isDirectory()) {
     throw new GradleException("GRETL plugin repository is missing for version ${gretlVersion}: ${localPluginRepository}")
 }
-def enableMavenLocal = System.getProperty('gretl.enableMavenLocal', 'false').toBoolean()
+def strictOffline = System.getProperty('gretl.image.offline', 'false').toBoolean()
+        || (System.getenv('GRETL_IMAGE_OFFLINE') ?: 'false').toBoolean()
 
 def configureGretlRepositories = { repositories ->
     repositories.maven {
         name = 'gretlImagePlugins'
         url = localPluginRepository.toURI()
     }
-    if (enableMavenLocal) {
-        repositories.mavenLocal()
+    if (!strictOffline) {
+        repositories.maven { url = URI.create('https://jars.sogeo.services/mirror') }
+        repositories.maven { url = URI.create('https://repo.osgeo.org/repository/release/') }
+        repositories.maven { url = URI.create('https://maven.geo-solutions.it') }
+        repositories.mavenCentral()
     }
-    repositories.maven {
-        name = 'sogeoMirror'
-        url = URI.create('https://jars.sogeo.services/mirror')
-    }
-    repositories.maven {
-        name = 'osgeoRelease'
-        url = URI.create('https://repo.osgeo.org/repository/release/')
-    }
-    repositories.maven {
-        name = 'geoSolutions'
-        url = URI.create('https://maven.geo-solutions.it')
-    }
-    repositories.mavenCentral()
 }
 
-settingsEvaluated { settings ->
+gradle.beforeSettings { settings ->
     settings.pluginManagement {
         repositories {
             configureGretlRepositories(delegate)
-            gradlePluginPortal()
+            if (!strictOffline) {
+                gradlePluginPortal()
+            }
         }
         plugins {
             id 'ch.so.agi.gretl' version gretlVersion
             id 'ch.so.agi.gretl.geotools' version gretlVersion
         }
     }
-    settings.dependencyResolutionManagement.repositories {
-        maven {
-            name = 'gretlImageDependencies'
-            url = localPluginRepository.toURI()
-        }
-        if (enableMavenLocal) {
-            mavenLocal()
+        settings.dependencyResolutionManagement {
+            repositories {
+                maven {
+                    name = 'gretlImageDependencies'
+                    url = localPluginRepository.toURI()
+                }
+            }
         }
     }
-}

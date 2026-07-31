@@ -53,8 +53,25 @@ public class SqlExecutionEngine {
 
     private Connection openConnection(DatabaseSpec database) throws SQLException {
         Connection connection = DbConnector.connect(database.jdbcUrl(), database.username(), database.password());
+        configureDuckDbExtensionDirectory(connection, database.jdbcUrl());
         connection.setAutoCommit(false);
         return connection;
+    }
+
+    private void configureDuckDbExtensionDirectory(Connection connection, String jdbcUrl) throws SQLException {
+        if (jdbcUrl == null || !jdbcUrl.startsWith("jdbc:duckdb:")) {
+            return;
+        }
+        String extensionDirectory = System.getProperty("duckdb.extensionDirectory");
+        if (extensionDirectory == null || extensionDirectory.isBlank()) {
+            extensionDirectory = System.getenv("DUCKDB_EXTENSION_DIRECTORY");
+        }
+        if (extensionDirectory == null || extensionDirectory.isBlank()) {
+            return;
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("SET extension_directory = '" + extensionDirectory.replace("'", "''") + "'");
+        }
     }
 
     private List<Path> validateSqlFiles(List<Path> sqlFiles) throws Exception {

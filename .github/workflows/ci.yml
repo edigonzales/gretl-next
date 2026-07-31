@@ -39,14 +39,11 @@ jobs:
           docker version
           docker info
 
-      - name: Build the tested runtime image
-        run: ./gradlew buildRuntimeImageForTest --stacktrace
+      - name: Build and test offline GRETL runtime image
+        run: ./gradlew runtimeImageOfflineTest --stacktrace
 
       - name: Runtime image contract
         run: ./gradlew runtimeImageContractTest --stacktrace
-
-      - name: Runtime image offline gate
-        run: ./gradlew runtimeImageOfflineTest --stacktrace
 
       - name: Runtime image service and daemon gate
         run: ./gradlew runtimeImageServiceTest --stacktrace
@@ -84,8 +81,7 @@ jobs:
         with:
           name: runtime-image-test-reports
           path: |
-            build/runtime-image/test/image-id.txt
-            build/runtime-image/docker/build.info
+            build/runtime-image/offline-test/**
             **/build/reports/tests/runtimeImage*/**
             **/build/test-results/runtimeImage*/**
 

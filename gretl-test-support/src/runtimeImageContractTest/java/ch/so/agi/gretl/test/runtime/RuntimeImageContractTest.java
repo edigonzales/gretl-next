@@ -55,7 +55,7 @@ class RuntimeImageContractTest {
         RuntimeImageDescriptor image = image();
         ProcessResult result = new DockerCli().execute(List.of(
                 "docker", "run", "--rm", "--pull=never", "--entrypoint", "/bin/sh", image.imageId(),
-                "-c", "cat /home/gradle/build.info"), Duration.ofSeconds(30), Set.of());
+                "-c", "cat /opt/gretl/build.info"), Duration.ofSeconds(30), Set.of());
 
         assertTrue(result.successful(), result.output());
         assertTrue(result.standardOutput().contains("GRETL Modular " + image.gretlVersion()), result.output());
@@ -67,8 +67,9 @@ class RuntimeImageContractTest {
     void imageContainsStructuredPluginRepositoryAndWorkerRuntime() {
         RuntimeImageDescriptor image = image();
         DockerCli docker = new DockerCli();
-        assertFile(docker, image, "/home/gradle/init.gradle");
-        assertFile(docker, image, "/home/gradle/build.info");
+        assertFile(docker, image, "/opt/gretl/init/gretl.init.gradle");
+        assertFile(docker, image, "/opt/gretl/build.info");
+        assertFile(docker, image, "/opt/gretl/manifests/duckdb-extensions.json");
         assertFile(docker, image, "/usr/local/bin/gretl");
         assertPomUnder(docker, image, "/opt/gretl/maven-repository/ch/so/agi/gretl/ch.so.agi.gretl.gradle.plugin/"
                 + image.gretlVersion());

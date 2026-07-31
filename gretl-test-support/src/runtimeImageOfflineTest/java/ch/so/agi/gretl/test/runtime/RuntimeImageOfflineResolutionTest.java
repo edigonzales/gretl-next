@@ -1,11 +1,8 @@
 package ch.so.agi.gretl.test.runtime;
 
-import ch.so.agi.gretl.test.docker.ContainerUserResolver;
-import ch.so.agi.gretl.test.docker.DockerCli;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
-import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageOfflineExecutor;
 import ch.so.agi.gretl.test.project.GradleTestProject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -214,8 +211,7 @@ class RuntimeImageOfflineResolutionTest {
 
     private GretlBuildResult run(GradleTestProject project, String... requestedArguments) {
         RuntimeImageDescriptor image = RuntimeImageDescriptor.fromSystemProperties();
-        RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
-                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
+        RuntimeImageOfflineExecutor executor = new RuntimeImageOfflineExecutor(image);
         List<String> arguments = new ArrayList<>(List.of("--no-daemon", "--offline", "--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.execute(GretlBuildRequest.builder(project.directory())
@@ -227,8 +223,7 @@ class RuntimeImageOfflineResolutionTest {
 
     private GretlBuildResult runAndFail(GradleTestProject project, String... requestedArguments) {
         RuntimeImageDescriptor image = RuntimeImageDescriptor.fromSystemProperties();
-        RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
-                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
+        RuntimeImageOfflineExecutor executor = new RuntimeImageOfflineExecutor(image);
         List<String> arguments = new ArrayList<>(List.of("--no-daemon", "--offline", "--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.executeAndExpectFailure(GretlBuildRequest.builder(project.directory())

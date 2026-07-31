@@ -45,7 +45,9 @@ def configureRuntimeImageTest = { String name, String description, SourceSet sou
         useJUnitPlatform()
         systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
         systemProperty 'gretl.test.runtimeImage.idFile',
-                rootProject.layout.buildDirectory.file('runtime-image/test/image-id.txt').get().asFile.absolutePath
+                rootProject.layout.buildDirectory.file('runtime-image/offline-test/image-id.txt').get().asFile.absolutePath
+        systemProperty 'gretl.runtime.image.descriptor',
+                rootProject.layout.buildDirectory.file('runtime-image/offline-test/image-descriptor.json').get().asFile.absolutePath
         systemProperty 'gretl.test.runtimeImage.tag',
                 rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
                         "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()

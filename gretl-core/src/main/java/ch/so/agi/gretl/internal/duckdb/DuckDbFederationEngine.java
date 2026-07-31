@@ -146,6 +146,13 @@ public class DuckDbFederationEngine {
     }
 
     private void loadExtensions(Connection connection, DuckDbExecutionRequest request) throws SQLException {
+        String extensionDirectory = System.getProperty("duckdb.extensionDirectory",
+                System.getenv("DUCKDB_EXTENSION_DIRECTORY"));
+        if (extensionDirectory != null && !extensionDirectory.isBlank()) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("SET extension_directory = '" + extensionDirectory.replace("'", "''") + "'");
+            }
+        }
         LinkedHashSet<String> extensions = new LinkedHashSet<>();
         for (DuckDbSourceSpec source : request.sources()) {
             extensions.addAll(source.requiredExtensions());

@@ -109,8 +109,11 @@ subprojects {
 
 def runtimeImageDir = layout.buildDirectory.dir('runtime-image/docker')
 def runtimeImageRepoDir = layout.buildDirectory.dir('runtime-image/maven-repo')
-def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/test')
+def runtimeImageOfflineDir = layout.buildDirectory.dir('runtime-image/offline')
+def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/offline-test')
 def projectVersionString = project.version.toString()
+def runtimeImageRepositoryRoot = rootProject.projectDir
+def runtimeImageGeotoolsVersion = rootProject.ext.geotoolsVersion.toString()
 def runtimeImageGradleRuntimeVersion = gradle.gradleVersion
 def dockerImageName = providers.gradleProperty('gretlDockerImage').orElse('sogis/gretl-modular:test')
 def runtimeImageTestTag = providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
@@ -231,7 +234,7 @@ tasks.register('materializeRuntimeImageDependencies') {
     <groupId>${xmlEscape(coordinateGroup)}</groupId>
     <artifactId>${xmlEscape(coordinateName)}</artifactId>
     <version>${xmlEscape(coordinateVersion)}</version>
-    <packaging>jar</packaging>
+    <packaging>${artifact == null ? 'pom' : 'jar'}</packaging>
     <dependencies>
 ${childPom}    </dependencies>
 </project>
@@ -243,7 +246,8 @@ ${childPom}    </dependencies>
 
 gradle.projectsEvaluated {
     [project(':gretl-core').configurations.runtimeClasspath,
-     project(':gretl-geotools').configurations.runtimeClasspath].each { configuration ->
+     project(':gretl-geotools').configurations.runtimeClasspath,
+     project(':gretl-geotools').configurations.workerRuntimeClasspath].each { configuration ->
         Map<String, Map> recordsByCoordinate = [:]
         configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             def module = artifact.moduleVersion.id
@@ -290,6 +294,15 @@ gradle.projectsEvaluated {
     }
 }
 
+tasks.register('cleanRuntimeImageOfflineState', Delete) {
+    group = 'distribution'
+    description = 'Deletes only project-owned runtime-image offline staging and diagnostics.'
+    delete runtimeImageOfflineDir
+    delete runtimeImageRepoDir
+    delete runtimeImageDir
+    delete runtimeImageTestDir
+}
+
 tasks.register('cleanRuntimeImageRepository', Delete) {
     delete runtimeImageRepoDir
 }
@@ -306,7 +319,9 @@ tasks.register('publishSnapshots') {
 subprojects {
     plugins.withId('maven-publish') {
         tasks.matching { it.name.endsWith('ToRuntimeImageRepository') }.configureEach {
-            dependsOn rootProject.tasks.named('cleanRuntimeImageRepository')
+            // Both publication tasks share one idempotent lifecycle clean.  Do
+            // not let each publication task delete the repository independently.
+            dependsOn rootProject.tasks.named('cleanRuntimeImageOfflineState')
         }
 
         tasks.matching { it.name.endsWith('ToPublishedTestRepository') }.configureEach {
@@ -542,6 +557,116 @@ tasks.register('publishedArtifactTest') {
     dependsOn ':gretl-geotools:publishedFunctionalTest'
 }
 
+def sha256File = { File file ->
+    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    file.withInputStream { input ->
+        byte[] buffer = new byte[64 * 1024]
+        int read
+        while ((read = input.read(buffer)) >= 0) {
+            if (read > 0) {
+                digest.update(buffer, 0, read)
+            }
+        }
+    }
+    digest.digest().collect { String.format('%02x', it & 0xff) }.join()
+}
+
+def writeOfflineManifests = { File context ->
+    File repository = new File(context, 'maven-repo')
+    File manifests = new File(context, 'manifests')
+    manifests.mkdirs()
+    List<File> files = []
+    if (repository.isDirectory()) {
+        repository.eachFileRecurse { File file -> if (file.isFile()) files.add(file) }
+    }
+    files.sort { File left, File right ->
+        repository.toPath().relativize(left.toPath()).toString() <=>
+                repository.toPath().relativize(right.toPath()).toString()
+    }
+    def relative = { File file -> repository.toPath().relativize(file.toPath()).toString().replace(File.separator, '/') }
+    def artifactRole = { String path ->
+        if (path.endsWith('.module')) return 'GRADLE_MODULE_METADATA'
+        if (path.endsWith('maven-metadata.xml') || path.endsWith('.sha1') || path.endsWith('.md5')) return 'MAVEN_METADATA'
+        if (path.endsWith('.pom') && path.split('/').size() >= 3
+                && path.split('/')[-3].toString().endsWith('.gradle.plugin')) return 'PLUGIN_MARKER_POM'
+        if (path.startsWith('ch/so/agi/gretl-core/') || path.startsWith('ch/so/agi/gretl-geotools/')) {
+            return path.endsWith('.pom') ? 'IMPLEMENTATION_POM' : 'IMPLEMENTATION_JAR'
+        }
+        return path.endsWith('.jar') ? 'RUNTIME_DEPENDENCY' : 'MAVEN_METADATA'
+    }
+    def artifactCoordinates = { String path ->
+        String[] segments = path.split('/')
+        if (segments.length < 4) {
+            return [group: '', module: '', version: '', classifier: '', extension: '']
+        }
+        String module = segments[-3]
+        String version = segments[-2]
+        String filename = segments[-1]
+        String extension = filename.contains('.') ? filename.substring(filename.lastIndexOf('.') + 1) : ''
+        String stem = extension ? filename.substring(0, filename.length() - extension.length() - 1) : filename
+        String prefix = module + '-'
+        String remainder = stem.startsWith(prefix) ? stem.substring(prefix.length()) : ''
+        String versionPrefix = version + '-'
+        if (remainder.startsWith(versionPrefix)) remainder = remainder.substring(versionPrefix.length())
+        else if (remainder == version) remainder = ''
+        String classifier = remainder
+        [group: segments[0..<(segments.length - 3)].join('.'), module: module, version: version,
+         classifier: classifier, extension: extension]
+    }
+    List<Map> records = files.collect { File file ->
+        String path = relative(file)
+        [group: artifactCoordinates(path).group, module: artifactCoordinates(path).module,
+         version: artifactCoordinates(path).version, classifier: artifactCoordinates(path).classifier,
+         extension: artifactCoordinates(path).extension, relativePath: path, sha256: sha256File(file),
+         size: file.length(), role: artifactRole(path)]
+    }
+    String version = projectVersionString
+    String generatedAt = java.time.Instant.now().toString()
+    File manifest = new File(manifests, 'offline-artifacts.json')
+    manifest.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+            gretlVersion: version,
+            gradleVersion: runtimeImageGradleVersion.get(),
+            generatedAt: generatedAt,
+            generatorVersion: 'runtime-image-offline-v1',
+            pluginMarkers: [
+                    [id: 'ch.so.agi.gretl', group: 'ch.so.agi.gretl', module: 'ch.so.agi.gretl.gradle.plugin', version: version],
+                    [id: 'ch.so.agi.gretl.geotools', group: 'ch.so.agi.gretl.geotools',
+                     module: 'ch.so.agi.gretl.geotools.gradle.plugin', version: version]
+            ],
+            duckDbExtensions: [],
+            artifacts: records
+    ])) + System.lineSeparator()
+
+    File checksums = new File(manifests, 'checksums.sha256')
+    checksums.text = records.collect { record -> "${record.sha256}  ${record.relativePath}" }.join(System.lineSeparator()) + System.lineSeparator()
+
+    List<Map> nodes = []
+    files.findAll { it.name.endsWith('.pom') }.each { File pomFile ->
+        String path = relative(pomFile)
+        String[] parts = path.split('/')
+        if (parts.length < 4) return
+        String group = parts[0..<(parts.length - 3)].join('.')
+        String module = parts[-3]
+        String moduleVersion = parts[-2]
+        def pom = new groovy.util.XmlSlurper(false, false).parse(pomFile)
+        List<String> dependencies = pom.dependencies.dependency.collect { dependency ->
+            [dependency.groupId.text(), dependency.artifactId.text(), dependency.version.text()]
+                    .join(':')
+        }.findAll { it != '::' }
+        nodes << [coordinate: "${group}:${module}:${moduleVersion}", dependencies: dependencies.sort()]
+    }
+    File closure = new File(manifests, 'dependency-closure.json')
+    closure.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+            roots: [
+                    "ch.so.agi.gretl:ch.so.agi.gretl.gradle.plugin:${version}",
+                    "ch.so.agi.gretl.geotools:ch.so.agi.gretl.geotools.gradle.plugin:${version}",
+                    "ch.so.agi:gretl-core:${version}",
+                    "ch.so.agi:gretl-geotools:${version}"
+            ],
+            nodes: nodes.sort { a, b -> a.coordinate <=> b.coordinate }
+    ])) + System.lineSeparator()
+}
+
 tasks.register('stageRuntimeImage', Sync) {
     group = 'distribution'
     description = 'Stages the Docker runtime image context with plugin Maven publications and runtime jars.'
@@ -567,10 +692,13 @@ tasks.register('stageRuntimeImage', Sync) {
     }
 
     doLast {
+        writeOfflineManifests(destinationDir)
         new File(destinationDir, 'build.info').text = """GRETL Modular ${projectVersionString}
-Gradle ${runtimeImageGradleRuntimeVersion}
-Java 17
+Gradle ${runtimeImageGradleVersion.get()}
+Java ${runtimeImageJavaVersion.get()}
 Repository /opt/gretl/maven-repository
+Init /opt/gretl/init/gretl.init.gradle
+Offline profile GRETL_IMAGE_OFFLINE=true
 """
     }
 }
@@ -586,17 +714,163 @@ tasks.register('buildRuntimeImage', Exec) {
             '-t', dockerImageName.get(), '.'
 }
 
-tasks.register('verifyRuntimeImagePrerequisites') {
-    group = 'verification'
-    description = 'Verifies Docker and the runtime-image build context before mandatory image tests.'
+tasks.register('prepareRuntimeImageOfflineDistribution') {
+    group = 'distribution'
+    description = 'Publishes and stages the complete GRETL offline runtime distribution.'
     dependsOn tasks.named('stageRuntimeImage')
+}
+
+tasks.register('verifyRuntimeImageOfflineDistribution') {
+    group = 'verification'
+    description = 'Verifies the Maven repository, manifests and dependency closure before the Docker build.'
+    dependsOn tasks.named('prepareRuntimeImageOfflineDistribution')
     doLast {
         File context = runtimeImageDir.get().asFile
-        ['Dockerfile', 'gretl', 'init.gradle', 'build.info', 'maven-repo'].each { String required ->
+        File repository = new File(context, 'maven-repo')
+        File manifestFile = new File(context, 'manifests/offline-artifacts.json')
+        File closureFile = new File(context, 'manifests/dependency-closure.json')
+        ['Dockerfile', 'gretl', 'init.gradle', 'build.info', 'maven-repo',
+         'manifests/offline-artifacts.json', 'manifests/dependency-closure.json', 'manifests/checksums.sha256'].each { String required ->
             if (!new File(context, required).exists()) {
-                throw new GradleException("Runtime image build context is missing '${required}' under ${context}.")
+                throw new GradleException("Offline runtime-image context is missing '${required}' under ${context}.")
             }
         }
+        def requireFile = { File file, String description ->
+            if (!file.isFile() || file.length() == 0) {
+                throw new GradleException("Missing offline distribution ${description}: ${file}")
+            }
+            file
+        }
+        String version = projectVersionString
+        def artifact = { String group, String module, String artifactVersion, String extension ->
+            File directory = new File(repository, "${group.replace('.', '/')}/${module}/${artifactVersion}")
+            File base = new File(directory, "${module}-${artifactVersion}.${extension}")
+            if (base.isFile()) return base
+            String physicalVersion = artifactVersion.endsWith('-SNAPSHOT')
+                    ? artifactVersion.substring(0, artifactVersion.length() - '-SNAPSHOT'.length()) : artifactVersion
+            List<File> timestamped = directory.listFiles()?.findAll { File candidate ->
+                candidate.name.startsWith("${module}-${physicalVersion}-")
+                        && candidate.name.endsWith(".${extension}")
+                        && !candidate.name.endsWith('.sha1') && !candidate.name.endsWith('.md5')
+                        && !candidate.name.endsWith('.sha256') && !candidate.name.endsWith('.sha512')
+            }?.sort { File left, File right -> left.name <=> right.name } ?: []
+            timestamped ? timestamped.last() : base
+        }
+        requireFile(artifact('ch.so.agi.gretl', 'ch.so.agi.gretl.gradle.plugin', version, 'pom'), 'core plugin marker POM')
+        requireFile(artifact('ch.so.agi.gretl.geotools', 'ch.so.agi.gretl.geotools.gradle.plugin', version, 'pom'), 'GeoTools plugin marker POM')
+        requireFile(artifact('ch.so.agi', 'gretl-core', version, 'jar'), 'core implementation JAR')
+        requireFile(artifact('ch.so.agi', 'gretl-core', version, 'pom'), 'core implementation POM')
+        requireFile(artifact('ch.so.agi', 'gretl-geotools', version, 'jar'), 'GeoTools implementation JAR')
+        requireFile(artifact('ch.so.agi', 'gretl-geotools', version, 'pom'), 'GeoTools implementation POM')
+
+        def manifest = new groovy.json.JsonSlurper().parse(manifestFile)
+        Set<String> manifestPaths = [] as LinkedHashSet
+        manifest.artifacts.each { record ->
+            String relativePath = record.relativePath.toString()
+            if (!manifestPaths.add(relativePath)) {
+                throw new GradleException("Offline artifact manifest contains duplicate path: ${relativePath}")
+            }
+            if (relativePath.startsWith('/') || relativePath.contains('..')) {
+                throw new GradleException("Offline artifact manifest contains non-relative path: ${relativePath}")
+            }
+            if (relativePath.contains('-sources.jar') || relativePath.contains('-javadoc.jar')
+                    || relativePath.endsWith('.lock') || relativePath.endsWith('gc.properties')) {
+                throw new GradleException("Forbidden file in offline distribution: ${relativePath}")
+            }
+            File file = new File(repository, relativePath)
+            requireFile(file, relativePath)
+            if (file.length() != record.size as long || sha256File(file) != record.sha256.toString()) {
+                throw new GradleException("Checksum or size mismatch for offline artifact ${relativePath}")
+            }
+        }
+        String initText = new File(context, 'init.gradle').getText('UTF-8')
+        if (initText.contains('mavenLocal()') || initText.contains('fileTree') || initText.contains('flatDir')
+                || initText.contains('0.1.0-SNAPSHOT') || initText.contains('services.gradle.org')) {
+            throw new GradleException('Offline init.gradle contains a forbidden repository, fallback or stale version.')
+        }
+        String repositoryText = repository.toPath().toFile().toString()
+        repository.eachFileRecurse { File file ->
+            if (file.isFile()) {
+                String text = file.name.toLowerCase()
+                if (text.endsWith('-sources.jar') || text.endsWith('-javadoc.jar') || text == 'settings.xml') {
+                    throw new GradleException("Forbidden file in repository: ${file}")
+                }
+                if (file.getText('UTF-8').contains(repositoryText) && !file.name.endsWith('.jar')) {
+                    throw new GradleException("Offline metadata contains a host path: ${file}")
+                }
+            }
+        }
+
+        // Traverse exact Maven POM edges.  This is intentionally independent
+        // of the host Gradle cache and catches a copied JAR without its POM.
+        Set<String> visited = [] as LinkedHashSet
+        List<String> queue = [
+                "ch.so.agi.gretl:ch.so.agi.gretl.gradle.plugin:${version}",
+                "ch.so.agi.gretl.geotools:ch.so.agi.gretl.geotools.gradle.plugin:${version}",
+                "ch.so.agi:gretl-core:${version}",
+                "ch.so.agi:gretl-geotools:${version}",
+                'org.geotools:gt-main:' + runtimeImageGeotoolsVersion,
+                'org.geotools:gt-shapefile:' + runtimeImageGeotoolsVersion,
+                'org.geotools:gt-geotiff:' + runtimeImageGeotoolsVersion,
+                'org.geotools:gt-coverage:' + runtimeImageGeotoolsVersion,
+                'org.geotools:gt-epsg-hsql:' + runtimeImageGeotoolsVersion
+        ]
+        while (!queue.isEmpty()) {
+            String coordinate = queue.remove(0)
+            if (!visited.add(coordinate)) continue
+            String[] parts = coordinate.split(':', 3)
+            if (parts.length != 3 || parts.any { it.contains('+') || it.contains('[') || it.contains(']') }) {
+                throw new GradleException("Dynamic or invalid dependency coordinate in offline closure: ${coordinate}")
+            }
+            File pomFile = artifact(parts[0], parts[1], parts[2], 'pom')
+            requireFile(pomFile, "POM ${coordinate}")
+            def pom = new groovy.util.XmlSlurper(false, false).parse(pomFile)
+            String packaging = pom.packaging.text()
+            if (!packaging || packaging == 'jar') {
+                requireFile(artifact(parts[0], parts[1], parts[2], 'jar'), "JAR ${coordinate}")
+            }
+            pom.dependencies.dependency.each { dependency ->
+                String scope = dependency.scope.text()
+                if (scope in ['test', 'provided', 'system', 'import']) return
+                String depVersion = dependency.version.text()
+                if (!depVersion || depVersion.contains('$') || depVersion == 'latest.release' || depVersion == 'latest.integration') {
+                    throw new GradleException("Dependency ${coordinate} has no exact version: ${dependency.artifactId.text()}")
+                }
+                queue.add("${dependency.groupId.text()}:${dependency.artifactId.text()}:${depVersion}")
+            }
+        }
+        ['commons-io:commons-io', 'org.xerial:sqlite-jdbc', 'org.postgresql:postgresql', 'org.duckdb:duckdb_jdbc'].each { required ->
+            if (!visited.any { it.startsWith(required + ':') }) {
+                throw new GradleException("Offline dependency closure is missing ${required}")
+            }
+        }
+        if (!visited.any { it.startsWith('org.geotools:gt-main:') }
+                || !visited.any { it.startsWith('org.geotools:gt-shapefile:') }
+                || !visited.any { it.startsWith('org.geotools:gt-epsg-hsql:') }) {
+            throw new GradleException('Offline GeoTools dependency closure is incomplete.')
+        }
+        def geotoolsJar = artifact('ch.so.agi', 'gretl-geotools', version, 'jar')
+        new java.util.jar.JarFile(geotoolsJar).withCloseable { jar ->
+            String prefix = 'gretl-geotools-worker-classpath/'
+            ['gretl-geotools-', 'lib/gt-main-', 'lib/gt-shapefile-', 'lib/gt-geotiff-', 'lib/gt-coverage-', 'lib/gt-epsg-hsql-'].each { required ->
+                if (!jar.entries().toList().any { it.name.startsWith(prefix + required) && it.name.endsWith('.jar') }) {
+                    throw new GradleException("GeoTools worker JAR is missing embedded dependency ${required}")
+                }
+            }
+        }
+        def closure = new groovy.json.JsonSlurper().parse(closureFile)
+        if ((closure.nodes ?: []).isEmpty()) {
+            throw new GradleException('Dependency-closure report is empty.')
+        }
+        println "Verified ${manifest.artifacts.size()} offline files and ${visited.size()} exact Maven coordinates."
+    }
+}
+
+tasks.register('verifyRuntimeImageOfflinePrerequisites') {
+    group = 'verification'
+    description = 'Verifies Docker and the offline image build context before mandatory image tests.'
+    dependsOn tasks.named('verifyRuntimeImageOfflineDistribution')
+    doLast {
         try {
             [['docker', 'version', '--format', '{{.Server.Version}}'],
              ['docker', 'info', '--format', '{{.OSType}}/{{.Architecture}}']].each { List<String> command ->
@@ -608,21 +882,26 @@ tasks.register('verifyRuntimeImagePrerequisites') {
                 println output.trim()
             }
         } catch (Exception e) {
-            throw new GradleException(
-                    'Docker is required to execute runtimeImageE2eTest. Start a Docker daemon and retry.', e)
+            throw new GradleException('Docker is required for runtimeImageOfflineTest; no silent skip is allowed.', e)
         }
     }
 }
 
-tasks.register('buildRuntimeImageForTest') {
+tasks.register('verifyRuntimeImagePrerequisites') {
     group = 'verification'
-    description = 'Builds and records the immutable Docker image used by runtime-image tests.'
-    dependsOn tasks.named('stageRuntimeImage')
-    dependsOn tasks.named('verifyRuntimeImagePrerequisites')
+    description = 'Compatibility alias for runtime-image Docker prerequisites.'
+    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
+}
+
+tasks.register('buildRuntimeImageForOfflineTest') {
+    group = 'verification'
+    description = 'Builds and records the immutable Docker image used by the strict offline gate.'
+    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
     inputs.dir runtimeImageDir
     inputs.property('imageTag', runtimeImageTestTag)
     inputs.property('gretlVersion', projectVersionString)
-    outputs.file runtimeImageTestDir.map { it.file('image-id.txt') }
+    outputs.files(runtimeImageTestDir.map { it.file('image-id.txt') },
+            runtimeImageTestDir.map { it.file('image-descriptor.json') })
 
     doFirst {
         File testDirectory = runtimeImageTestDir.get().asFile
@@ -676,9 +955,35 @@ tasks.register('buildRuntimeImageForTest') {
         String taggedId = taggedOutput.trim()
         if (taggedId != imageId) {
             throw new GradleException(
-                    "Runtime image tag '${runtimeImageTestTag.get()}' resolves to '${taggedId}', expected '${imageId}'.")
+                "Runtime image tag '${runtimeImageTestTag.get()}' resolves to '${taggedId}', expected '${imageId}'.")
         }
+        String commit = 'unknown'
+        try {
+            Process git = new ProcessBuilder(['git', 'rev-parse', 'HEAD']).directory(runtimeImageRepositoryRoot).start()
+            String output = git.inputStream.getText('UTF-8').trim()
+            if (git.waitFor() == 0 && output) commit = output
+        } catch (Exception ignored) {
+            // Source archives do not necessarily contain .git.
+        }
+        File descriptor = runtimeImageTestDir.get().file('image-descriptor.json').asFile
+        descriptor.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+                imageId: imageId,
+                imageTag: runtimeImageTestTag.get(),
+                gretlVersion: projectVersionString,
+                gradleVersion: runtimeImageGradleVersion.get(),
+                javaVersion: runtimeImageJavaVersion.get(),
+                repositoryPath: '/opt/gretl/maven-repository',
+                readOnlyCachePath: null,
+                initScriptPath: '/opt/gretl/init/gretl.init.gradle',
+                buildCommit: commit
+        ])) + System.lineSeparator()
     }
+}
+
+tasks.register('buildRuntimeImageForTest') {
+    group = 'verification'
+    description = 'Compatibility alias for the immutable offline test image build.'
+    dependsOn tasks.named('buildRuntimeImageForOfflineTest')
 }
 
 tasks.register('verifyRuntimeImageContract') {
@@ -694,6 +999,9 @@ tasks.register('runtimeImageContractTest') {
 
 tasks.register('runtimeImageOfflineTest') {
     group = 'verification'
+    description = 'Runs the mandatory black-box GRETL runtime-image offline gate.'
+    dependsOn tasks.named('buildRuntimeImageForOfflineTest')
+    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
     dependsOn ':gretl-test-support:runtimeImageOfflineTest'
 }
 

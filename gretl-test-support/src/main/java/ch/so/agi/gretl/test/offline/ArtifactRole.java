@@ -1,0 +1,12 @@
+package ch.so.agi.gretl.test.offline;
+
+public enum ArtifactRole {
+    PLUGIN_MARKER_POM,
+    IMPLEMENTATION_JAR,
+    IMPLEMENTATION_POM,
+    GRADLE_MODULE_METADATA,
+    RUNTIME_DEPENDENCY,
+    GEOTOOLS_WORKER_DEPENDENCY,
+    DUCKDB_EXTENSION,
+    MAVEN_METADATA
+}

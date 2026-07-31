@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 
-exec gradle --init-script /home/gradle/init.gradle "$@"
+exec gradle --init-script /opt/gretl/init/gretl.init.gradle "$@"
