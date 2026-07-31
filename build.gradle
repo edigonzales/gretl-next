@@ -109,12 +109,184 @@ subprojects {
 
 def runtimeImageDir = layout.buildDirectory.dir('runtime-image/docker')
 def runtimeImageRepoDir = layout.buildDirectory.dir('runtime-image/maven-repo')
+def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/test')
+def projectVersionString = project.version.toString()
+def runtimeImageGradleRuntimeVersion = gradle.gradleVersion
 def dockerImageName = providers.gradleProperty('gretlDockerImage').orElse('sogis/gretl-modular:test')
-def externalRuntimeClasspath = { String projectPath ->
-    File gradleLibDir = gradle.gradleHomeDir == null ? null : new File(gradle.gradleHomeDir, 'lib').canonicalFile
-    project(projectPath).configurations.runtimeClasspath.files.findAll { File file ->
-        !file.name.startsWith('gradle-api-') &&
-                (gradleLibDir == null || !file.canonicalPath.startsWith(gradleLibDir.canonicalPath + File.separator))
+def runtimeImageTestTag = providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
+        providers.provider { "gretl-next-e2e:${projectVersionString.replaceAll('[^A-Za-z0-9_.-]', '-') }" })
+def runtimeImageGradleVersion = providers.gradleProperty('gretlRuntimeImageGradleVersion').orElse('7.6.4')
+def runtimeImageJavaVersion = providers.gradleProperty('gretlRuntimeImageJavaVersion').orElse('17')
+def runtimeImageTestTimeoutSeconds = providers.gradleProperty('gretlRuntimeImageTestTimeoutSeconds').orElse('900')
+def runtimeImageUser = providers.gradleProperty('gretlRuntimeImageUser').orElse('')
+def runtimeImageDependencyRecords = []
+def runtimeImageDependencyFiles = []
+def xmlEscape = { String value ->
+    value.replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('"', '&quot;')
+            .replace("'", '&apos;')
+}
+
+// The plugin publications contain the GRETL module POMs.  The runtime image
+// also needs every resolved runtime module behind those POMs so that Gradle
+// can resolve the distribution with an empty cache and --offline.  Materialize
+// a small Maven repository from the already-resolved Gradle graph instead of
+// injecting an unstructured jar directory into every consumer buildscript.
+tasks.register('materializeRuntimeImageDependencies') {
+    group = 'distribution'
+    description = 'Materializes the resolved GRETL runtime dependency closure as Maven metadata.'
+    dependsOn ':gretl-core:publishAllPublicationsToRuntimeImageRepository'
+    dependsOn ':gretl-geotools:publishAllPublicationsToRuntimeImageRepository'
+    inputs.files(runtimeImageDependencyFiles)
+    outputs.dir runtimeImageRepoDir
+
+    doLast {
+        File repository = runtimeImageRepoDir.get().asFile
+        Map<String, Map> dependenciesByCoordinate = runtimeImageDependencyRecords.collectEntries {
+            [it.coordinate, it]
+        }
+        Map<String, File> artifactsByCoordinate = [:]
+        Map<String, File> fallbackArtifactsByModule = [:]
+        Set<String> exactPublishedCoordinates = new LinkedHashSet<>()
+        runtimeImageDependencyRecords.each { record ->
+            if (record.jarPath != null) {
+                File artifact = new File(record.jarPath)
+                artifactsByCoordinate[record.coordinate] = artifact
+                fallbackArtifactsByModule["${record.moduleGroup}:${record.moduleName}"] = artifact
+            }
+        }
+
+        // A published POM can retain a directly declared version even when the
+        // host configuration selected a newer version through conflict
+        // resolution. Resolve every direct dependency declared by the two
+        // plugin POMs as an exact root as well, so the image contains the
+        // coordinates Gradle will request in an isolated offline build.
+        List<File> pluginPoms
+        try (def paths = java.nio.file.Files.walk(repository.toPath())) {
+            pluginPoms = paths
+                    .filter { path ->
+                        String value = repository.toPath().relativize(path).toString()
+                        (value ==~ /ch\/so\/agi\/gretl-core\/[^\/]+\/gretl-core-[^\/]+\.pom/)
+                                || (value ==~ /ch\/so\/agi\/gretl-geotools\/[^\/]+\/gretl-geotools-[^\/]+\.pom/)
+                    }
+                    .map { path -> path.toFile() }
+                    .collect()
+        }
+        pluginPoms.each { File pluginPom ->
+            def parsed = new groovy.util.XmlSlurper(false, false).parse(pluginPom)
+            parsed.dependencies.dependency.each { dependencyNode ->
+                String group = dependencyNode.groupId.text()
+                String name = dependencyNode.artifactId.text()
+                String version = dependencyNode.version.text()
+                if (!group.isBlank() && !name.isBlank() && !version.isBlank()) {
+                    exactPublishedCoordinates.add("${group}:${name}:${version}")
+                }
+            }
+        }
+
+        Set<String> allCoordinates = new LinkedHashSet<>(dependenciesByCoordinate.keySet())
+        allCoordinates.addAll(exactPublishedCoordinates)
+        allCoordinates.each { String coordinate ->
+            def dependency = dependenciesByCoordinate[coordinate]
+            String[] coordinateParts = coordinate.split(':', 3)
+            String coordinateGroup = dependency == null ? coordinateParts[0] : dependency.moduleGroup
+            String coordinateName = dependency == null ? coordinateParts[1] : dependency.moduleName
+            String coordinateVersion = dependency == null ? coordinateParts[2] : dependency.moduleVersion
+            File versionDirectory = new File(repository,
+                    "${coordinateGroup.replace('.', '/')}/${coordinateName}/${coordinateVersion}")
+            versionDirectory.mkdirs()
+            File artifact = artifactsByCoordinate[coordinate]
+            if (artifact == null) {
+                artifact = fallbackArtifactsByModule["${coordinateGroup}:${coordinateName}"]
+            }
+            if (artifact != null) {
+                File target = new File(versionDirectory, "${coordinateName}-${coordinateVersion}.jar")
+                if (!target.isFile() || target.length() != artifact.length()) {
+                    java.nio.file.Files.copy(artifact.toPath(), target.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+
+            File pom = new File(versionDirectory, "${coordinateName}-${coordinateVersion}.pom")
+            if (!pom.isFile()) {
+                String childPom = dependency == null ? '' : dependency.children
+                        .collect { childCoordinate -> dependenciesByCoordinate[childCoordinate] }
+                        .findAll { it != null }
+                        .collect { child ->
+                            """        <dependency>
+            <groupId>${xmlEscape(child.moduleGroup)}</groupId>
+            <artifactId>${xmlEscape(child.moduleName)}</artifactId>
+            <version>${xmlEscape(child.moduleVersion)}</version>
+            <scope>runtime</scope>
+        </dependency>
+"""
+                        }.join('')
+                pom.text = """<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>${xmlEscape(coordinateGroup)}</groupId>
+    <artifactId>${xmlEscape(coordinateName)}</artifactId>
+    <version>${xmlEscape(coordinateVersion)}</version>
+    <packaging>jar</packaging>
+    <dependencies>
+${childPom}    </dependencies>
+</project>
+"""
+            }
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    [project(':gretl-core').configurations.runtimeClasspath,
+     project(':gretl-geotools').configurations.runtimeClasspath].each { configuration ->
+        Map<String, Map> recordsByCoordinate = [:]
+        configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def module = artifact.moduleVersion.id
+            if (module.group != null && module.group.toString() != 'org.gradle' && artifact.file.name.endsWith('.jar')) {
+                String coordinate = "${module.group}:${module.name}:${module.version}"
+                runtimeImageDependencyFiles.add(artifact.file.absolutePath)
+                recordsByCoordinate[coordinate] = [
+                        coordinate: coordinate,
+                        moduleGroup: module.group.toString(),
+                        moduleName: module.name.toString(),
+                        moduleVersion: module.version.toString(),
+                        jarPath: artifact.file.absolutePath,
+                        children: []
+                ]
+            }
+        }
+        configuration.incoming.resolutionResult.allComponents.each { component ->
+            def module = component.moduleVersion
+            if (module == null || module.group == null || module.group.toString() == 'org.gradle') {
+                return
+            }
+            String coordinate = "${module.group}:${module.name}:${module.version}"
+            Map record = recordsByCoordinate[coordinate] ?: [
+                    coordinate: coordinate,
+                    moduleGroup: module.group.toString(),
+                    moduleName: module.name.toString(),
+                    moduleVersion: module.version.toString(),
+                    jarPath: null,
+                    children: []
+            ]
+            record.children = component.dependencies
+                    .findAll { dependency -> dependency instanceof org.gradle.api.artifacts.result.ResolvedDependencyResult }
+                    .collect { dependency ->
+                        def child = dependency.selected.moduleVersion
+                        child == null ? null : "${child.group}:${child.name}:${child.version}"
+                    }
+                    .findAll { it != null }
+            recordsByCoordinate[coordinate] = record
+        }
+        runtimeImageDependencyRecords.addAll(recordsByCoordinate.values())
+    }
+    tasks.named('materializeRuntimeImageDependencies').configure {
+        inputs.files(runtimeImageDependencyFiles)
     }
 }
 
@@ -160,11 +332,11 @@ tasks.register('verifyPublishedTestRepository') {
     description = 'Verifies GRETL plugin markers, implementation POMs and packaged worker runtime in the published-test repository.'
     dependsOn tasks.named('preparePublishedTestRepository')
     inputs.dir publishedTestRepoDir
-    inputs.property 'gretlVersion', provider { project.version.toString() }
+    inputs.property 'gretlVersion', projectVersionString
 
     doLast {
         File repository = publishedTestRepoDir.get().asFile
-        String version = project.version.toString()
+        String version = projectVersionString
 
         def coordinate = { String groupId, String artifactId, String artifactVersion ->
             "${groupId}:${artifactId}:${artifactVersion}"
@@ -377,6 +549,7 @@ tasks.register('stageRuntimeImage', Sync) {
 
     dependsOn ':gretl-core:publishAllPublicationsToRuntimeImageRepository'
     dependsOn ':gretl-geotools:publishAllPublicationsToRuntimeImageRepository'
+    dependsOn tasks.named('materializeRuntimeImageDependencies')
     dependsOn ':gretl-core:jar'
     dependsOn ':gretl-geotools:jar'
 
@@ -392,25 +565,12 @@ tasks.register('stageRuntimeImage', Sync) {
         exclude '**/*-sources.jar*'
         exclude '**/*-javadoc.jar*'
     }
-    from({
-        [
-                project(':gretl-core').tasks.named('jar').get().archiveFile.get().asFile,
-                project(':gretl-geotools').tasks.named('jar').get().archiveFile.get().asFile
-        ]
-    }) {
-        into 'libs'
-    }
-    from({ externalRuntimeClasspath(':gretl-core') }) {
-        into 'libs'
-    }
-    from({ externalRuntimeClasspath(':gretl-geotools') }) {
-        into 'libs'
-    }
 
     doLast {
-        file("${destinationDir}/build.info").text = """GRETL Modular ${project.version}
-Gradle ${gradle.gradleVersion}
+        new File(destinationDir, 'build.info').text = """GRETL Modular ${projectVersionString}
+Gradle ${runtimeImageGradleRuntimeVersion}
 Java 17
+Repository /opt/gretl/maven-repository
 """
     }
 }
@@ -420,7 +580,170 @@ tasks.register('buildRuntimeImage', Exec) {
     description = 'Builds the local Docker runtime image. Override with -PgretlDockerImage=name:tag.'
     dependsOn tasks.named('stageRuntimeImage')
     workingDir runtimeImageDir.get().asFile
-    commandLine 'docker', 'build', '-t', dockerImageName.get(), '.'
+    commandLine 'docker', 'build', '--pull=false',
+            '--build-arg', "GRETL_VERSION=${projectVersionString}",
+            '--build-arg', "GRADLE_VERSION=${runtimeImageGradleVersion.get()}",
+            '-t', dockerImageName.get(), '.'
+}
+
+tasks.register('verifyRuntimeImagePrerequisites') {
+    group = 'verification'
+    description = 'Verifies Docker and the runtime-image build context before mandatory image tests.'
+    dependsOn tasks.named('stageRuntimeImage')
+    doLast {
+        File context = runtimeImageDir.get().asFile
+        ['Dockerfile', 'gretl', 'init.gradle', 'build.info', 'maven-repo'].each { String required ->
+            if (!new File(context, required).exists()) {
+                throw new GradleException("Runtime image build context is missing '${required}' under ${context}.")
+            }
+        }
+        try {
+            [['docker', 'version', '--format', '{{.Server.Version}}'],
+             ['docker', 'info', '--format', '{{.OSType}}/{{.Architecture}}']].each { List<String> command ->
+                Process process = new ProcessBuilder(command).redirectErrorStream(true).start()
+                String output = process.inputStream.getText('UTF-8')
+                if (process.waitFor() != 0) {
+                    throw new IOException("${command.join(' ')} failed: ${output}")
+                }
+                println output.trim()
+            }
+        } catch (Exception e) {
+            throw new GradleException(
+                    'Docker is required to execute runtimeImageE2eTest. Start a Docker daemon and retry.', e)
+        }
+    }
+}
+
+tasks.register('buildRuntimeImageForTest') {
+    group = 'verification'
+    description = 'Builds and records the immutable Docker image used by runtime-image tests.'
+    dependsOn tasks.named('stageRuntimeImage')
+    dependsOn tasks.named('verifyRuntimeImagePrerequisites')
+    inputs.dir runtimeImageDir
+    inputs.property('imageTag', runtimeImageTestTag)
+    inputs.property('gretlVersion', projectVersionString)
+    outputs.file runtimeImageTestDir.map { it.file('image-id.txt') }
+
+    doFirst {
+        File testDirectory = runtimeImageTestDir.get().asFile
+        testDirectory.mkdirs()
+        File imageIdFile = new File(testDirectory, 'image-id.txt')
+        if (imageIdFile.exists()) {
+            imageIdFile.delete()
+        }
+        if (imageIdFile.exists()) {
+            throw new GradleException("Cannot remove stale runtime image ID file: ${imageIdFile}")
+        }
+        List<String> command = ['docker', 'build', '--pull=false',
+                                '--iidfile', imageIdFile.absolutePath,
+                                '--tag', runtimeImageTestTag.get(),
+                                '--build-arg', "GRETL_VERSION=${projectVersionString}",
+                                '--build-arg', "GRADLE_VERSION=${runtimeImageGradleVersion.get()}",
+                                '--build-arg', "JAVA_VERSION=${runtimeImageJavaVersion.get()}",
+                                '.']
+        Process process = new ProcessBuilder(command as String[])
+                .directory(runtimeImageDir.get().asFile)
+                .redirectErrorStream(true)
+                .start()
+        String output = process.inputStream.getText('UTF-8')
+        if (process.waitFor() != 0) {
+            throw new GradleException("Docker image build failed:\n${output}")
+        }
+        println output
+    }
+
+    doLast {
+        File imageIdFile = runtimeImageTestDir.get().file('image-id.txt').asFile
+        if (!imageIdFile.isFile()) {
+            throw new GradleException("Docker did not create the runtime image ID file: ${imageIdFile}")
+        }
+        String imageId = imageIdFile.getText('UTF-8').trim()
+        if (!(imageId ==~ /sha256:[0-9a-fA-F]{64}/)) {
+            throw new GradleException("Invalid Docker image ID '${imageId}' in ${imageIdFile}.")
+        }
+        List<String> inspectCommand = ['docker', 'image', 'inspect', imageId]
+        Process inspectProcess = new ProcessBuilder(inspectCommand as String[]).redirectErrorStream(true).start()
+        String inspectOutput = inspectProcess.inputStream.getText('UTF-8')
+        if (inspectProcess.waitFor() != 0) {
+            throw new GradleException("Docker image inspection failed:\n${inspectOutput}")
+        }
+        List<String> taggedInspectCommand = ['docker', 'image', 'inspect', '--format', '{{.Id}}', runtimeImageTestTag.get()]
+        Process taggedInspectProcess = new ProcessBuilder(taggedInspectCommand as String[]).redirectErrorStream(true).start()
+        String taggedOutput = taggedInspectProcess.inputStream.getText('UTF-8')
+        if (taggedInspectProcess.waitFor() != 0) {
+            throw new GradleException("Docker tagged image inspection failed:\n${taggedOutput}")
+        }
+        String taggedId = taggedOutput.trim()
+        if (taggedId != imageId) {
+            throw new GradleException(
+                    "Runtime image tag '${runtimeImageTestTag.get()}' resolves to '${taggedId}', expected '${imageId}'.")
+        }
+    }
+}
+
+tasks.register('verifyRuntimeImageContract') {
+    group = 'verification'
+    dependsOn ':gretl-test-support:runtimeImageContractTest'
+}
+
+tasks.register('runtimeImageContractTest') {
+    group = 'verification'
+    description = 'Runs the runtime-image contract test suite.'
+    dependsOn tasks.named('verifyRuntimeImageContract')
+}
+
+tasks.register('runtimeImageOfflineTest') {
+    group = 'verification'
+    dependsOn ':gretl-test-support:runtimeImageOfflineTest'
+}
+
+tasks.register('runtimeImageServiceTest') {
+    group = 'verification'
+    dependsOn ':gretl-test-support:runtimeImageServiceTest'
+}
+
+tasks.register('runtimeImageSmokeTest') {
+    group = 'verification'
+    dependsOn tasks.named('verifyRuntimeImageContract')
+    dependsOn tasks.named('runtimeImageOfflineTest')
+    dependsOn ':gretl-core:runtimeImageFunctionalSmokeTest'
+    dependsOn ':gretl-core:runtimeImageIntegrationSmokeTest'
+    dependsOn ':gretl-geotools:runtimeImageFunctionalSmokeTest'
+}
+
+tasks.register('runtimeImageE2eTest') {
+    group = 'verification'
+    dependsOn ':gretl-core:runtimeImageFunctionalTest'
+    dependsOn ':gretl-core:runtimeImageIntegrationTest'
+    dependsOn ':gretl-geotools:runtimeImageFunctionalTest'
+}
+
+tasks.register('runtimeImageTest') {
+    group = 'verification'
+    description = 'Runs the complete mandatory GRETL runtime-image release gate.'
+    dependsOn tasks.named('verifyRuntimeImageContract')
+    dependsOn tasks.named('runtimeImageOfflineTest')
+    dependsOn tasks.named('runtimeImageServiceTest')
+    dependsOn tasks.named('runtimeImageE2eTest')
+}
+
+tasks.register('ciCheck') {
+    group = 'verification'
+    description = 'Runs the complete CI gate before snapshot publication.'
+    dependsOn tasks.named('check')
+    dependsOn ':gretl-core:integrationTest'
+    dependsOn tasks.named('publishedArtifactTest')
+    dependsOn tasks.named('runtimeImageTest')
+}
+
+// These gates all exercise Docker/Testcontainers. Keep them serialized when
+// the aggregate CI task is used so independent Gradle workers do not compete
+// for the same Docker Desktop resources.
+tasks.named('publishedArtifactTest').configure {
+    mustRunAfter ':gretl-core:integrationTest'
+}
+tasks.named('runtimeImageTest').configure {
+    mustRunAfter tasks.named('publishedArtifactTest')
 }
 
 tasks.register('checkAgentSkillMetadata', Exec) {

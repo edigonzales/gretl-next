@@ -370,6 +370,10 @@ class DuckDbSqlExecutorPostgisIntegrationTest extends PostgisIntegrationTestSupp
     void runsDocumentedPostgisTargetExample() throws Exception {
         createOrReplaceSchema("duckdbexecutor_example_target");
         copyTree(examplePath("postgis-target"), projectDir);
+        // The checked-in example keeps its remote snapshot repository for
+        // interactive use; published-artifact tests must resolve the local
+        // publication under test instead.
+        writeSettings();
 
         run("exportToPostgis", "-PpgSchema=duckdbexecutor_example_target");
 

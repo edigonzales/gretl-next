@@ -12,6 +12,11 @@ sourceSets {
         java.srcDir 'src/worker/java'
         resources.srcDir 'src/worker/resources'
     }
+    runtimeImageFunctionalTest {
+        resources.srcDir sourceSets.test.resources
+        compileClasspath += sourceSets.test.output + sourceSets.main.output
+        runtimeClasspath += sourceSets.test.runtimeClasspath + output + compileClasspath
+    }
 }
 
 configurations {
@@ -23,6 +28,8 @@ configurations {
         canBeConsumed = false
         canBeResolved = false
     }
+    runtimeImageFunctionalTestImplementation.extendsFrom testImplementation
+    runtimeImageFunctionalTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 dependencies {
@@ -97,3 +104,33 @@ tasks.register('publishedFunctionalTest', Test) {
 
     useJUnitPlatform()
 }
+
+def configureRuntimeImageTest = { String name, String description, String tag ->
+    tasks.register(name, Test) {
+        group = 'verification'
+        description = description
+        dependsOn rootProject.tasks.named('buildRuntimeImageForTest')
+        testClassesDirs = sourceSets.runtimeImageFunctionalTest.output.classesDirs
+        classpath = sourceSets.runtimeImageFunctionalTest.runtimeClasspath
+        maxParallelForks = 1
+        systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
+        systemProperty 'gretl.test.runtimeImage.idFile',
+                rootProject.layout.buildDirectory.file('runtime-image/test/image-id.txt').get().asFile.absolutePath
+        systemProperty 'gretl.test.runtimeImage.tag',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
+                        "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()
+        systemProperty 'gretl.test.runtimeImage.version', rootProject.version.toString()
+        systemProperty 'gretl.test.runtimeImage.gradleVersion', '7.6.4'
+        systemProperty 'gretl.test.runtimeImage.javaVersion', '17'
+        systemProperty 'gretl.test.runtimeImage.timeoutSeconds',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTimeoutSeconds').orElse('900').get()
+        systemProperty 'gretl.test.runtimeImage.user',
+                rootProject.providers.gradleProperty('gretlRuntimeImageUser').orElse('').get()
+        useJUnitPlatform { includeTags tag }
+    }
+}
+
+configureRuntimeImageTest('runtimeImageFunctionalTest',
+        'Runs GeoTools functional tests against the built runtime image.', 'runtime-image')
+configureRuntimeImageTest('runtimeImageFunctionalSmokeTest',
+        'Runs the GeoTools runtime-image smoke canaries.', 'runtime-image-smoke')

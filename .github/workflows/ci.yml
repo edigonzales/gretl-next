@@ -34,6 +34,32 @@ jobs:
       - name: Test published GRETL plugin artifacts
         run: ./gradlew publishedArtifactTest --stacktrace
 
+      - name: Show Docker environment
+        run: |
+          docker version
+          docker info
+
+      - name: Build the tested runtime image
+        run: ./gradlew buildRuntimeImageForTest --stacktrace
+
+      - name: Runtime image contract
+        run: ./gradlew runtimeImageContractTest --stacktrace
+
+      - name: Runtime image offline gate
+        run: ./gradlew runtimeImageOfflineTest --stacktrace
+
+      - name: Runtime image service and daemon gate
+        run: ./gradlew runtimeImageServiceTest --stacktrace
+
+      - name: Runtime image smoke gate
+        run: ./gradlew runtimeImageSmokeTest --stacktrace
+
+      - name: Runtime image full E2E gate
+        run: ./gradlew runtimeImageE2eTest --stacktrace
+
+      - name: Complete runtime image gate
+        run: ./gradlew runtimeImageTest --stacktrace
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,6 +77,17 @@ jobs:
           path: |
             gretl-core/build/reports/tests/
             gretl-core/build/test-results/
+
+      - name: Upload runtime image diagnostics and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-image-test-reports
+          path: |
+            build/runtime-image/test/image-id.txt
+            build/runtime-image/docker/build.info
+            **/build/reports/tests/runtimeImage*/**
+            **/build/test-results/runtimeImage*/**
 
       - name: Upload published-test repository on failure
         if: failure()

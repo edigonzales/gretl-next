@@ -12,11 +12,26 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += output + compileClasspath
     }
+    runtimeImageFunctionalTest {
+        resources.srcDir sourceSets.test.resources
+        compileClasspath += sourceSets.test.output + sourceSets.main.output
+        runtimeClasspath += sourceSets.test.runtimeClasspath + output + compileClasspath
+    }
+    runtimeImageIntegrationTest {
+        resources.srcDir sourceSets.test.resources
+        resources.srcDir sourceSets.integrationTest.resources
+        compileClasspath += sourceSets.integrationTest.output + sourceSets.main.output
+        runtimeClasspath += sourceSets.integrationTest.runtimeClasspath + output + compileClasspath
+    }
 }
 
 configurations {
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+    runtimeImageFunctionalTestImplementation.extendsFrom testImplementation
+    runtimeImageFunctionalTestRuntimeOnly.extendsFrom testRuntimeOnly
+    runtimeImageIntegrationTestImplementation.extendsFrom integrationTestImplementation
+    runtimeImageIntegrationTestRuntimeOnly.extendsFrom integrationTestRuntimeOnly
 }
 
 configurations.configureEach {
@@ -109,6 +124,40 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter tasks.named('test')
     useJUnitPlatform()
 }
+
+def configureRuntimeImageTest = { String name, String description, SourceSet sourceSet, String... tags ->
+    tasks.register(name, Test) {
+        group = 'verification'
+        description = description
+        dependsOn rootProject.tasks.named('buildRuntimeImageForTest')
+        testClassesDirs = sourceSet.output.classesDirs
+        classpath = sourceSet.runtimeClasspath
+        maxParallelForks = 1
+        systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
+        systemProperty 'gretl.test.runtimeImage.idFile',
+                rootProject.layout.buildDirectory.file('runtime-image/test/image-id.txt').get().asFile.absolutePath
+        systemProperty 'gretl.test.runtimeImage.tag',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
+                        "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()
+        systemProperty 'gretl.test.runtimeImage.version', rootProject.version.toString()
+        systemProperty 'gretl.test.runtimeImage.gradleVersion', '7.6.4'
+        systemProperty 'gretl.test.runtimeImage.javaVersion', '17'
+        systemProperty 'gretl.test.runtimeImage.timeoutSeconds',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTimeoutSeconds').orElse('900').get()
+        systemProperty 'gretl.test.runtimeImage.user',
+                rootProject.providers.gradleProperty('gretlRuntimeImageUser').orElse('').get()
+        useJUnitPlatform { includeTags(*tags) }
+    }
+}
+
+configureRuntimeImageTest('runtimeImageFunctionalTest',
+        'Runs core functional canaries against the built runtime image.', sourceSets.runtimeImageFunctionalTest, 'runtime-image')
+configureRuntimeImageTest('runtimeImageFunctionalSmokeTest',
+        'Runs the core runtime-image smoke canaries.', sourceSets.runtimeImageFunctionalTest, 'runtime-image-smoke')
+configureRuntimeImageTest('runtimeImageIntegrationTest',
+        'Runs core Docker-service scenarios through the runtime image.', sourceSets.runtimeImageIntegrationTest, 'runtime-image')
+configureRuntimeImageTest('runtimeImageIntegrationSmokeTest',
+        'Runs the core runtime-image integration smoke canaries.', sourceSets.runtimeImageIntegrationTest, 'runtime-image-smoke')
 
 tasks.named('test') {
     useJUnitPlatform {

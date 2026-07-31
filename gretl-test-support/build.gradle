@@ -2,9 +2,68 @@ plugins {
     id 'java-library'
 }
 
+sourceSets {
+    runtimeImageContractTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+    runtimeImageOfflineTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+    runtimeImageServiceTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    runtimeImageContractTestImplementation.extendsFrom testImplementation
+    runtimeImageContractTestRuntimeOnly.extendsFrom testRuntimeOnly
+    runtimeImageOfflineTestImplementation.extendsFrom testImplementation
+    runtimeImageOfflineTestRuntimeOnly.extendsFrom testRuntimeOnly
+    runtimeImageServiceTestImplementation.extendsFrom testImplementation
+    runtimeImageServiceTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
     api gradleTestKit()
+    api "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
 
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
+
+def configureRuntimeImageTest = { String name, String description, SourceSet sourceSet ->
+    tasks.register(name, Test) {
+        group = 'verification'
+        description = description
+        dependsOn rootProject.tasks.named('buildRuntimeImageForTest')
+        testClassesDirs = sourceSet.output.classesDirs
+        classpath = sourceSet.runtimeClasspath
+        maxParallelForks = 1
+        useJUnitPlatform()
+        systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
+        systemProperty 'gretl.test.runtimeImage.idFile',
+                rootProject.layout.buildDirectory.file('runtime-image/test/image-id.txt').get().asFile.absolutePath
+        systemProperty 'gretl.test.runtimeImage.tag',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
+                        "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()
+        systemProperty 'gretl.test.runtimeImage.version', rootProject.version.toString()
+        systemProperty 'gretl.test.runtimeImage.gradleVersion',
+                rootProject.providers.gradleProperty('gretlRuntimeImageGradleVersion').orElse('7.6.4').get()
+        systemProperty 'gretl.test.runtimeImage.javaVersion',
+                rootProject.providers.gradleProperty('gretlRuntimeImageJavaVersion').orElse('17').get()
+        systemProperty 'gretl.test.runtimeImage.timeoutSeconds',
+                rootProject.providers.gradleProperty('gretlRuntimeImageTestTimeoutSeconds').orElse('900').get()
+        systemProperty 'gretl.test.runtimeImage.user',
+                rootProject.providers.gradleProperty('gretlRuntimeImageUser').orElse('').get()
+    }
+}
+
+configureRuntimeImageTest('runtimeImageContractTest',
+        'Verifies the built GRETL runtime image contract.', sourceSets.runtimeImageContractTest)
+configureRuntimeImageTest('runtimeImageOfflineTest',
+        'Verifies GRETL runtime-image resolution without network or host caches.', sourceSets.runtimeImageOfflineTest)
+configureRuntimeImageTest('runtimeImageServiceTest',
+        'Verifies a long-lived GRETL runtime container and Gradle daemon reuse.', sourceSets.runtimeImageServiceTest)

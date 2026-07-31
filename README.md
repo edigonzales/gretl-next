@@ -36,6 +36,9 @@ toolchains.
 ./gradlew :gretl-core:integrationTest
 ./gradlew publishedArtifactTest
 ./gradlew stageRuntimeImage
+./gradlew runtimeImageSmokeTest
+./gradlew runtimeImageTest
+./gradlew ciCheck
 ./gradlew :gretl-control-server:bootRun
 ./gradlew :gretl-control-worker:bootRun
 ```
@@ -53,7 +56,7 @@ markers from the isolated Maven repository under
 publishes and verifies both plugins before running those black-box consumer
 projects. It is the published-artifact release gate; it does not test the
 Docker runtime image or full offline operation. The runtime-image level remains
-a separate, future deployment test after the source-classpath and
+a separate deployment gate after the source-classpath and
 published-artifact checks. The generated consumer settings do not use
 `mavenLocal()`.
 
@@ -67,6 +70,26 @@ be built with:
 
 The default image tag is `sogis/gretl-modular:test`; override it with
 `-PgretlDockerImage=registry/name:tag`.
+
+Runtime-image tests require a running Docker daemon and fail explicitly when
+Docker is unavailable. The image-test build records the immutable image ID in
+`build/runtime-image/test/image-id.txt`; override its tag with
+`-PgretlRuntimeImageTestTag=...`:
+
+```bash
+./gradlew buildRuntimeImageForTest
+./gradlew runtimeImageContractTest
+./gradlew runtimeImageOfflineTest
+./gradlew runtimeImageServiceTest
+./gradlew runtimeImageE2eTest
+```
+
+The default consumer contract is the modern `plugins {}` DSL. Core and GeoTools
+resolve from the structured repository in the image with an empty Gradle home
+and `--offline`. One-shot callers may pass `--no-daemon`; long-lived service
+containers keep the same user and Gradle home so compatible builds reuse the
+Gradle daemon. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
+and the [runtime task coverage matrix](docs/testing/runtime-image-coverage.yaml).
 
 ## Publishing Snapshots
 

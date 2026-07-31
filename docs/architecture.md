@@ -157,19 +157,20 @@ The staged image contains:
 - Java 17 runtime
 - Gradle 7.6.4
 - `/home/gradle/init.gradle`
-- local Maven plugin repository under `/home/gradle/maven-repo`
-- plugin/runtime jars under `/home/gradle/libs` for legacy `apply plugin:`
-  builds
+- structured local Maven repository under `/opt/gretl/maven-repository`,
+  including plugin markers, implementation metadata and the resolved runtime
+  dependency closure
 - `/usr/local/bin/gretl`, a small Gradle runner
 
-The runner always uses:
+The runner uses the bundled init script but is daemon-neutral:
 
 ```bash
-gradle "$@" --init-script /home/gradle/init.gradle --no-daemon --console=plain
+gradle --init-script /home/gradle/init.gradle "$@"
 ```
 
-`--no-daemon` avoids lingering daemon processes in short-lived containers.
-`--console=plain` avoids rich console control characters in Docker and CI logs.
+Callers can choose `--no-daemon --offline` for one-shot or diagnostic runs. A
+long-lived service container can keep the same `GRADLE_USER_HOME` and reuse a
+compatible Gradle daemon across `docker exec` builds.
 
 The init script configures plugin resolution so modern jobs can use the
 `plugins {}` DSL without repeating plugin versions:
@@ -181,8 +182,9 @@ plugins {
 }
 ```
 
-It also adds the staged jars to the buildscript classpath as a best-effort
-compatibility path for older jobs that still use `apply plugin:`.
+It does not inject arbitrary JARs into buildscript classpaths and does not use
+`mavenLocal()` by default. Consumer repositories remain additive so additional
+modern Gradle plugins can be resolved by the consumer project.
 
 ## Verification
 
