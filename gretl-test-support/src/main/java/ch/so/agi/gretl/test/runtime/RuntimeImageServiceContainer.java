@@ -84,6 +84,11 @@ public final class RuntimeImageServiceContainer implements AutoCloseable {
     }
 
     public ProcessResult execGretl(Path relativeProjectDir, List<String> arguments) {
+        return execGretl(relativeProjectDir, arguments, Set.of(), Duration.ofMinutes(15));
+    }
+
+    public ProcessResult execGretl(Path relativeProjectDir, List<String> arguments,
+                                   Set<String> secrets, Duration timeout) {
         Path relative = relativeProjectDir.normalize();
         if (relative.isAbsolute() || relative.startsWith("..")) {
             throw new IllegalArgumentException("relativeProjectDir must stay below the service jobs root");
@@ -91,17 +96,21 @@ public final class RuntimeImageServiceContainer implements AutoCloseable {
         List<String> command = new ArrayList<>(List.of("docker", "exec", containerName, "gretl",
                 "--project-dir=/home/gradle/project/" + relative));
         command.addAll(arguments);
-        return docker.execute(command, Duration.ofMinutes(15), Set.of());
+        return docker.execute(command, timeout, secrets);
     }
 
-    public ProcessResult execGradle(List<String> arguments) {
-        List<String> command = new ArrayList<>(List.of("docker", "exec", containerName, "gradle"));
-        command.addAll(arguments);
-        return docker.execute(command, Duration.ofMinutes(5), Set.of());
+    /** Returns the daemon status for this service container. */
+    public ProcessResult gradleStatus() {
+        return executeAdministrativeGradle(List.of("--status", "--console=plain"), Duration.ofMinutes(5));
+    }
+
+    /** Stops daemons in the service container without stopping the container. */
+    public ProcessResult stopGradleDaemons() {
+        return executeAdministrativeGradle(List.of("--stop"), Duration.ofMinutes(5));
     }
 
     public Set<Long> daemonPids() {
-        ProcessResult result = execGradle(List.of("--status", "--console=plain"));
+        ProcessResult result = gradleStatus();
         Set<Long> pids = new HashSet<>();
         for (String line : result.output().split("\\R")) {
             if (!line.contains("IDLE") && !line.contains("BUSY")) {
@@ -123,6 +132,12 @@ public final class RuntimeImageServiceContainer implements AutoCloseable {
 
     public String containerId() {
         return containerId;
+    }
+
+    private ProcessResult executeAdministrativeGradle(List<String> arguments, Duration timeout) {
+        List<String> command = new ArrayList<>(List.of("docker", "exec", containerName, "gradle"));
+        command.addAll(arguments);
+        return docker.execute(command, timeout, Set.of());
     }
 
     @Override

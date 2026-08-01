@@ -7,61 +7,49 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RuntimeImageCoverageInventoryTest {
-    private static final Pattern YAML_TASK = Pattern.compile("^  ([A-Za-z0-9]+):$");
-    private static final Pattern YAML_NEXT_TASK = Pattern.compile("(?m)^  [A-Za-z0-9]+:");
-
     @Test
     void everyPublicTaskHasCoverageEntry() throws IOException {
         Path root = repositoryRoot();
-        Set<String> covered = coverageTasks(root);
+        TaskCoverageManifest manifest = new TaskCoverageManifestReader()
+                .read(root.resolve("docs/testing/task-coverage.yaml"));
         Set<String> publicTasks = new HashSet<>();
         collectTaskNames(root.resolve("gretl-core/src/main/java/ch/so/agi/gretl/tasks"), publicTasks);
         collectTaskNames(root.resolve("gretl-geotools/src/main/java/ch/so/agi/gretl/geotools/tasks"), publicTasks);
         publicTasks.removeIf(name -> name.startsWith("Abstract") || name.endsWith("Task")
                 || name.equals("GeoToolsTask") || name.equals("S3Task"));
+        Set<String> covered = new HashSet<>(manifest.tasks().keySet());
         assertTrue(covered.containsAll(publicTasks),
                 "Unclassified public tasks: " + difference(publicTasks, covered));
     }
 
     @Test
-    void everyCoverageEntryHasValidClassificationAndScenario() throws IOException {
+    void everyCoverageEntryUsesAnHonestClassification() throws IOException {
         Path root = repositoryRoot();
-        String yaml = Files.readString(root.resolve("docs/testing/runtime-image-coverage.yaml"));
-        Set<String> entries = coverageTasks(root);
-        assertFalse(entries.isEmpty());
-        for (String task : entries) {
-            int start = yaml.indexOf("  " + task + ":");
-            Matcher nextMatcher = YAML_NEXT_TASK.matcher(yaml);
-            int next = nextMatcher.find(start + 3) ? nextMatcher.start() : -1;
-            String block = next < 0 ? yaml.substring(start) : yaml.substring(start, next);
-            assertTrue(block.contains("classification: DIRECT_E2E")
-                            || block.contains("classification: COVERED_BY_CHAIN")
-                            || block.contains("classification: NOT_APPLICABLE_WITH_REASON"),
-                    "Invalid classification for " + task);
-            assertTrue(block.contains("testClass:") && block.contains("testMethods:"),
-                    "Missing scenario for " + task);
-            if (block.contains("NOT_APPLICABLE_WITH_REASON")) {
-                assertTrue(block.contains("reason:"), "Missing reason for " + task);
+        TaskCoverageManifest manifest = new TaskCoverageManifestReader()
+                .read(root.resolve("docs/testing/task-coverage.yaml"));
+        assertFalse(manifest.tasks().isEmpty());
+        Set<String> publicClasses = new HashSet<>();
+        collectTaskNames(root.resolve("gretl-core/src/main/java/ch/so/agi/gretl/tasks"), publicClasses);
+        collectTaskNames(root.resolve("gretl-geotools/src/main/java/ch/so/agi/gretl/geotools/tasks"), publicClasses);
+        publicClasses.removeIf(name -> name.startsWith("Abstract") || name.endsWith("Task")
+                || name.equals("GeoToolsTask") || name.equals("S3Task"));
+        for (TaskCoverageEntry entry : manifest.entries()) {
+            assertTrue(publicClasses.contains(entry.name()),
+                    "Unknown task entry: " + entry.name());
+            if (entry.classification() == TaskCoverageClassification.DIRECT_JOB_EXECUTION) {
+                assertFalse(entry.scenarios().isEmpty(), "Direct entry has no scenario: " + entry.name());
+            } else {
+                assertTrue(entry.scenarios().isEmpty(), "Non-direct entry has a scenario: " + entry.name());
+            }
+            if (entry.classification() == TaskCoverageClassification.NOT_YET_COVERED) {
+                assertFalse(entry.reason().isBlank(), "Missing gap reason: " + entry.name());
             }
         }
-    }
-
-    private Set<String> coverageTasks(Path root) throws IOException {
-        Set<String> tasks = new HashSet<>();
-        for (String line : Files.readAllLines(root.resolve("docs/testing/runtime-image-coverage.yaml"))) {
-            Matcher matcher = YAML_TASK.matcher(line);
-            if (matcher.matches()) {
-                tasks.add(matcher.group(1));
-            }
-        }
-        return tasks;
     }
 
     private void collectTaskNames(Path directory, Set<String> target) throws IOException {

@@ -1,0 +1,2 @@
+GRETL canonical job catalog
+This payload verifies the core Gzip task across every execution backend.

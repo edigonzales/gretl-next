@@ -1,0 +1,23 @@
+schemaVersion: 1
+id: core-sqlite
+description: Executes a SQLite schema and data script with the core SQL task.
+category: database
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - initializeDatabase
+expectedTasks:
+  - path: :initializeDatabase
+    className: ch.so.agi.gretl.tasks.SqlExecutor
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - filesystem
+  - sqlite
+assertions: core-sqlite
+timeoutSeconds: 300

@@ -5,7 +5,7 @@ import ch.so.agi.gretl.test.docker.DockerCli;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments;
 import ch.so.agi.gretl.test.runtime.RuntimeImageDescriptor;
 import ch.so.agi.gretl.test.runtime.RuntimeImageRunOptions;
 import io.floci.testcontainers.FlociContainer;
@@ -301,7 +301,7 @@ class RuntimeImageNetworkIntegrationTest {
     private GretlBuildResult execute(List<String> arguments, String... secrets) {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(),
-                new ContainerUserResolver(), new RuntimeImageGradleArguments());
+                new ContainerUserResolver(), new RuntimeImageLifecycleArguments());
         GretlBuildRequest.Builder request = GretlBuildRequest.builder(project)
                 .arguments(arguments)
                 .timeout(Duration.ofMinutes(10))

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class DockerCli {
+public class DockerCli {
     private final ProcessExecutor processExecutor;
 
     public DockerCli() {

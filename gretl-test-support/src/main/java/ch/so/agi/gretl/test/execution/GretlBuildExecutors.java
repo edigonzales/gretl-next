@@ -17,7 +17,7 @@ public final class GretlBuildExecutors {
                     RuntimeImageDescriptor.fromSystemProperties(),
                     new DockerCli(),
                     new ContainerUserResolver(),
-                    new RuntimeImageGradleArguments());
+                    new RuntimeImageLifecycleArguments());
         };
     }
 

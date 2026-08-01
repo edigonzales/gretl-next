@@ -12,6 +12,9 @@ public final class FreshGradleUserHomeStrategy implements GradleUserHomeStrategy
         if (executionMode == null) {
             throw new IllegalArgumentException("executionMode must not be null");
         }
+        if (executionMode != RuntimeExecutionMode.ONE_SHOT) {
+            throw new IllegalArgumentException("Fresh Gradle user homes are only valid for ONE_SHOT execution");
+        }
         try {
             Path parent = projectDirectory.toAbsolutePath().normalize().getParent();
             Path home = Files.createTempDirectory(parent, "gretl-runtime-gradle-home-");

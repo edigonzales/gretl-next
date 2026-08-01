@@ -1,0 +1,29 @@
+import ch.so.agi.gretl.tasks.Gzip
+import ch.so.agi.gretl.tasks.XslTransformer
+import ch.so.agi.gretl.geotools.tasks.RasterReclassify
+
+plugins {
+    id 'ch.so.agi.gretl'
+    id 'ch.so.agi.gretl.geotools'
+}
+
+def generateRaster = tasks.register('generateRaster', XslTransformer) {
+    xslFile 'input/raster-to-asc.xsl'
+    xmlFiles 'input/raster.xml'
+    outDirectory layout.buildDirectory.dir('generated')
+    fileExtension 'asc'
+}
+
+def generatedRaster = generateRaster.flatMap { it.outDirectory.file('raster.asc') }
+
+def reclassifyRaster = tasks.register('reclassifyRaster', RasterReclassify) {
+    inputRaster.set(generatedRaster)
+    outputRaster layout.buildDirectory.file('geotools/reclassified.tif')
+    breaks 0d, 55d, 60d, 65d, 70d, 500d
+    noData(-100d)
+}
+
+tasks.register('packageRaster', Gzip) {
+    dataFile(reclassifyRaster.flatMap { it.outputRaster })
+    gzipFile layout.buildDirectory.file('distribution/reclassified.tif.gz')
+}

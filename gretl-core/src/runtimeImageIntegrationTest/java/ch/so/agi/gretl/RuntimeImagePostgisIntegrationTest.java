@@ -5,7 +5,7 @@ import ch.so.agi.gretl.test.docker.DockerCli;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments;
 import ch.so.agi.gretl.test.runtime.RuntimeImageDescriptor;
 import ch.so.agi.gretl.test.runtime.RuntimeImageRunOptions;
 import org.junit.jupiter.api.AfterAll;
@@ -64,7 +64,7 @@ class RuntimeImagePostgisIntegrationTest {
 
             RuntimeImageDescriptor image = RuntimeImageDescriptor.fromSystemProperties();
             RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image, new DockerCli(),
-                    new ContainerUserResolver(), new RuntimeImageGradleArguments());
+                    new ContainerUserResolver(), new RuntimeImageLifecycleArguments());
             GretlBuildRequest request = GretlBuildRequest.builder(project)
                     .arguments("--rerun-tasks", "-PpgUrl=jdbc:postgresql://postgis:5432/gretl",
                             "-PpgUser=gretl", "-PpgPass=gretl", "fill")
@@ -154,7 +154,7 @@ class RuntimeImagePostgisIntegrationTest {
 
             RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                     RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(),
-                    new ContainerUserResolver(), new RuntimeImageGradleArguments());
+                    new ContainerUserResolver(), new RuntimeImageLifecycleArguments());
             GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)
                     .arguments("--rerun-tasks",
                             "-PpgUrl=jdbc:postgresql://postgis:5432/gretl",

@@ -57,7 +57,7 @@ class RuntimeImageDaemonReuseTest {
             assertEquals(0, changed.exitCode(), changed.output());
             assertEquals("changed", Files.readString(jobA.resolve("build/marker.txt"), StandardCharsets.UTF_8));
 
-            var stop = service.execGradle(List.of("--stop"));
+            var stop = service.stopGradleDaemons();
             assertEquals(0, stop.exitCode(), stop.output());
             assertTrue(service.isRunning(), "Stopping Gradle must not stop the service container");
             var afterStop = service.execGretl(Path.of("job-b"), List.of("--console=plain", "--rerun-tasks", "writeMarker"));

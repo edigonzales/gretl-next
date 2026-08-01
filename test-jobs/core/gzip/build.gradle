@@ -1,0 +1,10 @@
+import ch.so.agi.gretl.tasks.Gzip
+
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+tasks.register('compressFile', Gzip) {
+    dataFile 'input/data.txt'
+    gzipFile layout.buildDirectory.file('output/data.txt.gz')
+}

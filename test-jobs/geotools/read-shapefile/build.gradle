@@ -1,0 +1,8 @@
+plugins {
+    id 'ch.so.agi.gretl.geotools'
+}
+
+tasks.named('readShapefile') {
+    shapefile 'input/points.shp'
+    crsCode 'EPSG:2056'
+}

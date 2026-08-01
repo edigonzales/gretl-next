@@ -6,7 +6,7 @@ import ch.so.agi.gretl.test.docker.ContainerUserResolver;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments;
 import ch.so.agi.gretl.test.process.ProcessResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -107,7 +107,7 @@ class RuntimeImageContractTest {
                 """, StandardCharsets.UTF_8);
 
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
-                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
+                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageLifecycleArguments());
         GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)
                 .arguments("--rerun-tasks", "writeMarker")
                 .timeout(Duration.ofMinutes(2))
@@ -131,7 +131,7 @@ class RuntimeImageContractTest {
                 tasks.register('failTask') { doLast { throw new GradleException('expected failure') } }
                 """);
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
-                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
+                image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageLifecycleArguments());
         GretlBuildResult result = executor.executeAndExpectFailure(GretlBuildRequest.builder(project)
                 .arguments("failTask")
                 .timeout(Duration.ofMinutes(2))

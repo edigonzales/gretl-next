@@ -5,14 +5,15 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RuntimeLauncherScriptTest {
     @Test
-    void launcherAlwaysAddsOffline() throws Exception {
+    void launcherAddsOfflineExactlyOnce() throws Exception {
         String script = launcher();
-        assertTrue(script.contains("--offline"));
+        assertEquals(1, script.lines().filter(line -> line.contains("--offline")).count());
     }
 
     @Test
@@ -21,7 +22,7 @@ class RuntimeLauncherScriptTest {
     }
 
     @Test
-    void launcherForwardsTaskNamesAndProperties() throws Exception {
+    void launcherForwardsAllUserArguments() throws Exception {
         String script = launcher();
         assertTrue(script.contains("\"$@\""));
     }
@@ -30,6 +31,11 @@ class RuntimeLauncherScriptTest {
     void launcherDoesNotForceNoDaemon() throws Exception {
         String script = launcher();
         assertFalse(script.contains("--no-daemon"));
+    }
+
+    @Test
+    void launcherDoesNotForceDaemon() throws Exception {
+        assertFalse(launcher().contains("--daemon"));
     }
 
     @Test

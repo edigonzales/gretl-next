@@ -5,7 +5,7 @@ import ch.so.agi.gretl.test.docker.DockerCli;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments;
 import ch.so.agi.gretl.test.runtime.RuntimeImageDescriptor;
 import ch.so.agi.gretl.test.runtime.RuntimeImageRunOptions;
 import org.junit.jupiter.api.Tag;
@@ -109,7 +109,7 @@ class RuntimeImageGeotoolsFunctionalTest {
     private GretlBuildResult run(String... arguments) {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(), new ContainerUserResolver(),
-                new RuntimeImageGradleArguments());
+                new RuntimeImageLifecycleArguments());
         List<String> requested = new ArrayList<>(List.of("--rerun-tasks"));
         requested.addAll(Arrays.asList(arguments));
         return executor.execute(GretlBuildRequest.builder(project)

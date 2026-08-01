@@ -1,0 +1,188 @@
+plugins {
+    id 'java'
+}
+
+base {
+    archivesName = 'gretl-job-tests'
+}
+
+configurations {
+    canonicalJobPluginClasspath {
+        canBeConsumed = false
+        canBeResolved = true
+        visible = false
+        transitive = true
+    }
+}
+
+dependencies {
+    canonicalJobPluginClasspath project(':gretl-core')
+    canonicalJobPluginClasspath project(':gretl-geotools')
+
+    testImplementation gradleTestKit()
+    testImplementation project(':gretl-test-support')
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.geotools:gt-main:${geotoolsVersion}"
+    testImplementation "org.geotools:gt-geotiff:${geotoolsVersion}"
+    testImplementation "org.geotools:gt-shapefile:${geotoolsVersion}"
+    testImplementation "org.geotools:gt-epsg-hsql:${geotoolsVersion}"
+    testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
+}
+
+def jobsRoot = rootProject.layout.projectDirectory.dir('test-jobs')
+def pluginClasspathFile = layout.buildDirectory.file('canonical-job-plugin-classpath/classpath.txt')
+def sourceTestKitDirectory = layout.buildDirectory.dir('test-kit/source')
+def publishedTestKitDirectory = layout.buildDirectory.dir('test-kit/published')
+def publishedRepository = rootProject.layout.buildDirectory.dir('published-test/maven-repo')
+def materializedJobs = layout.buildDirectory.dir('materialized-jobs')
+
+tasks.named('test') {
+    // Functional matrix tests run through their dedicated one-backend tasks.
+    // The ordinary module test task remains a Docker-free catalog smoke test.
+    systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest' }
+}
+
+tasks.register('writeCanonicalJobPluginClasspath') {
+    group = 'verification'
+    description = 'Writes the isolated Core and GeoTools plugin classpath for canonical consumer jobs.'
+    dependsOn ':gretl-core:jar', ':gretl-geotools:jar'
+    inputs.files(configurations.canonicalJobPluginClasspath)
+    outputs.file(pluginClasspathFile)
+    doLast {
+        File output = pluginClasspathFile.get().asFile
+        output.parentFile.mkdirs()
+        List<File> files = configurations.canonicalJobPluginClasspath.files
+                .findAll { it.isFile() }
+                .collect { it.toPath().toRealPath().toFile() }
+                .unique { it.absolutePath }
+                .sort { a, b -> a.absolutePath <=> b.absolutePath }
+        if (files.isEmpty()) throw new GradleException('Canonical job plugin classpath is empty.')
+        output.setText(files.collect { it.absolutePath }.join(System.lineSeparator()) + System.lineSeparator(), 'UTF-8')
+    }
+}
+
+def configureJobTest = { Test task, String backend, boolean published, boolean runtime ->
+    task.dependsOn tasks.named('validateTestJobCatalog')
+    task.systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    task.systemProperty 'gretl.test.materializedJobs', materializedJobs.get().asFile.absolutePath
+    task.systemProperty 'gretl.job.backend', backend
+    task.systemProperty 'gretl.test.explicitPluginClasspath', pluginClasspathFile.get().asFile.absolutePath
+    task.systemProperty 'gretl.test.testKitDirectory', (published ? publishedTestKitDirectory : sourceTestKitDirectory).get().asFile.absolutePath
+    task.systemProperty 'gretl.test.executionMode', published ? 'PUBLISHED_ARTIFACT' : 'PLUGIN_CLASSPATH'
+    def traceBackend = backend.toLowerCase()
+    def coverageTraceDirectory = rootProject.layout.buildDirectory.dir("reports/test-jobs/traces/${traceBackend}")
+    task.systemProperty 'gretl.test.coverageTraceRoot', rootProject.layout.buildDirectory.dir('reports/test-jobs/traces').get().asFile.absolutePath
+    task.outputs.dir(coverageTraceDirectory)
+    if (published) {
+        task.systemProperty 'gretl.test.publishedRepository', publishedRepository.get().asFile.absolutePath
+        task.systemProperty 'gretl.test.pluginVersion', rootProject.version.toString()
+    }
+    if (runtime) {
+        task.systemProperty 'gretl.test.runtimeImage.idFile', rootProject.layout.buildDirectory.file('runtime-image/dependency-closure-test/image-id.txt').get().asFile.absolutePath
+        task.systemProperty 'gretl.test.runtimeImage.tag', rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse("gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()
+        task.systemProperty 'gretl.test.runtimeImage.version', rootProject.version.toString()
+        task.systemProperty 'gretl.test.runtimeImage.gradleVersion', '7.6.4'
+        task.systemProperty 'gretl.test.runtimeImage.javaVersion', '17'
+        task.systemProperty 'gretl.test.runtimeImage.user', rootProject.providers.gradleProperty('gretlRuntimeImageUser').orElse('').get()
+    }
+}
+
+tasks.register('validateTestJobCatalog', Test) {
+    group = 'verification'
+    description = 'Validates all persistent GRETL test jobs and their strict consumer contract.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest' }
+}
+
+tasks.register('canonicalJobSourceTest', Test) {
+    group = 'verification'
+    description = 'Runs canonical jobs through the isolated plugin classpath backend.'
+    dependsOn tasks.named('writeCanonicalJobPluginClasspath')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'PLUGIN_CLASSPATH', false, false)
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobPublishedTest', Test) {
+    group = 'verification'
+    description = 'Runs canonical jobs against the isolated published-test Maven repository.'
+    dependsOn rootProject.tasks.named('verifyPublishedTestRepository'), tasks.named('writeCanonicalJobPluginClasspath')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'PUBLISHED_ARTIFACT', true, false)
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobRuntimeImageTest', Test) {
+    group = 'verification'
+    description = 'Runs canonical jobs through one-shot runtime-image containers.'
+    dependsOn rootProject.tasks.named('buildRuntimeImageForTest'), tasks.named('writeCanonicalJobPluginClasspath')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'RUNTIME_IMAGE_ONE_SHOT', false, true)
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobServiceTest', Test) {
+    group = 'verification'
+    description = 'Runs canonical jobs through the long-lived runtime-image service container.'
+    dependsOn rootProject.tasks.named('buildRuntimeImageForTest'), tasks.named('writeCanonicalJobPluginClasspath')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'RUNTIME_IMAGE_SERVICE', false, true)
+    systemProperty 'gretl.job.serviceOnly', 'true'
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobTest') {
+    group = 'verification'
+    dependsOn tasks.named('canonicalJobSourceTest'), tasks.named('canonicalJobPublishedTest'),
+            tasks.named('canonicalJobRuntimeImageTest'), tasks.named('canonicalJobServiceTest')
+}
+
+tasks.register('coverageTest', Test) {
+    group = 'verification'
+    description = 'Verifies the task coverage matrix against canonical job execution traces.'
+    dependsOn tasks.named('canonicalJobTest')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'gretl.test.repositoryRoot', rootProject.projectDir.absolutePath
+    systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    systemProperty 'gretl.test.coverageTraceRoot', rootProject.layout.buildDirectory.dir('reports/test-jobs/traces').get().asFile.absolutePath
+    systemProperty 'gretl.test.coverageReportDir', rootProject.layout.buildDirectory.dir('reports/test-jobs').get().asFile.absolutePath
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.TaskCoverageVerificationTest' }
+}
+
+tasks.register('assertJobTestsNotPublished') {
+    group = 'verification'
+    description = 'Ensures the internal canonical job test module is not published or copied into the runtime image.'
+    doLast {
+        [rootProject.layout.buildDirectory.dir('published-test/maven-repo').get().asFile,
+         rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile,
+         rootProject.layout.buildDirectory.dir('runtime-image/docker').get().asFile].each { File root ->
+            if (root.exists()) {
+                root.eachFileRecurse { File file ->
+                    if (file.name.contains('gretl-job-tests') || file.path.contains('test-jobs')) {
+                        throw new GradleException("Internal job test content was published or staged: ${file}")
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('validateTestJobCatalog'), tasks.named('canonicalJobSourceTest'), tasks.named('assertJobTestsNotPublished')
+}

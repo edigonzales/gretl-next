@@ -106,7 +106,7 @@ class RuntimeImageGzipTest {
         return new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
                 new ch.so.agi.gretl.test.docker.DockerCli(),
                 new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
+                new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments());
     }
 
     private static byte[] gunzip(Path path) throws IOException {

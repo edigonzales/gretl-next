@@ -16,27 +16,27 @@ public final class RuntimeImageBuildExecutor implements GretlBuildExecutor {
     private final RuntimeImageDescriptor image;
     private final DockerCli docker;
     private final ContainerUserResolver userResolver;
-    private final RuntimeImageGradleArguments gradleArguments;
+    private final RuntimeImageLifecycleArguments lifecycleArguments;
     private final GradleUserHomeStrategy gradleUserHomeStrategy;
 
     public RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor image,
                 DockerCli docker,
                 ContainerUserResolver userResolver,
-                RuntimeImageGradleArguments gradleArguments) {
-        this(image, docker, userResolver, gradleArguments, new FreshGradleUserHomeStrategy());
+                RuntimeImageLifecycleArguments lifecycleArguments) {
+        this(image, docker, userResolver, lifecycleArguments, new FreshGradleUserHomeStrategy());
     }
 
     public RuntimeImageBuildExecutor(
             RuntimeImageDescriptor image,
             DockerCli docker,
             ContainerUserResolver userResolver,
-            RuntimeImageGradleArguments gradleArguments,
+            RuntimeImageLifecycleArguments lifecycleArguments,
             GradleUserHomeStrategy gradleUserHomeStrategy) {
         this.image = image;
         this.docker = docker;
         this.userResolver = userResolver;
-        this.gradleArguments = gradleArguments;
+        this.lifecycleArguments = lifecycleArguments;
         this.gradleUserHomeStrategy = gradleUserHomeStrategy;
         image.verify();
     }
@@ -59,13 +59,7 @@ public final class RuntimeImageBuildExecutor implements GretlBuildExecutor {
         return result;
     }
 
-    public DockerRunRequest toDockerRunRequest(GretlBuildRequest request) {
-        GradleUserHomeHandle home = gradleUserHomeStrategy.prepare(
-                request.projectDirectory(), request.runtimeExecutionMode());
-        return toDockerRunRequest(request, home.path());
-    }
-
-    private DockerRunRequest toDockerRunRequest(GretlBuildRequest request, Path gradleUserHome) {
+    DockerRunRequest toDockerRunRequest(GretlBuildRequest request, Path gradleUserHome) {
         RuntimeImageRunOptions options = request.runtimeImageOptions();
         Map<String, String> environment = new HashMap<>(options.containerEnvironment());
         environment.putAll(request.environment());
@@ -74,7 +68,7 @@ public final class RuntimeImageBuildExecutor implements GretlBuildExecutor {
                 createContainerName(request),
                 request.projectDirectory(),
                 gradleUserHome,
-                gradleArguments.arguments(request.runtimeExecutionMode(), request.arguments()),
+                lifecycleArguments.arguments(RuntimeExecutionMode.ONE_SHOT, request.arguments()),
                 environment,
                 options.dockerNetwork(),
                 userResolver.resolve(),
@@ -105,8 +99,9 @@ public final class RuntimeImageBuildExecutor implements GretlBuildExecutor {
     }
 
     private GretlBuildResult executeInternal(GretlBuildRequest request) {
+        requireOneShot(request);
         try (GradleUserHomeHandle home = gradleUserHomeStrategy.prepare(
-                request.projectDirectory(), request.runtimeExecutionMode())) {
+                request.projectDirectory(), RuntimeExecutionMode.ONE_SHOT)) {
             DockerRunRequest dockerRequest = toDockerRunRequest(request, home.path());
             try {
                 ProcessResult result = docker.runContainer(dockerRequest);
@@ -123,6 +118,14 @@ public final class RuntimeImageBuildExecutor implements GretlBuildExecutor {
                 }
                 throw e;
             }
+        }
+    }
+
+    private void requireOneShot(GretlBuildRequest request) {
+        if (request.runtimeExecutionMode() != RuntimeExecutionMode.ONE_SHOT) {
+            throw new IllegalArgumentException(
+                    "RuntimeImageBuildExecutor supports only ONE_SHOT execution. "
+                            + "Use RuntimeImageServiceContainer for SERVICE execution.");
         }
     }
 

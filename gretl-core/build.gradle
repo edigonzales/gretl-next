@@ -7,6 +7,19 @@ base {
     archivesName = 'gretl-core'
 }
 
+tasks.named('jar').configure {
+    // Gradle's plugin classpath resolver loads the implementation artifact but
+    // does not reliably carry Saxon's runtime-only transitive resolver into an
+    // offline plugin build. Embed that small direct runtime dependency so the
+    // published plugin remains executable from the runtime image.
+    from({
+        configurations.runtimeClasspath.findAll { it.name == "xmlresolver-${xmlResolverVersion}.jar" }
+                .collect { zipTree(it) }
+    }) {
+        include 'org/xmlresolver/**'
+    }
+}
+
 sourceSets {
     integrationTest {
         compileClasspath += sourceSets.main.output
@@ -83,6 +96,10 @@ dependencies {
     implementation "ch.geowerkstatt.ilivalidator.extensions.functions:interlis-functions-ngk-so:${geowNgkFunctionsVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "net.sf.saxon:Saxon-HE:${saxonVersion}"
+    // Saxon loads the XML resolver directly during processor initialization;
+    // keep this dependency direct so Gradle plugin classloaders in the runtime
+    // image do not omit it when resolving only the plugin's immediate graph.
+    implementation "org.xmlresolver:xmlresolver:${xmlResolverVersion}"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
     runtimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"

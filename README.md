@@ -85,12 +85,13 @@ Docker is unavailable. The image-test build records the immutable image ID in
 ```
 
 The default consumer contract is the modern `plugins {}` DSL. The GRETL runtime
-image starts Gradle with `--offline`, which prevents Gradle from downloading
-additional plugins and dependencies while a job is running. It does not disable
-the job's network: jobs may still connect to PostGIS, S3, FTP, HTTP and other
-application services. One-shot and service lifecycle are independent from this
-dependency policy. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
-and the [runtime task coverage matrix](docs/testing/runtime-image-coverage.yaml).
+image launcher starts Gradle with `--offline`, which prevents remote plugin and
+dependency downloads while a job is running. Gradle may still resolve from the
+image-local repository, a deliberately mounted local repository or local
+caches. This does not disable the job's application network: jobs may still
+connect to PostGIS, S3, FTP, HTTP and other services. One-shot and service
+lifecycle are independent from this dependency policy. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
+and the [task coverage matrix](docs/testing/task-coverage.yaml).
 
 ## Publishing Snapshots
 

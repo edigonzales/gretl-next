@@ -250,7 +250,7 @@ class RuntimeImageBundledPluginResolutionTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image,
                 new ch.so.agi.gretl.test.docker.DockerCli(),
                 new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
+                new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments());
         List<String> arguments = new ArrayList<>(List.of("--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.execute(GretlBuildRequest.builder(project.directory())
@@ -265,7 +265,7 @@ class RuntimeImageBundledPluginResolutionTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image,
                 new ch.so.agi.gretl.test.docker.DockerCli(),
                 new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
+                new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments());
         List<String> arguments = new ArrayList<>(List.of("--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.executeAndExpectFailure(GretlBuildRequest.builder(project.directory())

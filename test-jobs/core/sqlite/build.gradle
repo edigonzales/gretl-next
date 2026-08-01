@@ -1,0 +1,13 @@
+import ch.so.agi.gretl.tasks.SqlExecutor
+
+plugins {
+    id 'ch.so.agi.gretl'
+}
+
+tasks.register('initializeDatabase', SqlExecutor) {
+    doFirst {
+        layout.buildDirectory.dir('db').get().asFile.mkdirs()
+    }
+    database "jdbc:sqlite:${layout.buildDirectory.file('db/test.db').get().asFile.absolutePath}"
+    sqlFiles 'input/schema.sql'
+}

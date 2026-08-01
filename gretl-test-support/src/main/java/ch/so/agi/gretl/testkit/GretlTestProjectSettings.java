@@ -1,6 +1,7 @@
 package ch.so.agi.gretl.testkit;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,10 +33,16 @@ public final class GretlTestProjectSettings {
             return "rootProject.name = '" + escapeGroovyString(rootProjectName) + "'\n";
         }
 
-        PublishedArtifactTestConfiguration configuration =
-                PublishedArtifactTestConfiguration.fromSystemProperties();
-        String repository = escapeGroovyString(configuration.repositoryUri().toString());
-        String version = escapeGroovyString(configuration.pluginVersion());
+        PublishedArtifactTestConfiguration configuration = PublishedArtifactTestConfiguration.fromSystemProperties();
+        return renderPublished(rootProjectName, configuration.repositoryUri(), configuration.pluginVersion());
+    }
+
+    public static String renderPublished(String rootProjectName, URI repositoryUri, String pluginVersion) {
+        Objects.requireNonNull(repositoryUri, "repositoryUri must not be null");
+        Objects.requireNonNull(pluginVersion, "pluginVersion must not be null");
+        if (pluginVersion.isBlank()) throw new IllegalArgumentException("pluginVersion must not be blank");
+        String repository = escapeGroovyString(repositoryUri.toString());
+        String version = escapeGroovyString(pluginVersion);
         String projectName = escapeGroovyString(rootProjectName);
 
         return """

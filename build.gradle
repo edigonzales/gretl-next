@@ -38,6 +38,7 @@ ext {
     jacksonVersion = '2.17.2'
     junitVersion = '5.10.3'
     saxonVersion = '11.4'
+    xmlResolverVersion = '4.4.3'
     sqliteJdbcVersion = '3.43.0.0'
     postgresqlVersion = '42.6.0'
     duckdbVersion = '1.5.2.0'
@@ -560,6 +561,8 @@ tasks.register('publishedArtifactTest') {
     dependsOn ':gretl-geotools:publishedFunctionalTest'
     dependsOn ':gretl-combined-tests:publishedArtifactTest'
     dependsOn ':gretl-combined-tests:assertCombinedTestsNotPublished'
+    dependsOn ':gretl-job-tests:canonicalJobPublishedTest'
+    dependsOn ':gretl-job-tests:assertJobTestsNotPublished'
 }
 
 tasks.register('coreGeoToolsCombinedTest') {
@@ -573,6 +576,9 @@ tasks.register('coreGeoToolsCombinedTest') {
 
 tasks.named('check').configure {
     dependsOn ':gretl-combined-tests:test'
+    dependsOn ':gretl-job-tests:validateTestJobCatalog'
+    dependsOn ':gretl-job-tests:canonicalJobSourceTest'
+    dependsOn ':gretl-job-tests:assertJobTestsNotPublished'
 }
 
 def sha256File = { File file ->
@@ -716,7 +722,7 @@ Gradle ${runtimeImageGradleVersion.get()}
 Java ${runtimeImageJavaVersion.get()}
 Repository /opt/gretl/maven-repository
 Init /opt/gretl/init/gretl.init.gradle
-Dependency policy bundled-only (Gradle --offline)
+Dependency policy local-only Gradle resolution (no remote downloads)
 """
     }
 }
@@ -1011,7 +1017,7 @@ tasks.register('runtimeImageContractTest') {
 
 tasks.register('runtimeImageDependencyClosureTest') {
     group = 'verification'
-    description = 'Verifies the dependency closure of the bundled-only GRETL runtime image.'
+    description = 'Verifies the dependency closure of the GRETL runtime image with local-only Gradle resolution.'
     dependsOn tasks.named('buildRuntimeImageForTest')
     dependsOn tasks.named('verifyRuntimeImageDependencyClosurePrerequisites')
     dependsOn ':gretl-test-support:runtimeImageDependencyClosureTest'
@@ -1033,7 +1039,7 @@ tasks.register('runtimeImageSmokeTest') {
 
 tasks.register('runtimeImageIntegrationTest') {
     group = 'verification'
-    description = 'Runs networked runtime-image integration tests with bundled-only dependency resolution.'
+    description = 'Runs networked runtime-image integration tests with no remote Gradle downloads.'
     dependsOn ':gretl-core:runtimeImageFunctionalTest'
     dependsOn ':gretl-core:runtimeImageIntegrationTest'
     dependsOn ':gretl-geotools:runtimeImageFunctionalTest'
@@ -1047,6 +1053,8 @@ tasks.register('runtimeImageTest') {
     dependsOn tasks.named('runtimeImageSmokeTest')
     dependsOn tasks.named('runtimeImageIntegrationTest')
     dependsOn tasks.named('runtimeImageServiceTest')
+    dependsOn ':gretl-job-tests:canonicalJobRuntimeImageTest'
+    dependsOn ':gretl-job-tests:canonicalJobServiceTest'
 }
 
 tasks.register('ciCheck') {

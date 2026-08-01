@@ -1,0 +1,30 @@
+schemaVersion: 1
+id: combined-core-geotools-pipeline
+description: Generates, reclassifies and packages a raster through both GRETL plugins.
+category: combined
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+  - id: kotlin
+    file: build.gradle.kts
+    language: KOTLIN
+entryTasks:
+  - packageRaster
+expectedTasks:
+  - path: :generateRaster
+    className: ch.so.agi.gretl.tasks.XslTransformer
+  - path: :reclassifyRaster
+    className: ch.so.agi.gretl.geotools.tasks.RasterReclassify
+  - path: :packageRaster
+    className: ch.so.agi.gretl.tasks.Gzip
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - filesystem
+  - geotools-worker
+assertions: combined-core-geotools-pipeline
+timeoutSeconds: 600

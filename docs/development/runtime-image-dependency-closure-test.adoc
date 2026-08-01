@@ -1,8 +1,9 @@
 = Dependency-closed runtime-image test
 
 The runtime-image dependency-closure gate builds the current image and verifies
-that Gradle can resolve the bundled Core and GeoTools distribution from a fresh
-Gradle user home. The runtime image always invokes Gradle with `--offline`.
+that Gradle can resolve the image-local Core and GeoTools distribution from a fresh
+Gradle user home without remote downloads. The runtime launcher always invokes
+Gradle with `--offline`; a deliberately mounted local repository remains valid.
 Docker networking is deliberately independent: networked job tests use named
 networks for HTTP, FTP, S3 and PostGIS fixtures.
 

@@ -44,7 +44,7 @@ class RuntimeImageDuckDbTest {
             return new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
                     new ch.so.agi.gretl.test.docker.DockerCli(),
                     new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                    new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments()).execute(
+                    new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments()).execute(
                     GretlBuildRequest.builder(project.directory())
                             .arguments(List.of("--rerun-tasks", task))
                             .timeout(timeout)

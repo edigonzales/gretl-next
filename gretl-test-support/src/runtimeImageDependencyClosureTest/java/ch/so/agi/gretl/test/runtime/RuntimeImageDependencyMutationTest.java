@@ -29,7 +29,7 @@ class RuntimeImageDependencyMutationTest {
         GretlBuildResult result = new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
                 new ch.so.agi.gretl.test.docker.DockerCli(),
                 new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments())
+                new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments())
                 .executeAndExpectFailure(GretlBuildRequest.builder(project.directory())
                         .arguments(List.of("-Dgretl.version=0.0.0-mutated", "--rerun-tasks", "tasks"))
                         .timeout(Duration.ofMinutes(2))
@@ -75,7 +75,7 @@ class RuntimeImageDependencyMutationTest {
             return new RuntimeImageBuildExecutor(image,
                     new ch.so.agi.gretl.test.docker.DockerCli(),
                     new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
-                    new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments()).executeAndExpectFailure(
+                    new ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments()).executeAndExpectFailure(
                     GretlBuildRequest.builder(project.directory())
                             .arguments(List.of("--rerun-tasks", "tasks"))
                             .timeout(Duration.ofMinutes(2))

@@ -5,7 +5,7 @@ import ch.so.agi.gretl.test.docker.DockerCli;
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
-import ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments;
+import ch.so.agi.gretl.test.execution.RuntimeImageLifecycleArguments;
 import ch.so.agi.gretl.test.fixture.FixturePluginRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,7 +42,7 @@ class RuntimeImageAdditionalPluginTest {
 
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(), new ContainerUserResolver(),
-                new RuntimeImageGradleArguments());
+                new RuntimeImageLifecycleArguments());
         RuntimeImageRunOptions options = RuntimeImageRunOptions.defaults()
                 .withReadOnlyMount(repository, "/fixture/plugin-repo");
         GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)

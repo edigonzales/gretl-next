@@ -1,0 +1,23 @@
+schemaVersion: 1
+id: geotools-read-shapefile
+description: Reads a shapefile through the isolated GeoTools worker.
+category: geotools
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - readShapefile
+expectedTasks:
+  - path: :readShapefile
+    className: ch.so.agi.gretl.geotools.tasks.ReadShapefile
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: optional
+capabilities:
+  - filesystem
+  - geotools-worker
+assertions: geotools-read-shapefile
+timeoutSeconds: 300

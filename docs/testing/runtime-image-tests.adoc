@@ -33,6 +33,29 @@ explicit prerequisite error; tests are not silently skipped. `check` remains
 Docker-free. `ciCheck` runs source checks, published-artifact checks, external
 integration tests and the complete runtime-image gate before publication.
 
+== Canonical test jobs
+
+Persistent consumer jobs live below `test-jobs/` and are described by a strict
+`job.yaml`. The same build file is materialized for the isolated plugin
+classpath, published-artifact, runtime-image one-shot and runtime-image service
+backends. The job catalog validates build variants, expected task classes,
+required targets and fachliche output assertions before execution.
+
+[source,bash]
+----
+./gradlew :gretl-job-tests:validateTestJobCatalog
+./gradlew :gretl-job-tests:canonicalJobSourceTest
+./gradlew :gretl-job-tests:canonicalJobPublishedTest
+./gradlew :gretl-job-tests:canonicalJobRuntimeImageTest
+./gradlew :gretl-job-tests:canonicalJobServiceTest
+./gradlew :gretl-job-tests:coverageTest
+----
+
+Each job run writes a JSON-lines task trace containing the job, build variant,
+backend, task path, task class and outcome. Coverage is granted only from
+these traces; unexecuted public tasks remain explicitly `NOT_YET_COVERED` in
+`docs/testing/task-coverage.yaml`.
+
 == Dependency-closed runtime-image contract
 
 The image contains a structured Maven repository at
@@ -43,17 +66,19 @@ version to versionless `plugins {}` declarations. It does not register remote
 Gradle repositories or `mavenLocal()` and does not inject a directory of
 arbitrary JARs into buildscript classpaths.
 
-The GRETL runtime image starts Gradle with `--offline`. This prevents Gradle
-from downloading additional plugins and dependencies while a job is running. It
-does not disable the job's network. Jobs may still connect to PostGIS, S3, FTP,
-HTTP and other application services. The closure gate mounts a fresh
+The GRETL runtime launcher starts Gradle with `--offline`. Gradle may resolve
+plugins and dependencies from the image-local Maven repository, a deliberately
+mounted local repository or local caches, but it does not contact remote
+repositories while a job is running. This is local-only Gradle dependency
+resolution; it does not disable application network access. Jobs may still
+connect to PostGIS, S3, FTP, HTTP and other application services. The closure gate mounts a fresh
 `/home/gradle/.gradle`; normal service jobs reuse an image-owned persistent home
 without mounting a host Gradle cache.
 
 == One-shot and service modes
 
-The launcher applies `--offline` in both lifecycle modes. One-shot calls add
-`--no-daemon`; service calls reuse the Gradle daemon:
+The launcher is the only automatic source of `--offline` in both lifecycle
+modes. One-shot calls add `--no-daemon`; service calls reuse the Gradle daemon:
 
 [source,bash]
 ----
@@ -80,5 +105,7 @@ local fixture values and are redacted from commands, output and reports.
 
 The task-specific reports are under each module's `build/reports/tests` and
 `build/test-results`. The task coverage inventory is maintained in
-`docs/testing/runtime-image-coverage.yaml`. Cleanup removes one-shot containers,
+`docs/testing/task-coverage.yaml`; `./gradlew :gretl-job-tests:coverageTest`
+writes the trace-backed reports to `build/reports/test-jobs/coverage.json` and
+`coverage.adoc`. Cleanup removes one-shot containers,
 service containers, temporary Gradle homes and test networks.
