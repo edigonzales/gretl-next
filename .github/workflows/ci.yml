@@ -34,6 +34,9 @@ jobs:
       - name: Test published GRETL plugin artifacts
         run: ./gradlew publishedArtifactTest --stacktrace
 
+      - name: Run combined Core and GeoTools P0 gate
+        run: ./gradlew coreGeoToolsCombinedTest --stacktrace
+
       - name: Show Docker environment
         run: |
           docker version
@@ -65,6 +68,8 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/test-results/
+            gretl-combined-tests/build/reports/tests/
+            gretl-combined-tests/build/test-results/
 
       - name: Upload integration test reports
         if: always()
@@ -91,6 +96,15 @@ jobs:
         with:
           name: published-test-repository-on-failure
           path: build/published-test/maven-repo
+
+      - name: Upload combined TestKit diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-testkit-diagnostics
+          path: |
+            gretl-combined-tests/build/test-kit/
+            gretl-combined-tests/build/combined-plugin-classpath/
 
   publish:
     runs-on: ubuntu-latest

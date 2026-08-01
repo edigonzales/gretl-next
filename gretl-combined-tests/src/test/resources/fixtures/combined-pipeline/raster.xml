@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<raster ncols="4" nrows="3" xllcorner="2600000" yllcorner="1200000" cellsize="1" nodata="-9999">
+  <row>10 56 61 71</row>
+  <row>54 59 64 499</row>
+  <row>-9999 0 70 500</row>
+</raster>

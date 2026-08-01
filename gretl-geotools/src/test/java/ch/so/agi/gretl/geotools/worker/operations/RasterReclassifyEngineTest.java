@@ -60,7 +60,7 @@ class RasterReclassifyEngineTest {
 
         GridCoverage2D coverage = readCoverage(output);
         Set<Double> values = readClassValues(coverage);
-        Set<Double> expected = Set.of(0d, 40d, 42d);
+        Set<Double> expected = Set.of(0d, 40d, 42d, -5d);
 
         assertEquals(expected, values);
 

@@ -1,0 +1,199 @@
+plugins {
+    id 'java'
+}
+
+base {
+    archivesName = 'gretl-combined-tests'
+}
+
+// This configuration is the only classpath passed to the Gradle TestKit
+// child build. Host assertions and JUnit must never leak into that build.
+configurations {
+    combinedPluginClasspath {
+        canBeConsumed = false
+        canBeResolved = true
+        visible = false
+        transitive = true
+    }
+}
+
+dependencies {
+    combinedPluginClasspath project(':gretl-core')
+    combinedPluginClasspath project(':gretl-geotools')
+
+    testImplementation gradleTestKit()
+    testImplementation project(':gretl-test-support')
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+
+    // Host-side readers used only by semantic assertions.
+    testImplementation "org.geotools:gt-main:${geotoolsVersion}"
+    testImplementation "org.geotools:gt-geotiff:${geotoolsVersion}"
+    testImplementation "org.geotools:gt-epsg-hsql:${geotoolsVersion}"
+}
+
+def combinedClasspathFile = layout.buildDirectory.file('combined-plugin-classpath/classpath.txt')
+def sourceTestKitDirectory = layout.buildDirectory.dir('test-kit/source')
+def publishedTestKitDirectory = layout.buildDirectory.dir('test-kit/published')
+def configurationCacheTestKitDirectory = layout.buildDirectory.dir('test-kit/configuration-cache')
+def publishedRepository = rootProject.layout.buildDirectory.dir('published-test/maven-repo')
+
+def registerTestKitLifecycle = { String suffix, Provider<Directory> directory ->
+    def prepare = tasks.register("prepare${suffix}TestKit") {
+        group = 'verification'
+        description = "Clears the generated ${suffix} Gradle TestKit user home before execution."
+        doLast {
+            delete(directory.get().asFile)
+        }
+    }
+    def cleanup = tasks.register("cleanup${suffix}TestKit") {
+        group = 'verification'
+        description = "Removes the generated ${suffix} Gradle TestKit user home after execution."
+        doLast {
+            delete(directory.get().asFile)
+        }
+    }
+    [prepare: prepare, cleanup: cleanup]
+}
+
+def sourceTestKitLifecycle = registerTestKitLifecycle('Source', sourceTestKitDirectory)
+def publishedTestKitLifecycle = registerTestKitLifecycle('Published', publishedTestKitDirectory)
+def configurationCacheTestKitLifecycle = registerTestKitLifecycle('ConfigurationCache', configurationCacheTestKitDirectory)
+
+tasks.register('writeCombinedPluginClasspath') {
+    group = 'verification'
+    description = 'Writes the explicit, deterministic TestKit classpath for Core and GeoTools.'
+    dependsOn ':gretl-core:jar', ':gretl-geotools:jar'
+    inputs.files(configurations.combinedPluginClasspath)
+    outputs.file(combinedClasspathFile)
+
+    doLast {
+        File output = combinedClasspathFile.get().asFile
+        output.parentFile.mkdirs()
+        List<File> files = configurations.combinedPluginClasspath.files
+                .findAll { it.isFile() }
+                .collect { it.toPath().toRealPath().toFile() }
+                .unique { it.absolutePath }
+                .sort { left, right -> left.absolutePath <=> right.absolutePath }
+        if (files.isEmpty()) {
+            throw new GradleException('The combined plugin classpath resolved no files.')
+        }
+        output.setText(files.collect { it.absolutePath }.join(System.lineSeparator()) + System.lineSeparator(), 'UTF-8')
+    }
+}
+
+tasks.register('assertCombinedPluginClasspathIsolation') {
+    group = 'verification'
+    description = 'Verifies that the child-build classpath excludes host test and worker libraries.'
+    dependsOn tasks.named('writeCombinedPluginClasspath')
+    inputs.file(combinedClasspathFile)
+
+    doLast {
+        List<String> entries = combinedClasspathFile.get().asFile.readLines('UTF-8')
+                .findAll { !it.trim().isEmpty() }
+        List<String> normalized = entries.collect { it.trim() }
+        if (normalized != normalized.unique().sort()) {
+            throw new GradleException('Combined plugin classpath must be sorted and duplicate-free.')
+        }
+        if (!normalized.any { it ==~ /.*[\\/]gretl-core-[^\\/]+\.jar/ }) {
+            throw new GradleException('Combined plugin classpath does not contain the Core plugin JAR.')
+        }
+        if (!normalized.any { it ==~ /.*[\\/]gretl-geotools-[^\\/]+\.jar/ }) {
+            throw new GradleException('Combined plugin classpath does not contain the GeoTools plugin JAR.')
+        }
+        String joined = normalized.join('\n').toLowerCase(Locale.ROOT)
+        ['gretl-test-support', 'gretl-combined-tests', 'junit', 'testcontainers',
+         '-sources.jar', '-javadoc.jar', '/build/classes/', '/build/resources/',
+         '/src/'].each { forbidden ->
+            if (joined.contains(forbidden)) {
+                throw new GradleException("Forbidden entry in combined plugin classpath: ${forbidden}")
+            }
+        }
+        if (normalized.any { it ==~ /.*[\\/](gt-|geotools).*\.jar/ }) {
+            throw new GradleException('Raw GeoTools libraries must remain in the embedded worker runtime.')
+        }
+        Set<String> hostAssertionEntries = configurations.testRuntimeClasspath.files.collect {
+            it.toPath().toAbsolutePath().normalize().toString()
+        }.findAll { it.toLowerCase(Locale.ROOT).matches('.*(geotools|/gt-[^/]+\\.jar).*') } as Set
+        if (!Collections.disjoint(normalized as Set, hostAssertionEntries)) {
+            throw new GradleException('Host GeoTools assertion libraries leaked into the combined child-build classpath.')
+        }
+    }
+}
+
+tasks.named('test', Test).configure {
+    // TestKit uses a long-lived Tooling API daemon. Recycle the test worker
+    // after each class so classloaders from previous child builds cannot
+    // accumulate in that daemon, while keeping one shared TestKit cache.
+    forkEvery = 1
+    maxParallelForks = 1
+    dependsOn tasks.named('writeCombinedPluginClasspath'), sourceTestKitLifecycle.prepare
+    finalizedBy sourceTestKitLifecycle.cleanup
+    systemProperty 'gretl.test.executionMode', 'PLUGIN_CLASSPATH'
+    systemProperty 'gretl.test.explicitPluginClasspath', combinedClasspathFile.get().asFile.absolutePath
+    systemProperty 'gretl.test.testKitDirectory', sourceTestKitDirectory.get().asFile.absolutePath
+    systemProperty 'gretl.test.combined', 'true'
+    useJUnitPlatform { excludeTags 'published-artifact-only' }
+}
+
+tasks.register('publishedArtifactTest', Test) {
+    group = 'verification'
+    description = 'Runs the combined suite against the isolated published-test Maven repository.'
+    // Keep TestKit daemon memory bounded without duplicating the Gradle User
+    // Home for every JUnit method.
+    forkEvery = 1
+    maxParallelForks = 1
+    dependsOn rootProject.tasks.named('verifyPublishedTestRepository')
+    dependsOn tasks.named('assertCombinedPluginClasspathIsolation'), publishedTestKitLifecycle.prepare
+    finalizedBy publishedTestKitLifecycle.cleanup
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'gretl.test.executionMode', 'PUBLISHED_ARTIFACT'
+    systemProperty 'gretl.test.publishedRepository', publishedRepository.get().asFile.absolutePath
+    systemProperty 'gretl.test.pluginVersion', rootProject.version.toString()
+    systemProperty 'gretl.test.testKitDirectory', publishedTestKitDirectory.get().asFile.absolutePath
+    systemProperty 'gretl.test.combined', 'true'
+    inputs.dir(publishedRepository)
+    inputs.property('gretlPluginVersion', rootProject.provider { rootProject.version.toString() })
+    useJUnitPlatform()
+}
+
+tasks.register('combinedConfigurationCacheTest', Test) {
+    group = 'verification'
+    description = 'Runs the combined pipeline configuration-cache canary.'
+    dependsOn tasks.named('writeCombinedPluginClasspath'), configurationCacheTestKitLifecycle.prepare
+    finalizedBy configurationCacheTestKitLifecycle.cleanup
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter { includeTestsMatching 'ch.so.agi.gretl.combined.CoreGeoToolsPipelineFunctionalTest' }
+    systemProperty 'gretl.test.executionMode', 'PLUGIN_CLASSPATH'
+    systemProperty 'gretl.test.explicitPluginClasspath', combinedClasspathFile.get().asFile.absolutePath
+    systemProperty 'gretl.test.testKitDirectory', configurationCacheTestKitDirectory.get().asFile.absolutePath
+    systemProperty 'gretl.test.combined', 'true'
+    useJUnitPlatform()
+}
+
+tasks.register('assertCombinedTestsNotPublished') {
+    group = 'verification'
+    description = 'Fails if the internal combined-test module is present in a publication repository.'
+    doLast {
+        [rootProject.layout.buildDirectory.dir('published-test/maven-repo').get().asFile,
+         rootProject.layout.buildDirectory.dir('runtime-image/maven-repo').get().asFile].each { repository ->
+            if (repository.exists()) {
+                List<File> forbidden = []
+                repository.eachFileRecurse { File file ->
+                    if (file.name.contains('gretl-combined-tests')) {
+                        forbidden << file
+                    }
+                }
+                if (!forbidden.isEmpty()) {
+                    throw new GradleException("Internal test module was published: ${forbidden.unique()}")
+                }
+            }
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('assertCombinedPluginClasspathIsolation')
+}

@@ -6,10 +6,14 @@ import org.gradle.testkit.runner.GradleRunner;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 abstract class AbstractGradleBuildExecutor implements GretlBuildExecutor {
+    static final String DEFAULT_TEST_KIT_JVM_ARGS = GretlTestSystemProperties.DEFAULT_GRADLE_JVM_ARGS;
+
     @Override
     public final BuildResult run(Path projectDirectory, String... arguments) {
         return baseRunner(projectDirectory, arguments).build();
@@ -28,9 +32,12 @@ abstract class AbstractGradleBuildExecutor implements GretlBuildExecutor {
             throw new IllegalArgumentException(
                     "Gradle test project must be an existing directory: " + projectDirectory);
         }
+        Map<String, String> environment = new HashMap<>(System.getenv());
+
         return customize(GradleRunner.create()
                 .withProjectDir(projectDirectory.toFile())
                 .withArguments(normalizeArguments(arguments))
+                .withEnvironment(environment)
                 .forwardOutput());
     }
 
@@ -44,6 +51,19 @@ abstract class AbstractGradleBuildExecutor implements GretlBuildExecutor {
                 throw new IllegalArgumentException("Gradle arguments must not contain null.");
             }
             normalized.add(argument);
+        }
+        if (normalized.stream().noneMatch(argument -> argument.startsWith("-Dorg.gradle.jvmargs="))) {
+            String configuredJvmArgs = System.getProperty(
+                    GretlTestSystemProperties.GRADLE_JVM_ARGS, DEFAULT_TEST_KIT_JVM_ARGS).trim();
+            if (configuredJvmArgs.isEmpty()) {
+                throw new IllegalStateException(
+                        "TestKit JVM arguments must not be empty. Configure "
+                                + GretlTestSystemProperties.GRADLE_JVM_ARGS + ".");
+            }
+            normalized.add(0, "-Dorg.gradle.jvmargs=" + configuredJvmArgs);
+        }
+        if (normalized.stream().noneMatch(argument -> argument.equals("-Dorg.gradle.daemon=false"))) {
+            normalized.add(0, "-Dorg.gradle.daemon=false");
         }
         if (!normalized.contains("--stacktrace") && !normalized.contains("-s")) {
             normalized.add("--stacktrace");

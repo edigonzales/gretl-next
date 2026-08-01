@@ -9,6 +9,10 @@ public final class GretlTestTags {
     public static final String REQUIRES_FTP = "requires-ftp";
     public static final String REQUIRES_S3 = "requires-s3";
     public static final String REQUIRES_HTTP = "requires-http";
+    public static final String COMBINED_PLUGIN = "combined-plugin";
+    public static final String PUBLISHED_ARTIFACT_ONLY = "published-artifact-only";
+    public static final String SOURCE_CLASSPATH_ONLY = "source-classpath-only";
+    public static final String CONFIGURATION_CACHE = "configuration-cache";
 
     private GretlTestTags() {
     }

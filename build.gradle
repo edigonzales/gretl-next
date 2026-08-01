@@ -7,6 +7,8 @@ group = 'ch.so.agi'
 version = '5.0.0-SNAPSHOT'
 
 def publishedTestRepoDir = layout.buildDirectory.dir('published-test/maven-repo')
+def testKitJvmArgs = providers.gradleProperty('gretlTestKitJvmArgs')
+        .orElse('-Xmx768m -XX:MaxMetaspaceSize=512m')
 
 def publishUsername = providers.gradleProperty('gretlPublishUsername')
         .orElse(providers.environmentVariable('GRETL_PUBLISH_USERNAME'))
@@ -103,6 +105,7 @@ subprojects {
 
         tasks.withType(Test).configureEach {
             useJUnitPlatform()
+            systemProperty 'gretl.test.gradleJvmArgs', testKitJvmArgs.get()
         }
     }
 }
@@ -555,6 +558,21 @@ tasks.register('publishedArtifactTest') {
     dependsOn ':gretl-core:publishedFunctionalTest'
     dependsOn ':gretl-core:publishedIntegrationTest'
     dependsOn ':gretl-geotools:publishedFunctionalTest'
+    dependsOn ':gretl-combined-tests:publishedArtifactTest'
+    dependsOn ':gretl-combined-tests:assertCombinedTestsNotPublished'
+}
+
+tasks.register('coreGeoToolsCombinedTest') {
+    group = 'verification'
+    description = 'Runs the complete combined Core and GeoTools P0 test suite.'
+    dependsOn ':gretl-combined-tests:test'
+    dependsOn ':gretl-combined-tests:publishedArtifactTest'
+    dependsOn ':gretl-combined-tests:combinedConfigurationCacheTest'
+    dependsOn ':gretl-combined-tests:assertCombinedTestsNotPublished'
+}
+
+tasks.named('check').configure {
+    dependsOn ':gretl-combined-tests:test'
 }
 
 def sha256File = { File file ->

@@ -5,8 +5,10 @@ import ch.so.agi.gretl.doclet.api.GretlTaskDoc;
 import ch.so.agi.gretl.doclet.api.LocaleText;
 import ch.so.agi.gretl.geotools.internal.operations.RasterReclassifyRequest;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
@@ -45,13 +47,13 @@ public abstract class RasterReclassify extends GeoToolsTask {
     @GretlDslMethod(required = true, description = "Configures the input raster file.",
             descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Eingabe-Rasterdatei.") })
     public void inputRaster(Object path) {
-        getInputRaster().set(getProject().file(path));
+        setRegularFile(getInputRaster(), path);
     }
 
     @GretlDslMethod(required = true, description = "Configures the output raster file.",
             descriptions = { @LocaleText(locale = "de_CH", value = "Konfiguriert die Ausgabe-Rasterdatei.") })
     public void outputRaster(Object path) {
-        getOutputRaster().set(getProject().file(path));
+        setRegularFile(getOutputRaster(), path);
     }
 
     @GretlDslMethod(defaultValue = "0, 55, 60, 65, 70, 500", description = "Specifies strictly increasing class break values.",
@@ -104,5 +106,22 @@ public abstract class RasterReclassify extends GeoToolsTask {
                 throw new IllegalStateException("breaks must be strictly increasing");
             }
         }
+    }
+
+    /**
+     * Accepts normal Gradle file notation and preserves producer metadata when
+     * a Provider&lt;RegularFile&gt; is supplied by another task.
+     */
+    private void setRegularFile(RegularFileProperty property, Object path) {
+        if (path == null) {
+            throw new IllegalArgumentException("raster path must not be null");
+        }
+        if (path instanceof Provider<?> provider) {
+            @SuppressWarnings("unchecked")
+            Provider<RegularFile> regularFileProvider = (Provider<RegularFile>) provider;
+            property.set(regularFileProvider);
+            return;
+        }
+        property.set(getProject().file(path));
     }
 }

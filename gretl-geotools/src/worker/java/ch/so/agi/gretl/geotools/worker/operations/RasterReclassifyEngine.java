@@ -2,11 +2,18 @@ package ch.so.agi.gretl.geotools.worker.operations;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.util.CoverageUtilities;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridFormatFinder;
 import org.geotools.gce.geotiff.GeoTiffWriter;
@@ -125,6 +132,7 @@ public class RasterReclassifyEngine {
         try {
             reader = format.getReader(inputPath.toFile());
             cov = reader.read((GeneralParameterValue[]) null);
+            cov = attachAsciiGridNoData(inputPath, cov);
         } finally {
             if (reader != null) {
                 reader.dispose();
@@ -163,5 +171,38 @@ public class RasterReclassifyEngine {
             classValues[i] = (int) Math.round(breaks[i]);
         }
         return classValues;
+    }
+
+    private static GridCoverage2D attachAsciiGridNoData(Path inputPath, GridCoverage2D coverage) {
+        Double noData = readAsciiGridNoData(inputPath);
+        if (noData == null || CoverageUtilities.getNoDataProperty(coverage) != null) {
+            return coverage;
+        }
+        Map<String, Object> properties = new HashMap<>(coverage.getProperties());
+        CoverageUtilities.setNoDataProperty(properties, noData);
+        return new GridCoverageFactory().create(
+                coverage.getName(),
+                coverage.getRenderedImage(),
+                coverage.getGridGeometry(),
+                coverage.getSampleDimensions(),
+                new GridCoverage2D[] {coverage},
+                properties);
+    }
+
+    private static Double readAsciiGridNoData(Path inputPath) {
+        if (!inputPath.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".asc")) {
+            return null;
+        }
+        try {
+            for (String line : Files.readAllLines(inputPath, StandardCharsets.UTF_8).stream().limit(12).toList()) {
+                String[] parts = line.trim().split("\\s+");
+                if (parts.length >= 2 && parts[0].equalsIgnoreCase("NODATA_value")) {
+                    return Double.parseDouble(parts[1]);
+                }
+            }
+        } catch (IOException | NumberFormatException ignored) {
+            // The raster reader remains the source of truth for non-standard files.
+        }
+        return null;
     }
 }

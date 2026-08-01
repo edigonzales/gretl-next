@@ -10,8 +10,20 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.process.raster.RangeLookupProcess;
 import org.eclipse.imagen.media.range.Range;
 import org.eclipse.imagen.media.range.RangeFactory;
+import org.eclipse.imagen.media.range.NoDataContainer;
+
 
 import java.awt.image.RenderedImage;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.awt.image.BufferedImage;
+import java.awt.image.BandedSampleModel;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.color.ColorSpace;
+import java.awt.Transparency;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,6 +87,12 @@ public final class RasterReclassifyOperation {
                 Double.valueOf(noData),
                 (ProgressListener) null
         );
+
+        // RangeLookupProcess assigns the fallback value to values outside all
+        // ranges, but some ArcGrid readers expose the declared source NoData
+        // cell as an ordinary sample. Preserve that semantic marker explicitly
+        // before publishing the output coverage.
+        coverage = replaceSourceNoData(source, coverage, band, noData);
         HashMap<String, Object> properties = new HashMap<>(coverage.getProperties());
         CoverageUtilities.setNoDataProperty(properties, Double.valueOf(noData));
         GridCoverageFactory factory = new GridCoverageFactory();
@@ -86,6 +104,58 @@ public final class RasterReclassifyOperation {
                 new GridCoverage2D[] {coverage},
                 properties
         );
+    }
+
+    private static GridCoverage2D replaceSourceNoData(
+            GridCoverage2D source,
+            GridCoverage2D result,
+            int band,
+            double outputNoData) {
+        NoDataContainer sourceNoDataProperty = CoverageUtilities.getNoDataProperty(source);
+        double[] sourceNoData = sourceNoDataProperty == null
+                ? null : sourceNoDataProperty.getAsArray();
+        if (sourceNoData == null || sourceNoData.length == 0) {
+            return result;
+        }
+
+        BufferedImage image = createIntImage(result.getRenderedImage());
+        Raster sourceRaster = source.getRenderedImage().getData();
+        Raster resultSourceRaster = result.getRenderedImage().getData();
+        WritableRaster resultRaster = image.getRaster();
+        for (int row = 0; row < sourceRaster.getHeight(); row++) {
+            for (int column = 0; column < sourceRaster.getWidth(); column++) {
+                resultRaster.setSample(column, row, 0,
+                        resultSourceRaster.getSampleDouble(column, row, 0));
+                double value = sourceRaster.getSampleDouble(column, row, band);
+                for (double noData : sourceNoData) {
+                    if (Double.compare(value, noData) == 0) {
+                        resultRaster.setSample(column, row, 0, outputNoData);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return new GridCoverageFactory().create(
+                result.getName(),
+                image,
+                result.getGridGeometry(),
+                result.getSampleDimensions(),
+                new GridCoverage2D[] {result},
+                result.getProperties());
+    }
+
+    private static BufferedImage createIntImage(RenderedImage source) {
+        int width = source.getWidth();
+        int height = source.getHeight();
+        BandedSampleModel sampleModel = new BandedSampleModel(
+                DataBuffer.TYPE_INT, width, height, 1);
+        DataBufferInt dataBuffer = new DataBufferInt(width * height);
+        WritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer, null);
+        ColorModel colorModel = new ComponentColorModel(
+                ColorSpace.getInstance(ColorSpace.CS_GRAY),
+                new int[] {32}, false, false, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+        return new BufferedImage(colorModel, raster, false, null);
     }
 
     /**
@@ -157,6 +227,13 @@ public final class RasterReclassifyOperation {
         }
 
         GridCoverageFactory gcf = new GridCoverageFactory();
-        return gcf.create(src.getName().toString(), src.getRenderedImage(), refEnv);
+        HashMap<String, Object> properties = new HashMap<>(src.getProperties());
+        return gcf.create(
+                src.getName().toString(),
+                src.getRenderedImage(),
+                refEnv,
+                src.getSampleDimensions(),
+                new GridCoverage2D[] {src},
+                properties);
     }
 }
