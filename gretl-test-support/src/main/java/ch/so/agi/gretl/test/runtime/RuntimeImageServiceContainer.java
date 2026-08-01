@@ -67,7 +67,8 @@ public final class RuntimeImageServiceContainer implements AutoCloseable {
                 "--label", "ch.so.agi.gretl.test.run=" + runId,
                 "--mount", "type=bind,src=" + jobsRoot.toAbsolutePath().normalize() + ",dst=/home/gradle/project",
                 "--mount", "type=bind,src=" + gradleUserHome.toAbsolutePath().normalize() + ",dst=/home/gradle/.gradle",
-                "--workdir", "/home/gradle/project"));
+                "--workdir", "/home/gradle/project",
+                "--env", "GRADLE_USER_HOME=/home/gradle/.gradle"));
         additionalReadOnlyMounts.forEach((host, target) -> command.addAll(List.of(
                 "--mount", "type=bind,src=" + host.toAbsolutePath().normalize() + ",dst=" + target + ",readonly")));
         user.ifPresent(value -> command.addAll(List.of("--user", value)));

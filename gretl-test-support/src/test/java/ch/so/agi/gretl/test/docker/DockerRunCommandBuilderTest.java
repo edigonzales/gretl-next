@@ -20,28 +20,30 @@ class DockerRunCommandBuilderTest {
     Path temp;
 
     @Test
-    void buildsOfflineCommandWithImmutableImageAndIsolatedHomes() throws Exception {
+    void defaultRequestOmitsNetworkWithImmutableImageAndIsolatedHomes() throws Exception {
         Path project = Files.createDirectory(temp.resolve("project"));
         Path gradleHome = Files.createDirectory(temp.resolve("gradle"));
         List<String> command = new DockerRunCommandBuilder().build(new DockerRunRequest(
                 "sha256:" + "a".repeat(64), "gretl-test", project, gradleHome,
-                List.of("--offline", "task with spaces"), Map.of("SECRET", "value"), Optional.empty(), true,
+                List.of("--offline", "task with spaces"), Map.of("SECRET", "value"), Optional.empty(),
                 Optional.of("1000:1000"), Duration.ofMinutes(1), Set.of("value"), Map.of(), Map.of()));
 
         assertTrue(command.contains("--pull=never"));
-        assertTrue(command.contains("--network"));
-        assertTrue(command.contains("none"));
+        assertFalse(command.contains("--network"));
+        assertFalse(command.contains("none"));
         assertTrue(command.contains("sha256:" + "a".repeat(64)));
         assertTrue(command.contains("task with spaces"));
         assertFalse(command.stream().anyMatch(value -> value.equals("--no-daemon")));
     }
 
     @Test
-    void rejectsConflictingNetworkOptions() throws Exception {
+    void namedNetworkAddsNetworkOption() throws Exception {
         Path project = Files.createDirectory(temp.resolve("project"));
         Path gradleHome = Files.createDirectory(temp.resolve("gradle"));
-        assertThrows(IllegalArgumentException.class, () -> new DockerRunRequest(
-                "image", "name", project, gradleHome, List.of(), Map.of(), Optional.of("network"), true,
+        List<String> command = new DockerRunCommandBuilder().build(new DockerRunRequest(
+                "image", "name", project, gradleHome, List.of(), Map.of(), Optional.of("network"),
                 Optional.empty(), Duration.ofSeconds(1), Set.of(), Map.of(), Map.of()));
+        assertTrue(command.contains("--network"));
+        assertTrue(command.contains("network"));
     }
 }

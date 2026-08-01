@@ -1,5 +1,3 @@
-import java.net.URI
-
 def bundledGretlVersion = System.getenv('GRETL_VERSION')
 def requestedGretlVersion = System.getProperty('gretl.version')
 def gretlVersion = requestedGretlVersion ?: bundledGretlVersion
@@ -7,25 +5,17 @@ if (!gretlVersion) {
     throw new GradleException('GRETL bundled version is missing from the image.')
 }
 if (requestedGretlVersion && requestedGretlVersion != bundledGretlVersion) {
-    throw new GradleException("Requested GRETL version ${requestedGretlVersion} does not match bundled version ${bundledGretlVersion}.")
+    throw new GradleException("Requested GRETL plugin version ${requestedGretlVersion} is not bundled. "
+            + "Bundled version: ${bundledGretlVersion}. Gradle dependency downloads are disabled.")
 }
 def localPluginRepository = new File(System.getProperty('gretl.mavenRepo', '/opt/gretl/maven-repository'))
 if (!localPluginRepository.isDirectory()) {
     throw new GradleException("GRETL plugin repository is missing for version ${gretlVersion}: ${localPluginRepository}")
 }
-def strictOffline = System.getProperty('gretl.image.offline', 'false').toBoolean()
-        || (System.getenv('GRETL_IMAGE_OFFLINE') ?: 'false').toBoolean()
-
 def configureGretlRepositories = { repositories ->
     repositories.maven {
         name = 'gretlImagePlugins'
         url = localPluginRepository.toURI()
-    }
-    if (!strictOffline) {
-        repositories.maven { url = URI.create('https://jars.sogeo.services/mirror') }
-        repositories.maven { url = URI.create('https://repo.osgeo.org/repository/release/') }
-        repositories.maven { url = URI.create('https://maven.geo-solutions.it') }
-        repositories.mavenCentral()
     }
 }
 
@@ -33,8 +23,15 @@ gradle.beforeSettings { settings ->
     settings.pluginManagement {
         repositories {
             configureGretlRepositories(delegate)
-            if (!strictOffline) {
-                gradlePluginPortal()
+        }
+        resolutionStrategy {
+            eachPlugin { pluginRequest ->
+                if (pluginRequest.requested.id.id in ['ch.so.agi.gretl', 'ch.so.agi.gretl.geotools']
+                        && pluginRequest.requested.version
+                        && pluginRequest.requested.version != gretlVersion) {
+                    throw new GradleException("Requested GRETL plugin version ${pluginRequest.requested.version} is not bundled. "
+                            + "Bundled version: ${gretlVersion}. Gradle dependency downloads are disabled.")
+                }
             }
         }
         plugins {
@@ -42,12 +39,12 @@ gradle.beforeSettings { settings ->
             id 'ch.so.agi.gretl.geotools' version gretlVersion
         }
     }
-        settings.dependencyResolutionManagement {
-            repositories {
-                maven {
-                    name = 'gretlImageDependencies'
-                    url = localPluginRepository.toURI()
-                }
+    settings.dependencyResolutionManagement {
+        repositories {
+            maven {
+                name = 'gretlImageDependencies'
+                url = localPluginRepository.toURI()
             }
         }
     }
+}

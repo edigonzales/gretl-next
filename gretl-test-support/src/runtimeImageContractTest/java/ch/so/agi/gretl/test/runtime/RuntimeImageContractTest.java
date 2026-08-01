@@ -109,9 +109,9 @@ class RuntimeImageContractTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
         GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)
-                .arguments("--no-daemon", "--offline", "--rerun-tasks", "writeMarker")
+                .arguments("--rerun-tasks", "writeMarker")
                 .timeout(Duration.ofMinutes(2))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build());
 
         assertTrue(result.successful(), result.output());
@@ -133,9 +133,9 @@ class RuntimeImageContractTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 image, new DockerCli(), new ContainerUserResolver(), new RuntimeImageGradleArguments());
         GretlBuildResult result = executor.executeAndExpectFailure(GretlBuildRequest.builder(project)
-                .arguments("--no-daemon", "--offline", "failTask")
+                .arguments("failTask")
                 .timeout(Duration.ofMinutes(2))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build());
         assertNotEquals(0, result.exitCode());
         assertTrue(result.output().contains("expected failure"), result.output());

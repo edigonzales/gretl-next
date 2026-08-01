@@ -55,7 +55,7 @@ markers from the isolated Maven repository under
 `build/published-test/maven-repo`. The aggregate `publishedArtifactTest` task
 publishes and verifies both plugins before running those black-box consumer
 projects. It is the published-artifact release gate; it does not test the
-Docker runtime image or full offline operation. The runtime-image level remains
+Docker runtime image or its dependency-closed execution contract. The runtime-image level remains
 a separate deployment gate after the source-classpath and
 published-artifact checks. The generated consumer settings do not use
 `mavenLocal()`.
@@ -79,16 +79,17 @@ Docker is unavailable. The image-test build records the immutable image ID in
 ```bash
 ./gradlew buildRuntimeImageForTest
 ./gradlew runtimeImageContractTest
-./gradlew runtimeImageOfflineTest
+./gradlew runtimeImageDependencyClosureTest
 ./gradlew runtimeImageServiceTest
-./gradlew runtimeImageE2eTest
+./gradlew runtimeImageIntegrationTest
 ```
 
-The default consumer contract is the modern `plugins {}` DSL. Core and GeoTools
-resolve from the structured repository in the image with an empty Gradle home
-and `--offline`. One-shot callers may pass `--no-daemon`; long-lived service
-containers keep the same user and Gradle home so compatible builds reuse the
-Gradle daemon. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
+The default consumer contract is the modern `plugins {}` DSL. The GRETL runtime
+image starts Gradle with `--offline`, which prevents Gradle from downloading
+additional plugins and dependencies while a job is running. It does not disable
+the job's network: jobs may still connect to PostGIS, S3, FTP, HTTP and other
+application services. One-shot and service lifecycle are independent from this
+dependency policy. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
 and the [runtime task coverage matrix](docs/testing/runtime-image-coverage.yaml).
 
 ## Publishing Snapshots

@@ -4,20 +4,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class RuntimeImageGradleArguments {
-    public List<String> arguments(RuntimeInvocationProfile profile, List<String> requested) {
-        List<String> arguments = new ArrayList<>(requested);
-        if (arguments.stream().noneMatch(value -> value.equals("--console=plain"))) {
-            arguments.add("--console=plain");
+    public List<String> arguments(RuntimeExecutionMode executionMode, List<String> requested) {
+        if (executionMode == null) {
+            throw new IllegalArgumentException("executionMode must not be null");
         }
-        switch (profile) {
-            case ONE_SHOT_ONLINE -> addIfAbsent(arguments, "--no-daemon");
-            case ONE_SHOT_OFFLINE -> {
+        if (requested == null) {
+            throw new IllegalArgumentException("requested arguments must not be null");
+        }
+        if (requested.contains("--refresh-dependencies")) {
+            throw new IllegalArgumentException(
+                    "The GRETL runtime image uses bundled-only dependency resolution.\n"
+                            + "Argument '--refresh-dependencies' is not supported.");
+        }
+        List<String> arguments = new ArrayList<>(requested);
+        addIfAbsent(arguments, "--offline");
+        addIfAbsent(arguments, "--console=plain");
+        switch (executionMode) {
+            case ONE_SHOT -> {
+                if (arguments.contains("--daemon")) {
+                    throw new IllegalArgumentException("ONE_SHOT must not use --daemon");
+                }
                 addIfAbsent(arguments, "--no-daemon");
-                addIfAbsent(arguments, "--offline");
             }
-            case LONG_LIVED_DAEMON -> {
-                if (arguments.stream().anyMatch(value -> value.equals("--no-daemon"))) {
-                    throw new IllegalArgumentException("LONG_LIVED_DAEMON must not use --no-daemon");
+            case SERVICE -> {
+                if (arguments.contains("--no-daemon")) {
+                    throw new IllegalArgumentException("SERVICE must not use --no-daemon");
                 }
                 addIfAbsent(arguments, "--daemon");
             }

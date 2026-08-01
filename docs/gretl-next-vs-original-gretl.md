@@ -268,8 +268,8 @@ Die Smoke-Ergebnisse:
 |---|---|
 | Versionslose moderne `plugins {}`-DSL | **Fehler** |
 | Moderne DSL mit `-Dgretl.version=5.0.0-SNAPSHOT` und Netzwerk | Erfolgreich |
-| Moderne DSL mit expliziter Version und `--network none` | **Fehler** |
-| Legacy `apply plugin:` mit `--network none` | Erfolgreich |
+| Moderne DSL mit expliziter Version und dependency-closed Runtime-Image | **Fehler** |
+| Legacy `apply plugin:` mit dependency-closed Runtime-Image | Erfolgreich |
 
 Im erfolgreichen Lauf wurden tatsächlich ausgeführt:
 

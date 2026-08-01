@@ -42,8 +42,8 @@ jobs:
           docker version
           docker info
 
-      - name: Build and test offline GRETL runtime image
-        run: ./gradlew runtimeImageOfflineTest --stacktrace
+      - name: Verify GRETL runtime-image dependency closure
+        run: ./gradlew runtimeImageDependencyClosureTest --stacktrace
 
       - name: Runtime image contract
         run: ./gradlew runtimeImageContractTest --stacktrace
@@ -54,8 +54,8 @@ jobs:
       - name: Runtime image smoke gate
         run: ./gradlew runtimeImageSmokeTest --stacktrace
 
-      - name: Runtime image full E2E gate
-        run: ./gradlew runtimeImageE2eTest --stacktrace
+      - name: Runtime image integration gate
+        run: ./gradlew runtimeImageIntegrationTest --stacktrace
 
       - name: Complete runtime image gate
         run: ./gradlew runtimeImageTest --stacktrace
@@ -86,7 +86,8 @@ jobs:
         with:
           name: runtime-image-test-reports
           path: |
-            build/runtime-image/offline-test/**
+            build/runtime-image/dependency-closure-test/**
+            build/runtime-image/dependency-closure/**
             **/build/reports/tests/runtimeImage*/**
             **/build/test-results/runtimeImage*/**
 

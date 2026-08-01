@@ -2,7 +2,7 @@ package ch.so.agi.gretl.test.runtime;
 
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
-import ch.so.agi.gretl.test.execution.RuntimeImageOfflineExecutor;
+import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
 import ch.so.agi.gretl.test.project.GradleTestProject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RuntimeImageOfflineGeoToolsTest {
+class RuntimeImageGeoToolsTest {
     @TempDir
     Path temporaryDirectory;
 
@@ -70,11 +70,14 @@ class RuntimeImageOfflineGeoToolsTest {
     }
 
     private GretlBuildResult run(GradleTestProject project, String task, Duration timeout) {
-        return new RuntimeImageOfflineExecutor(RuntimeImageDescriptor.fromSystemProperties()).execute(
+        return new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
+                new ch.so.agi.gretl.test.docker.DockerCli(),
+                new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments()).execute(
                 GretlBuildRequest.builder(project.directory())
                         .arguments(List.of("--rerun-tasks", task))
                         .timeout(timeout)
-                        .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                        .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                         .build());
     }
 

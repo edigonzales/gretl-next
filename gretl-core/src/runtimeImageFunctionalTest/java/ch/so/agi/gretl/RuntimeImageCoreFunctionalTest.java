@@ -64,7 +64,7 @@ class RuntimeImageCoreFunctionalTest {
     }
 
     @Test
-    void loadsDuckDbSpatialExtensionOffline() throws Exception {
+    void loadsDuckDbSpatialExtension() throws Exception {
         writeSettings();
         Files.writeString(project.resolve("spatial.sql"), """
                 LOAD spatial;
@@ -92,9 +92,9 @@ class RuntimeImageCoreFunctionalTest {
 
     private GretlBuildRequest request(String task) {
         return GretlBuildRequest.builder(project)
-                .arguments("--no-daemon", "--offline", "--rerun-tasks", task)
+                .arguments("--rerun-tasks", task)
                 .timeout(Duration.ofMinutes(5))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build();
     }
 

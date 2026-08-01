@@ -156,19 +156,21 @@ The staged image contains:
 
 - Java 17 runtime
 - Gradle 7.6.4
-- `/home/gradle/init.gradle`
+- `/opt/gretl/init/gretl.init.gradle`
 - structured local Maven repository under `/opt/gretl/maven-repository`,
   including plugin markers, implementation metadata and the resolved runtime
   dependency closure
 - `/usr/local/bin/gretl`, a small Gradle runner
 
-The runner uses the bundled init script but is daemon-neutral:
+The runner uses the bundled init script and always enables dependency-closed
+Gradle resolution:
 
 ```bash
-gradle --init-script /home/gradle/init.gradle "$@"
+gradle --offline --init-script /opt/gretl/init/gretl.init.gradle "$@"
 ```
 
-Callers can choose `--no-daemon --offline` for one-shot or diagnostic runs. A
+The runtime launcher always supplies Gradle `--offline`; lifecycle callers select
+one-shot or service mode independently. A
 long-lived service container can keep the same `GRADLE_USER_HOME` and reuse a
 compatible Gradle daemon across `docker exec` builds.
 
@@ -183,8 +185,8 @@ plugins {
 ```
 
 It does not inject arbitrary JARs into buildscript classpaths and does not use
-`mavenLocal()` by default. Consumer repositories remain additive so additional
-modern Gradle plugins can be resolved by the consumer project.
+`mavenLocal()` or remote Gradle repositories. Consumer repositories remain
+additive for additional artifacts already available to the job.
 
 ## Verification
 

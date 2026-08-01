@@ -20,11 +20,7 @@ public final class DockerRunCommandBuilder {
         for (Map.Entry<String, String> environment : request.environment().entrySet()) {
             command.addAll(List.of("--env", environment.getKey() + "=" + environment.getValue()));
         }
-        if (request.networkDisabled()) {
-            command.addAll(List.of("--network", "none"));
-        } else {
-            command.addAll(List.of("--network", request.network().orElseThrow()));
-        }
+        request.network().ifPresent(network -> command.addAll(List.of("--network", network)));
         command.add(request.imageReference());
         command.addAll(request.commandArguments());
         return List.copyOf(command);

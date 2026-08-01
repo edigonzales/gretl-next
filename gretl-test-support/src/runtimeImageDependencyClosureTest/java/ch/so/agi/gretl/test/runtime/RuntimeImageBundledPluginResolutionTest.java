@@ -2,7 +2,7 @@ package ch.so.agi.gretl.test.runtime;
 
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
-import ch.so.agi.gretl.test.execution.RuntimeImageOfflineExecutor;
+import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
 import ch.so.agi.gretl.test.project.GradleTestProject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,92 +18,92 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RuntimeImageOfflineResolutionTest {
+class RuntimeImageBundledPluginResolutionTest {
     @TempDir
     Path temporaryDirectory;
 
     @Test
-    void appliesCorePluginWithVersionlessGroovyDslOffline() throws Exception {
+    void appliesCorePluginWithVersionlessGroovyDsl() throws Exception {
         GradleTestProject project = project("core-groovy");
         project.settingsGroovy("rootProject.name = 'core-groovy'\n")
                 .buildGroovy("""
                         plugins { id 'ch.so.agi.gretl' }
-                        tasks.register('writeOffline') {
+                        tasks.register('writeMarker') {
                             doLast {
-                                def output = file('build/offline.txt')
+                                def output = file('build/marker.txt')
                                 output.parentFile.mkdirs()
                                 output.text = 'core'
                             }
                         }
                         """);
-        GretlBuildResult result = run(project, "writeOffline");
+        GretlBuildResult result = run(project, "writeMarker");
         assertTrue(result.successful(), result.output());
-        assertTrue(Files.exists(project.path("build/offline.txt")));
+        assertTrue(Files.exists(project.path("build/marker.txt")));
         assertNoDownload(result);
     }
 
     @Test
-    void appliesCorePluginWithKotlinDslOffline() throws Exception {
+    void appliesCorePluginWithKotlinDsl() throws Exception {
         GradleTestProject project = project("core-kotlin");
         project.settingsKotlin("rootProject.name = \"core-kotlin\"\n")
                 .buildKotlin("""
                         plugins { id("ch.so.agi.gretl") }
-                        tasks.register("writeOffline") {
+                        tasks.register("writeMarker") {
                             doLast {
-                                val output = file("build/offline.txt")
+                                val output = file("build/marker.txt")
                                 output.parentFile.mkdirs()
                                 output.writeText("kotlin")
                             }
                         }
                         """);
-        GretlBuildResult result = run(project, "writeOffline");
+        GretlBuildResult result = run(project, "writeMarker");
         assertTrue(result.successful(), result.output());
-        assertTrue(Files.exists(project.path("build/offline.txt")));
+        assertTrue(Files.exists(project.path("build/marker.txt")));
         assertNoDownload(result);
     }
 
     @Test
-    void appliesCorePluginWithExplicitVersionGroovyDslOffline() throws Exception {
+    void appliesCorePluginWithExplicitVersionGroovyDsl() throws Exception {
         String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
         GradleTestProject project = project("core-groovy-explicit");
         project.settingsGroovy("rootProject.name = 'core-groovy-explicit'\n")
                 .buildGroovy("""
                         plugins { id 'ch.so.agi.gretl' version '%s' }
-                        tasks.register('writeOffline') {
+                        tasks.register('writeMarker') {
                             doLast {
-                                def output = file('build/offline.txt')
+                                def output = file('build/marker.txt')
                                 output.parentFile.mkdirs()
                                 output.text = 'core'
                             }
                         }
                         """.formatted(version));
-        GretlBuildResult result = run(project, "writeOffline");
+        GretlBuildResult result = run(project, "writeMarker");
         assertTrue(result.successful(), result.output());
         assertNoDownload(result);
     }
 
     @Test
-    void appliesCorePluginWithExplicitVersionKotlinDslOffline() throws Exception {
+    void appliesCorePluginWithExplicitVersionKotlinDsl() throws Exception {
         String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
         GradleTestProject project = project("core-kotlin-explicit");
         project.settingsKotlin("rootProject.name = \"core-kotlin-explicit\"\n")
                 .buildKotlin("""
                         plugins { id("ch.so.agi.gretl") version "%s" }
-                        tasks.register("writeOffline") {
+                        tasks.register("writeMarker") {
                             doLast {
-                                val output = file("build/offline.txt")
+                                val output = file("build/marker.txt")
                                 output.parentFile.mkdirs()
                                 output.writeText("kotlin")
                             }
                         }
                         """.formatted(version));
-        GretlBuildResult result = run(project, "writeOffline");
+        GretlBuildResult result = run(project, "writeMarker");
         assertTrue(result.successful(), result.output());
         assertNoDownload(result);
     }
 
     @Test
-    void appliesGeotoolsPluginAndRunsWorkerCanaryOffline() throws Exception {
+    void appliesGeotoolsPluginAndRunsWorkerCanary() throws Exception {
         GradleTestProject project = project("geotools-groovy");
         project.settingsGroovy("rootProject.name = 'geotools-groovy'\n")
                 .buildGroovy("""
@@ -127,7 +127,7 @@ class RuntimeImageOfflineResolutionTest {
     }
 
     @Test
-    void appliesGeotoolsPluginWithExplicitVersionGroovyDslOffline() throws Exception {
+    void appliesGeotoolsPluginWithExplicitVersionGroovyDsl() throws Exception {
         String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
         GradleTestProject project = project("geotools-groovy-explicit");
         project.settingsGroovy("rootProject.name = 'geotools-groovy-explicit'\n")
@@ -150,7 +150,7 @@ class RuntimeImageOfflineResolutionTest {
     }
 
     @Test
-    void appliesGeotoolsPluginWithVersionlessKotlinDslOffline() throws Exception {
+    void appliesGeotoolsPluginWithVersionlessKotlinDsl() throws Exception {
         GradleTestProject project = project("geotools-kotlin");
         project.settingsKotlin("rootProject.name = \"geotools-kotlin\"\n")
                 .buildKotlin("""
@@ -172,7 +172,7 @@ class RuntimeImageOfflineResolutionTest {
     }
 
     @Test
-    void appliesGeotoolsPluginWithExplicitVersionKotlinDslOffline() throws Exception {
+    void appliesGeotoolsPluginWithExplicitVersionKotlinDsl() throws Exception {
         String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
         GradleTestProject project = project("geotools-kotlin-explicit");
         project.settingsKotlin("rootProject.name = \"geotools-kotlin-explicit\"\n")
@@ -199,9 +199,45 @@ class RuntimeImageOfflineResolutionTest {
         GradleTestProject project = project("missing-repository");
         project.settingsGroovy("rootProject.name = 'missing-repository'\n")
                 .buildGroovy("plugins { id 'ch.so.agi.gretl' }\n");
-        GretlBuildResult result = runAndFail(project, "-Dgretl.mavenRepo=/tmp/gretl-e2e-repository-does-not-exist", "--offline", "tasks");
+        GretlBuildResult result = runAndFail(project, "-Dgretl.mavenRepo=/tmp/gretl-e2e-repository-does-not-exist", "tasks");
         assertFalse(result.successful());
         assertTrue(result.output().contains("GRETL plugin repository"), result.output());
+        assertNoDownload(result);
+    }
+
+    @Test
+    void rejectsDifferentBundledCoreVersion() throws Exception {
+        GradleTestProject project = project("not-bundled-version");
+        project.settingsGroovy("rootProject.name = 'not-bundled-version'\n")
+                .buildGroovy("plugins { id 'ch.so.agi.gretl' version '999.0.0' }\n");
+
+        GretlBuildResult result = runAndFail(project, "tasks");
+
+        assertTrue(result.output().contains("Requested GRETL plugin version 999.0.0 is not bundled."), result.output());
+        assertTrue(result.output().contains("Gradle dependency downloads are disabled."), result.output());
+    }
+
+    @Test
+    void rejectsNonBundledGretlPlugin() throws Exception {
+        GradleTestProject project = project("not-bundled-gretl-plugin");
+        project.settingsGroovy("rootProject.name = 'not-bundled-gretl-plugin'\n")
+                .buildGroovy("plugins { id 'ch.so.agi.gretl.notbundled' version '1.0.0' }\n");
+
+        GretlBuildResult result = runAndFail(project, "tasks");
+
+        assertTrue(result.output().contains("ch.so.agi.gretl.notbundled"), result.output());
+        assertNoDownload(result);
+    }
+
+    @Test
+    void rejectsNonBundledThirdPartyPlugin() throws Exception {
+        GradleTestProject project = project("not-bundled-third-party");
+        project.settingsGroovy("rootProject.name = 'not-bundled-third-party'\n")
+                .buildGroovy("plugins { id 'com.example.not-bundled' version '1.0.0' }\n");
+
+        GretlBuildResult result = runAndFail(project, "tasks");
+
+        assertTrue(result.output().contains("com.example.not-bundled"), result.output());
         assertNoDownload(result);
     }
 
@@ -211,25 +247,31 @@ class RuntimeImageOfflineResolutionTest {
 
     private GretlBuildResult run(GradleTestProject project, String... requestedArguments) {
         RuntimeImageDescriptor image = RuntimeImageDescriptor.fromSystemProperties();
-        RuntimeImageOfflineExecutor executor = new RuntimeImageOfflineExecutor(image);
-        List<String> arguments = new ArrayList<>(List.of("--no-daemon", "--offline", "--rerun-tasks"));
+        RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image,
+                new ch.so.agi.gretl.test.docker.DockerCli(),
+                new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
+        List<String> arguments = new ArrayList<>(List.of("--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.execute(GretlBuildRequest.builder(project.directory())
                 .arguments(arguments)
                 .timeout(Duration.ofMinutes(5))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build());
     }
 
     private GretlBuildResult runAndFail(GradleTestProject project, String... requestedArguments) {
         RuntimeImageDescriptor image = RuntimeImageDescriptor.fromSystemProperties();
-        RuntimeImageOfflineExecutor executor = new RuntimeImageOfflineExecutor(image);
-        List<String> arguments = new ArrayList<>(List.of("--no-daemon", "--offline", "--rerun-tasks"));
+        RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image,
+                new ch.so.agi.gretl.test.docker.DockerCli(),
+                new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
+        List<String> arguments = new ArrayList<>(List.of("--rerun-tasks"));
         arguments.addAll(Arrays.asList(requestedArguments));
         return executor.executeAndExpectFailure(GretlBuildRequest.builder(project.directory())
                 .arguments(arguments)
                 .timeout(Duration.ofMinutes(5))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build());
     }
 

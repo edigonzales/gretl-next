@@ -43,10 +43,10 @@ class RuntimeImageAdditionalPluginTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(), new ContainerUserResolver(),
                 new RuntimeImageGradleArguments());
-        RuntimeImageRunOptions options = RuntimeImageRunOptions.offline()
+        RuntimeImageRunOptions options = RuntimeImageRunOptions.defaults()
                 .withReadOnlyMount(repository, "/fixture/plugin-repo");
         GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)
-                .arguments("--no-daemon", "--offline", "--rerun-tasks", "combined")
+                .arguments("--rerun-tasks", "combined")
                 .timeout(Duration.ofMinutes(3))
                 .runtimeImageOptions(options)
                 .build());

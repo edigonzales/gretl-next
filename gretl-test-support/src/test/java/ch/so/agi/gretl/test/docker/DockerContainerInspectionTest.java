@@ -16,25 +16,27 @@ class DockerContainerInspectionTest {
     Path temporaryDirectory;
 
     @Test
-    void acceptsStrictOfflineInspection() throws Exception {
+    void acceptsRuntimeImageInspectionOnDefaultNetwork() throws Exception {
         RuntimeImageDescriptor descriptor = descriptor();
         DockerContainerInspection inspection = new DockerContainerInspection("container", descriptor.imageId(),
-                "none", "1001:0", true,
-                Map.of("/work/project", new DockerMountInspection("/tmp/project", "/work/project", "bind", true),
-                        "/work/gradle-home", new DockerMountInspection("tmpfs", "/work/gradle-home", "tmpfs", true)),
-                Map.of("GRADLE_USER_HOME", "/work/gradle-home", "GRETL_IMAGE_OFFLINE", "true"));
+                "bridge", "1001:0", false,
+                Map.of("/home/gradle/project", new DockerMountInspection("/tmp/project", "/home/gradle/project", "bind", true),
+                        "/home/gradle/.gradle", new DockerMountInspection("/tmp/gradle", "/home/gradle/.gradle", "bind", true)),
+                Map.of("GRADLE_USER_HOME", "/home/gradle/.gradle"));
 
-        assertDoesNotThrow(() -> inspection.assertStrictOffline(descriptor));
+        assertDoesNotThrow(() -> inspection.assertRuntimeImage(descriptor));
     }
 
     @Test
-    void rejectsNetworkedContainer() throws Exception {
+    void acceptsNamedNetworkForRuntimeJobs() throws Exception {
         RuntimeImageDescriptor descriptor = descriptor();
         DockerContainerInspection inspection = new DockerContainerInspection("container", descriptor.imageId(),
-                "bridge", "1001:0", true, Map.of(),
-                Map.of("GRADLE_USER_HOME", "/work/gradle-home", "GRETL_IMAGE_OFFLINE", "true"));
+                "gretl-postgis", "1001:0", false,
+                Map.of("/home/gradle/project", new DockerMountInspection("/tmp/project", "/home/gradle/project", "bind", true),
+                        "/home/gradle/.gradle", new DockerMountInspection("/tmp/gradle", "/home/gradle/.gradle", "bind", true)),
+                Map.of("GRADLE_USER_HOME", "/home/gradle/.gradle"));
 
-        assertThrows(AssertionError.class, () -> inspection.assertStrictOffline(descriptor));
+        assertDoesNotThrow(() -> inspection.assertRuntimeImage(descriptor));
     }
 
     private RuntimeImageDescriptor descriptor() throws Exception {

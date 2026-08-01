@@ -18,6 +18,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,7 +53,7 @@ class RuntimeImageGeotoolsFunctionalTest {
     }
 
     @Test
-    void reclassifiesRasterAndVectorizesItOffline() throws Exception {
+    void reclassifiesRasterAndVectorizesIt() throws Exception {
         copyResourceTree("fixtures/vectorize", project.resolve("vector-data"));
         copyResourceTree("fixtures/raster-reclassify", project.resolve("raster-data"));
         writeSettings();
@@ -107,20 +110,13 @@ class RuntimeImageGeotoolsFunctionalTest {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(), new ContainerUserResolver(),
                 new RuntimeImageGradleArguments());
+        List<String> requested = new ArrayList<>(List.of("--rerun-tasks"));
+        requested.addAll(Arrays.asList(arguments));
         return executor.execute(GretlBuildRequest.builder(project)
-                .arguments(java.util.Arrays.asList(concat("--no-daemon", "--offline", "--rerun-tasks", arguments)))
+                .arguments(requested)
                 .timeout(Duration.ofMinutes(5))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build());
-    }
-
-    private String[] concat(String first, String second, String third, String[] rest) {
-        String[] values = new String[3 + rest.length];
-        values[0] = first;
-        values[1] = second;
-        values[2] = third;
-        System.arraycopy(rest, 0, values, 3, rest.length);
-        return values;
     }
 
     private void writeSettings() throws IOException {

@@ -66,7 +66,7 @@ class RuntimeImagePostgisIntegrationTest {
             RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(image, new DockerCli(),
                     new ContainerUserResolver(), new RuntimeImageGradleArguments());
             GretlBuildRequest request = GretlBuildRequest.builder(project)
-                    .arguments("--no-daemon", "--offline", "--rerun-tasks", "-PpgUrl=jdbc:postgresql://postgis:5432/gretl",
+                    .arguments("--rerun-tasks", "-PpgUrl=jdbc:postgresql://postgis:5432/gretl",
                             "-PpgUser=gretl", "-PpgPass=gretl", "fill")
                     .secret("gretl")
                     .timeout(Duration.ofMinutes(10))
@@ -156,7 +156,7 @@ class RuntimeImagePostgisIntegrationTest {
                     RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(),
                     new ContainerUserResolver(), new RuntimeImageGradleArguments());
             GretlBuildResult result = executor.execute(GretlBuildRequest.builder(project)
-                    .arguments("--no-daemon", "--offline", "--rerun-tasks",
+                    .arguments("--rerun-tasks",
                             "-PpgUrl=jdbc:postgresql://postgis:5432/gretl",
                             "-PpgUser=" + POSTGIS.getUsername(), "-PpgPass=" + POSTGIS.getPassword(), "deleteData")
                     .secret(POSTGIS.getPassword())

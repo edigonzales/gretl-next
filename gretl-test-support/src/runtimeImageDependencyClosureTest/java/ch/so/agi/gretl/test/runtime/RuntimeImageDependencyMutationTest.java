@@ -2,7 +2,7 @@ package ch.so.agi.gretl.test.runtime;
 
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
-import ch.so.agi.gretl.test.execution.RuntimeImageOfflineExecutor;
+import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
 import ch.so.agi.gretl.test.project.GradleTestProject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RuntimeImageOfflineMutationTest {
+class RuntimeImageDependencyMutationTest {
     @TempDir
     Path temporaryDirectory;
 
@@ -26,15 +26,18 @@ class RuntimeImageOfflineMutationTest {
         project.settingsGroovy("rootProject.name = 'wrong-version'\n")
                 .buildGroovy("plugins { id 'ch.so.agi.gretl' }\n");
 
-        GretlBuildResult result = new RuntimeImageOfflineExecutor(RuntimeImageDescriptor.fromSystemProperties())
+        GretlBuildResult result = new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
+                new ch.so.agi.gretl.test.docker.DockerCli(),
+                new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments())
                 .executeAndExpectFailure(GretlBuildRequest.builder(project.directory())
                         .arguments(List.of("-Dgretl.version=0.0.0-mutated", "--rerun-tasks", "tasks"))
                         .timeout(Duration.ofMinutes(2))
-                        .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                        .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                         .build());
 
         assertFalse(result.successful());
-        assertTrue(result.output().contains("does not match bundled version"), result.output());
+        assertTrue(result.output().contains("Requested GRETL plugin version 0.0.0-mutated is not bundled."), result.output());
         assertTrue(result.output().contains("0.0.0-mutated"), result.output());
     }
 
@@ -69,11 +72,14 @@ class RuntimeImageOfflineMutationTest {
 
     private GretlBuildResult runAgainst(RuntimeImageDescriptor image, GradleTestProject project) {
         try {
-            return new RuntimeImageOfflineExecutor(image).executeAndExpectFailure(
+            return new RuntimeImageBuildExecutor(image,
+                    new ch.so.agi.gretl.test.docker.DockerCli(),
+                    new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                    new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments()).executeAndExpectFailure(
                     GretlBuildRequest.builder(project.directory())
                             .arguments(List.of("--rerun-tasks", "tasks"))
                             .timeout(Duration.ofMinutes(2))
-                            .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                            .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                             .build());
         } finally {
             try {
@@ -89,7 +95,7 @@ class RuntimeImageOfflineMutationTest {
     private RuntimeImageDescriptor buildMutationImage(String name, String mutation) throws Exception {
         RuntimeImageDescriptor base = RuntimeImageDescriptor.fromSystemProperties();
         Path context = Files.createDirectories(temporaryDirectory.resolve("image-" + name));
-        String tag = "gretl-offline-mutation:" + name;
+        String tag = "gretl-dependency-closure-mutation:" + name;
         Files.writeString(context.resolve("Dockerfile"), "FROM " + base.imageTag() + "\n"
                 + "USER root\n" + mutation + "USER gradle\n", StandardCharsets.UTF_8);
         Path idFile = context.resolve("image-id.txt");

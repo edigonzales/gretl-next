@@ -7,7 +7,7 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += output + compileClasspath
     }
-    runtimeImageOfflineTest {
+    runtimeImageDependencyClosureTest {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += output + compileClasspath
     }
@@ -20,8 +20,8 @@ sourceSets {
 configurations {
     runtimeImageContractTestImplementation.extendsFrom testImplementation
     runtimeImageContractTestRuntimeOnly.extendsFrom testRuntimeOnly
-    runtimeImageOfflineTestImplementation.extendsFrom testImplementation
-    runtimeImageOfflineTestRuntimeOnly.extendsFrom testRuntimeOnly
+    runtimeImageDependencyClosureTestImplementation.extendsFrom testImplementation
+    runtimeImageDependencyClosureTestRuntimeOnly.extendsFrom testRuntimeOnly
     runtimeImageServiceTestImplementation.extendsFrom testImplementation
     runtimeImageServiceTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
@@ -45,9 +45,9 @@ def configureRuntimeImageTest = { String name, String description, SourceSet sou
         useJUnitPlatform()
         systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
         systemProperty 'gretl.test.runtimeImage.idFile',
-                rootProject.layout.buildDirectory.file('runtime-image/offline-test/image-id.txt').get().asFile.absolutePath
+                rootProject.layout.buildDirectory.file('runtime-image/dependency-closure-test/image-id.txt').get().asFile.absolutePath
         systemProperty 'gretl.runtime.image.descriptor',
-                rootProject.layout.buildDirectory.file('runtime-image/offline-test/image-descriptor.json').get().asFile.absolutePath
+                rootProject.layout.buildDirectory.file('runtime-image/dependency-closure-test/image-descriptor.json').get().asFile.absolutePath
         systemProperty 'gretl.test.runtimeImage.tag',
                 rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
                         "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()
@@ -65,7 +65,8 @@ def configureRuntimeImageTest = { String name, String description, SourceSet sou
 
 configureRuntimeImageTest('runtimeImageContractTest',
         'Verifies the built GRETL runtime image contract.', sourceSets.runtimeImageContractTest)
-configureRuntimeImageTest('runtimeImageOfflineTest',
-        'Verifies GRETL runtime-image resolution without network or host caches.', sourceSets.runtimeImageOfflineTest)
+configureRuntimeImageTest('runtimeImageDependencyClosureTest',
+        'Verifies bundled-only runtime-image dependency resolution and network separation.',
+        sourceSets.runtimeImageDependencyClosureTest)
 configureRuntimeImageTest('runtimeImageServiceTest',
         'Verifies a long-lived GRETL runtime container and Gradle daemon reuse.', sourceSets.runtimeImageServiceTest)

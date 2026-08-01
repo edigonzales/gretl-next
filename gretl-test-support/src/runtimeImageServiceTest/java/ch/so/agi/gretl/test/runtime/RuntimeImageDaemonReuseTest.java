@@ -32,7 +32,7 @@ class RuntimeImageDaemonReuseTest {
         Path gradleHome = Files.createDirectories(temporaryDirectory.resolve("gradle-home"));
 
         try (RuntimeImageServiceContainer service = RuntimeImageServiceContainer.start(
-                image, jobs, gradleHome, Optional.of("none"), new ContainerUserResolver().resolve())) {
+                image, jobs, gradleHome, Optional.empty(), new ContainerUserResolver().resolve())) {
             assertTrue(service.isRunning());
             var first = service.execGretl(Path.of("job-a"), List.of("--console=plain", "--rerun-tasks", "writeMarker"));
             assertEquals(0, first.exitCode(), first.output());
@@ -67,8 +67,8 @@ class RuntimeImageDaemonReuseTest {
             assertTrue(java.util.Collections.disjoint(firstPids, afterStopPids),
                     "A new daemon should be started after --stop");
 
-            var noDaemon = service.execGretl(Path.of("job-a"), List.of("--no-daemon", "--offline", "writeMarker"));
-            assertEquals(0, noDaemon.exitCode(), noDaemon.output());
+            var secondJob = service.execGretl(Path.of("job-a"), List.of("--rerun-tasks", "writeMarker"));
+            assertEquals(0, secondJob.exitCode(), secondJob.output());
             assertTrue(service.isRunning());
         }
     }
@@ -98,10 +98,10 @@ class RuntimeImageDaemonReuseTest {
         Path gradleHome = Files.createDirectories(temporaryDirectory.resolve("plugin-gradle-home"));
 
         try (RuntimeImageServiceContainer service = RuntimeImageServiceContainer.start(
-                image, jobs, gradleHome, Optional.of("none"), new ContainerUserResolver().resolve(),
+                image, jobs, gradleHome, Optional.empty(), new ContainerUserResolver().resolve(),
                 Map.of(repository, "/fixture/plugin-repo"))) {
             var result = service.execGretl(Path.of("consumer"),
-                    List.of("--no-daemon", "--offline", "--rerun-tasks", "combined", "--console=plain"));
+                    List.of("--rerun-tasks", "combined", "--console=plain"));
             assertEquals(0, result.exitCode(), result.output());
             assertTrue(Files.exists(project.resolve("build/service-plugin.txt")));
             assertEquals("service", Files.readString(project.resolve("build/service-plugin.txt"), StandardCharsets.UTF_8));

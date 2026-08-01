@@ -68,7 +68,7 @@ public abstract class AbstractGretlBuildTestSupport {
     }
 
     protected RuntimeImageRunOptions runtimeImageRunOptions() {
-        return RuntimeImageRunOptions.offline();
+        return RuntimeImageRunOptions.defaults();
     }
 
     protected void writeSettings(String content) throws IOException {

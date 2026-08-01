@@ -70,7 +70,8 @@ public final class DockerCli {
 
     public String createContainer(DockerCreateRequest request, Set<String> secrets) {
         List<String> command = new ArrayList<>(List.of("docker", "create", "--pull=never",
-                "--name", request.containerName(), "--network", "none"));
+                "--name", request.containerName()));
+        request.network().ifPresent(network -> command.addAll(List.of("--network", network)));
         if (request.readOnlyRootFilesystem()) {
             command.add("--read-only");
         }

@@ -22,44 +22,34 @@ public record DockerContainerInspection(
         environment = Map.copyOf(environment == null ? Map.of() : environment);
     }
 
-    public void assertStrictOffline(RuntimeImageDescriptor descriptor) {
-        if (!"none".equals(networkMode)) {
-            throw new AssertionError("Expected Docker NetworkMode 'none' but was '" + networkMode
-                    + "' for container " + id + ".");
-        }
+    public void assertRuntimeImage(RuntimeImageDescriptor descriptor) {
         if (!descriptor.imageId().equals(imageId)) {
             throw new AssertionError("Expected image " + descriptor.imageId() + " but container was created from "
                     + imageId + ".");
         }
-        if (!readOnlyRootFilesystem) {
-            throw new AssertionError("Expected a read-only root filesystem for container " + id + ".");
-        }
         if (user == null || user.isBlank() || "0".equals(user) || "root".equalsIgnoreCase(user)) {
             throw new AssertionError("Expected a non-root container user but was '" + user + "'.");
         }
-        DockerMountInspection project = mounts.get("/work/project");
+        DockerMountInspection project = mounts.get("/home/gradle/project");
         if (project == null || !project.readWrite()) {
-            throw new AssertionError("Expected /work/project as a read-write bind mount; mounts=" + mounts);
+            throw new AssertionError("Expected /home/gradle/project as a read-write bind mount; mounts=" + mounts);
         }
-        DockerMountInspection gradleHome = mounts.get("/work/gradle-home");
-        if (gradleHome == null || !"tmpfs".equalsIgnoreCase(gradleHome.type())) {
-            throw new AssertionError("Expected a fresh tmpfs Gradle home; mounts=" + mounts);
+        DockerMountInspection gradleHome = mounts.get("/home/gradle/.gradle");
+        if (gradleHome == null || !gradleHome.readWrite()) {
+            throw new AssertionError("Expected a writable service or fresh Gradle home; mounts=" + mounts);
         }
         for (DockerMountInspection mount : mounts.values()) {
             String source = mount.source() == null ? "" : mount.source().toLowerCase();
             String destination = mount.destination().toLowerCase();
-            if (source.contains(".gradle") || source.contains(".m2") || source.contains("gretl-modular")
+            if (source.contains(".gradle") || source.contains(".m2")
                     || destination.contains("/.gradle") || destination.contains("/.m2")) {
-                if (!"/work/gradle-home".equals(destination)) {
+                if (!"/home/gradle/.gradle".equals(destination)) {
                     throw new AssertionError("Forbidden host cache or checkout mount: " + mount);
                 }
             }
         }
-        if (!"/work/gradle-home".equals(environment.get("GRADLE_USER_HOME"))) {
-            throw new AssertionError("GRADLE_USER_HOME is not the fresh test mount: " + environment);
-        }
-        if (!"true".equalsIgnoreCase(environment.get("GRETL_IMAGE_OFFLINE"))) {
-            throw new AssertionError("GRETL_IMAGE_OFFLINE is not enabled: " + environment);
+        if (!"/home/gradle/.gradle".equals(environment.get("GRADLE_USER_HOME"))) {
+            throw new AssertionError("GRADLE_USER_HOME is not the container Gradle home: " + environment);
         }
     }
 }

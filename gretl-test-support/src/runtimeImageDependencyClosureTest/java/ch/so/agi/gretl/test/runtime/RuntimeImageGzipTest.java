@@ -2,7 +2,7 @@ package ch.so.agi.gretl.test.runtime;
 
 import ch.so.agi.gretl.test.execution.GretlBuildRequest;
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
-import ch.so.agi.gretl.test.execution.RuntimeImageOfflineExecutor;
+import ch.so.agi.gretl.test.execution.RuntimeImageBuildExecutor;
 import ch.so.agi.gretl.test.project.GradleTestProject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,14 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RuntimeImageOfflineGzipTest {
+class RuntimeImageGzipTest {
     @TempDir
     Path temporaryDirectory;
 
     @Test
-    void compressesFileOfflineWithGroovyDsl() throws Exception {
+    void compressesFileWithGroovyDsl() throws Exception {
         GradleTestProject project = project("gzip-groovy");
-        byte[] input = "offline gzip payload\n".getBytes(StandardCharsets.UTF_8);
+        byte[] input = "bundled gzip payload\n".getBytes(StandardCharsets.UTF_8);
         project.settingsGroovy("rootProject.name = 'gzip-groovy'\n")
                 .binaryFile("data/input.txt", input)
                 .buildGroovy("""
@@ -46,9 +46,9 @@ class RuntimeImageOfflineGzipTest {
     }
 
     @Test
-    void compressesFileOfflineWithKotlinDsl() throws Exception {
+    void compressesFileWithKotlinDsl() throws Exception {
         GradleTestProject project = project("gzip-kotlin");
-        byte[] input = "kotlin offline gzip".getBytes(StandardCharsets.UTF_8);
+        byte[] input = "kotlin bundled gzip".getBytes(StandardCharsets.UTF_8);
         project.settingsKotlin("rootProject.name = \"gzip-kotlin\"\n")
                 .binaryFile("data/input.txt", input)
                 .buildKotlin("""
@@ -66,7 +66,7 @@ class RuntimeImageOfflineGzipTest {
     }
 
     @Test
-    void missingInputFailsClearlyOffline() {
+    void missingInputFailsClearly() {
         GradleTestProject project = project("gzip-missing");
         project.settingsGroovy("rootProject.name = 'gzip-missing'\n")
                 .buildGroovy("""
@@ -98,12 +98,15 @@ class RuntimeImageOfflineGzipTest {
         return GretlBuildRequest.builder(project.directory())
                 .arguments(List.of("--rerun-tasks", task))
                 .timeout(Duration.ofMinutes(2))
-                .runtimeImageOptions(RuntimeImageRunOptions.offline())
+                .runtimeImageOptions(RuntimeImageRunOptions.defaults())
                 .build();
     }
 
-    private RuntimeImageOfflineExecutor executor() {
-        return new RuntimeImageOfflineExecutor(RuntimeImageDescriptor.fromSystemProperties());
+    private RuntimeImageBuildExecutor executor() {
+        return new RuntimeImageBuildExecutor(RuntimeImageDescriptor.fromSystemProperties(),
+                new ch.so.agi.gretl.test.docker.DockerCli(),
+                new ch.so.agi.gretl.test.docker.ContainerUserResolver(),
+                new ch.so.agi.gretl.test.execution.RuntimeImageGradleArguments());
     }
 
     private static byte[] gunzip(Path path) throws IOException {

@@ -35,7 +35,7 @@ COPY --chown=gradle:root gretl /usr/local/bin/gretl
 COPY --chown=gradle:root init.gradle /opt/gretl/init/gretl.init.gradle
 COPY --chown=gradle:root build.info /opt/gretl/build.info
 COPY --chown=gradle:root maven-repo /opt/gretl/maven-repository
-COPY --chown=gradle:root manifests/offline-artifacts.json /opt/gretl/manifests/offline-artifacts.json
+COPY --chown=gradle:root manifests/bundled-artifacts.json /opt/gretl/manifests/bundled-artifacts.json
 COPY --chown=gradle:root manifests/dependency-closure.json /opt/gretl/manifests/dependency-closure.json
 COPY --chown=gradle:root manifests/checksums.sha256 /opt/gretl/manifests/checksums.sha256
 
@@ -60,7 +60,7 @@ RUN mkdir -p "${GRADLE_USER_HOME}" \
 
 USER root
 RUN chmod -R a-w /opt/gretl /opt/gradle /usr/local/bin/gretl \
-    && chmod 555 /work /work/project /home/gradle /home/gradle/project
+    && chmod 755 /work /work/project /home/gradle /home/gradle/project
 
 USER gradle
 WORKDIR /home/gradle/project

@@ -10,7 +10,7 @@ Consumer fixtures contain only a mounted Gradle project and its data files.
 * a reachable Docker Engine or Docker Desktop
 
 The image is staged under `build/runtime-image/docker` and the test build writes
-the immutable image ID to `build/runtime-image/test/image-id.txt`. Tests use the
+the immutable image ID to `build/runtime-image/dependency-closure-test/image-id.txt`. Tests use the
 ID (`sha256:...`) and pass `--pull=never`; the human-readable tag can be set with
 `-PgretlRuntimeImageTestTag=...`.
 
@@ -21,9 +21,9 @@ ID (`sha256:...`) and pass `--pull=never`; the human-readable tag can be set wit
 ./gradlew buildRuntimeImageForTest
 ./gradlew runtimeImageContractTest
 ./gradlew runtimeImageSmokeTest
-./gradlew runtimeImageOfflineTest
+./gradlew runtimeImageDependencyClosureTest
 ./gradlew runtimeImageServiceTest
-./gradlew runtimeImageE2eTest
+./gradlew runtimeImageIntegrationTest
 ./gradlew runtimeImageTest
 ./gradlew ciCheck
 ----
@@ -33,33 +33,34 @@ explicit prerequisite error; tests are not silently skipped. `check` remains
 Docker-free. `ciCheck` runs source checks, published-artifact checks, external
 integration tests and the complete runtime-image gate before publication.
 
-== Image and offline contract
+== Dependency-closed runtime-image contract
 
 The image contains a structured Maven repository at
 `/opt/gretl/maven-repository` with GRETL plugin markers, implementation modules,
 POMs, Gradle metadata and the resolved runtime dependency closure. The init
 script adds this repository to plugin management and assigns the bundled GRETL
-version to versionless `plugins {}` declarations. It does not use `mavenLocal()`
-by default and does not inject a directory of arbitrary JARs into buildscript
-classpaths. `-Dgretl.enableMavenLocal=true` is an explicit developer-only
-override.
+version to versionless `plugins {}` declarations. It does not register remote
+Gradle repositories or `mavenLocal()` and does not inject a directory of
+arbitrary JARs into buildscript classpaths.
 
-Offline tests mount a fresh `/home/gradle/.gradle` directory and use
-`--network none --offline`. No host Gradle cache, source checkout, or public
-GRETL snapshot is required. Additional consumer plugins remain additive: a
-consumer can declare its own plugin repositories and modern plugin DSL entries.
+The GRETL runtime image starts Gradle with `--offline`. This prevents Gradle
+from downloading additional plugins and dependencies while a job is running. It
+does not disable the job's network. Jobs may still connect to PostGIS, S3, FTP,
+HTTP and other application services. The closure gate mounts a fresh
+`/home/gradle/.gradle`; normal service jobs reuse an image-owned persistent home
+without mounting a host Gradle cache.
 
 == One-shot and service modes
 
-The launcher is daemon-neutral. One-shot calls may explicitly use
-`--no-daemon --offline`:
+The launcher applies `--offline` in both lifecycle modes. One-shot calls add
+`--no-daemon`; service calls reuse the Gradle daemon:
 
 [source,bash]
 ----
 docker run --rm --pull=never \
   --mount type=bind,src="$PWD/job",dst=/home/gradle/project \
   --mount type=bind,src="$PWD/gradle-home",dst=/home/gradle/.gradle \
-  <image-id> --project-dir=/home/gradle/project --no-daemon processData
+  <image-id> --project-dir=/home/gradle/project processData
 ----
 
 For a long-lived service, keep the image process alive with a neutral entrypoint
@@ -67,8 +68,8 @@ and run `docker exec ... gretl --project-dir=... processData`. Compatible builds
 share the same container user, Java runtime, Gradle version and
 `GRADLE_USER_HOME`; the service test proves PID reuse with `gradle --status`,
 observes build-script changes, and verifies that `gradle --stop` does not stop
-the container. An explicit `--no-daemon` remains available for diagnosis and
-one-shot isolation.
+the container. Docker network selection is independent and may use the default
+network or an explicit named network for a fixture service.
 
 == Networks, fixtures and diagnostics
 

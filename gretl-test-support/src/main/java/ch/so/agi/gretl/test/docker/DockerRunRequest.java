@@ -17,7 +17,6 @@ public record DockerRunRequest(
         List<String> commandArguments,
         Map<String, String> environment,
         Optional<String> network,
-        boolean networkDisabled,
         Optional<String> user,
         Duration timeout,
         Set<String> secretValues,
@@ -40,10 +39,10 @@ public record DockerRunRequest(
         commandArguments = List.copyOf(commandArguments);
         environment = Map.copyOf(environment);
         network = network == null ? Optional.empty() : network;
-        user = user == null ? Optional.empty() : user;
-        if (network.isPresent() == networkDisabled) {
-            throw new IllegalArgumentException("exactly one Docker network mode must be selected");
+        if (network.isPresent() && network.get().isBlank()) {
+            throw new IllegalArgumentException("network must not be blank");
         }
+        user = user == null ? Optional.empty() : user;
         timeout = Objects.requireNonNull(timeout, "timeout must not be null");
         if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("timeout must be positive");

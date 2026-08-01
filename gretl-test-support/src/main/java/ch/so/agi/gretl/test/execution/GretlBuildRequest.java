@@ -19,7 +19,8 @@ public record GretlBuildRequest(
         Map<String, String> environment,
         Set<String> secretValues,
         Duration timeout,
-        RuntimeImageRunOptions runtimeImageOptions) {
+        RuntimeImageRunOptions runtimeImageOptions,
+        RuntimeExecutionMode runtimeExecutionMode) {
 
     public GretlBuildRequest {
         projectDirectory = projectDirectory.toAbsolutePath().normalize();
@@ -36,7 +37,9 @@ public record GretlBuildRequest(
             throw new IllegalArgumentException("timeout must be positive");
         }
         runtimeImageOptions = runtimeImageOptions == null
-                ? RuntimeImageRunOptions.offline() : runtimeImageOptions;
+                ? RuntimeImageRunOptions.defaults() : runtimeImageOptions;
+        runtimeExecutionMode = runtimeExecutionMode == null
+                ? RuntimeExecutionMode.ONE_SHOT : runtimeExecutionMode;
     }
 
     @Override
@@ -45,7 +48,8 @@ public record GretlBuildRequest(
                 + ", arguments=" + arguments
                 + ", environment=" + environment.keySet()
                 + ", secretValues=<redacted>, timeout=" + timeout
-                + ", runtimeImageOptions=" + runtimeImageOptions + "]";
+                + ", runtimeImageOptions=" + runtimeImageOptions
+                + ", runtimeExecutionMode=" + runtimeExecutionMode + "]";
     }
 
     public static Builder builder(Path projectDirectory) {
@@ -58,7 +62,8 @@ public record GretlBuildRequest(
         private final Map<String, String> environment = new HashMap<>();
         private final Set<String> secretValues = new HashSet<>();
         private Duration timeout = Duration.ofMinutes(2);
-        private RuntimeImageRunOptions runtimeImageOptions = RuntimeImageRunOptions.offline();
+        private RuntimeImageRunOptions runtimeImageOptions = RuntimeImageRunOptions.defaults();
+        private RuntimeExecutionMode runtimeExecutionMode = RuntimeExecutionMode.ONE_SHOT;
 
         private Builder(Path projectDirectory) {
             this.projectDirectory = projectDirectory;
@@ -98,9 +103,14 @@ public record GretlBuildRequest(
             return this;
         }
 
+        public Builder runtimeExecutionMode(RuntimeExecutionMode value) {
+            runtimeExecutionMode = value;
+            return this;
+        }
+
         public GretlBuildRequest build() {
             return new GretlBuildRequest(projectDirectory, arguments, environment, secretValues, timeout,
-                    runtimeImageOptions);
+                    runtimeImageOptions, runtimeExecutionMode);
         }
     }
 }

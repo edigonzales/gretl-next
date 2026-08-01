@@ -259,7 +259,7 @@ class RuntimeImageNetworkIntegrationTest {
     }
 
     @Test
-    void executesOfflineIli2duckdbSchemaImportImportAndExport() throws Exception {
+    void executesIli2duckdbSchemaImportImportAndExport() throws Exception {
         copyResource("fixtures/interlis/ili2duckdb/import/KS3-20060703.ili", "KS3-20060703.ili");
         copyResource("fixtures/interlis/ili2duckdb/import/VOLLZUG_SO0200002401_1531_20180105113131.xml",
                 "transfer.xml");
@@ -290,7 +290,7 @@ class RuntimeImageNetworkIntegrationTest {
                 }
                 """, StandardCharsets.UTF_8);
 
-        GretlBuildResult result = execute(List.of("--no-daemon", "--offline", "exportData"));
+        GretlBuildResult result = execute(List.of("exportData"));
 
         assertTrue(result.successful(), result.output());
         assertTrue(Files.size(project.resolve("build/out/export.xml")) > 0);

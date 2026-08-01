@@ -3,6 +3,7 @@ package ch.so.agi.gretl.test.docker;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public record DockerCreateRequest(
         String imageId,
@@ -10,7 +11,7 @@ public record DockerCreateRequest(
         List<String> command,
         Map<String, String> environment,
         List<ContainerMount> mounts,
-        boolean networkNone,
+        Optional<String> network,
         boolean readOnlyRootFilesystem,
         String workingDirectory,
         String user) {
@@ -24,8 +25,9 @@ public record DockerCreateRequest(
         command = List.copyOf(Objects.requireNonNull(command, "command must not be null"));
         environment = Map.copyOf(Objects.requireNonNull(environment, "environment must not be null"));
         mounts = List.copyOf(Objects.requireNonNull(mounts, "mounts must not be null"));
-        if (!networkNone) {
-            throw new IllegalArgumentException("The offline executor only accepts networkNone=true");
+        network = network == null ? Optional.empty() : network;
+        if (network.isPresent() && network.get().isBlank()) {
+            throw new IllegalArgumentException("network must not be blank");
         }
         if (workingDirectory == null || !workingDirectory.startsWith("/")) {
             throw new IllegalArgumentException("workingDirectory must be absolute");

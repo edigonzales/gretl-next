@@ -115,7 +115,7 @@ def configureRuntimeImageTest = { String name, String description, String tag ->
         maxParallelForks = 1
         systemProperty 'gretl.test.executionMode', 'RUNTIME_IMAGE'
         systemProperty 'gretl.test.runtimeImage.idFile',
-                rootProject.layout.buildDirectory.file('runtime-image/offline-test/image-id.txt').get().asFile.absolutePath
+                rootProject.layout.buildDirectory.file('runtime-image/dependency-closure-test/image-id.txt').get().asFile.absolutePath
         systemProperty 'gretl.test.runtimeImage.tag',
                 rootProject.providers.gradleProperty('gretlRuntimeImageTestTag').orElse(
                         "gretl-next-e2e:${rootProject.version.toString().replaceAll('[^A-Za-z0-9_.-]', '-')}").get()

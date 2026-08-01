@@ -112,8 +112,8 @@ subprojects {
 
 def runtimeImageDir = layout.buildDirectory.dir('runtime-image/docker')
 def runtimeImageRepoDir = layout.buildDirectory.dir('runtime-image/maven-repo')
-def runtimeImageOfflineDir = layout.buildDirectory.dir('runtime-image/offline')
-def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/offline-test')
+def runtimeImageDependencyClosureDir = layout.buildDirectory.dir('runtime-image/dependency-closure')
+def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/dependency-closure-test')
 def projectVersionString = project.version.toString()
 def runtimeImageRepositoryRoot = rootProject.projectDir
 def runtimeImageGeotoolsVersion = rootProject.ext.geotoolsVersion.toString()
@@ -297,10 +297,10 @@ gradle.projectsEvaluated {
     }
 }
 
-tasks.register('cleanRuntimeImageOfflineState', Delete) {
+tasks.register('cleanRuntimeImageDependencyClosureState', Delete) {
     group = 'distribution'
-    description = 'Deletes only project-owned runtime-image offline staging and diagnostics.'
-    delete runtimeImageOfflineDir
+    description = 'Deletes only project-owned dependency-closure staging and diagnostics.'
+    delete runtimeImageDependencyClosureDir
     delete runtimeImageRepoDir
     delete runtimeImageDir
     delete runtimeImageTestDir
@@ -324,7 +324,7 @@ subprojects {
         tasks.matching { it.name.endsWith('ToRuntimeImageRepository') }.configureEach {
             // Both publication tasks share one idempotent lifecycle clean.  Do
             // not let each publication task delete the repository independently.
-            dependsOn rootProject.tasks.named('cleanRuntimeImageOfflineState')
+            dependsOn rootProject.tasks.named('cleanRuntimeImageDependencyClosureState')
         }
 
         tasks.matching { it.name.endsWith('ToPublishedTestRepository') }.configureEach {
@@ -589,7 +589,7 @@ def sha256File = { File file ->
     digest.digest().collect { String.format('%02x', it & 0xff) }.join()
 }
 
-def writeOfflineManifests = { File context ->
+def writeBundledManifests = { File context ->
     File repository = new File(context, 'maven-repo')
     File manifests = new File(context, 'manifests')
     manifests.mkdirs()
@@ -640,12 +640,12 @@ def writeOfflineManifests = { File context ->
     }
     String version = projectVersionString
     String generatedAt = java.time.Instant.now().toString()
-    File manifest = new File(manifests, 'offline-artifacts.json')
+    File manifest = new File(manifests, 'bundled-artifacts.json')
     manifest.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
             gretlVersion: version,
             gradleVersion: runtimeImageGradleVersion.get(),
             generatedAt: generatedAt,
-            generatorVersion: 'runtime-image-offline-v1',
+            generatorVersion: 'runtime-image-bundled-v1',
             pluginMarkers: [
                     [id: 'ch.so.agi.gretl', group: 'ch.so.agi.gretl', module: 'ch.so.agi.gretl.gradle.plugin', version: version],
                     [id: 'ch.so.agi.gretl.geotools', group: 'ch.so.agi.gretl.geotools',
@@ -710,13 +710,13 @@ tasks.register('stageRuntimeImage', Sync) {
     }
 
     doLast {
-        writeOfflineManifests(destinationDir)
+        writeBundledManifests(destinationDir)
         new File(destinationDir, 'build.info').text = """GRETL Modular ${projectVersionString}
 Gradle ${runtimeImageGradleVersion.get()}
 Java ${runtimeImageJavaVersion.get()}
 Repository /opt/gretl/maven-repository
 Init /opt/gretl/init/gretl.init.gradle
-Offline profile GRETL_IMAGE_OFFLINE=true
+Dependency policy bundled-only (Gradle --offline)
 """
     }
 }
@@ -732,30 +732,30 @@ tasks.register('buildRuntimeImage', Exec) {
             '-t', dockerImageName.get(), '.'
 }
 
-tasks.register('prepareRuntimeImageOfflineDistribution') {
+tasks.register('prepareRuntimeImageDependencyClosure') {
     group = 'distribution'
-    description = 'Publishes and stages the complete GRETL offline runtime distribution.'
+    description = 'Publishes and stages the complete dependency-closed runtime-image distribution.'
     dependsOn tasks.named('stageRuntimeImage')
 }
 
-tasks.register('verifyRuntimeImageOfflineDistribution') {
+tasks.register('verifyRuntimeImageDependencyClosureDistribution') {
     group = 'verification'
-    description = 'Verifies the Maven repository, manifests and dependency closure before the Docker build.'
-    dependsOn tasks.named('prepareRuntimeImageOfflineDistribution')
+    description = 'Verifies the bundled Maven repository, manifests and dependency closure before the Docker build.'
+    dependsOn tasks.named('prepareRuntimeImageDependencyClosure')
     doLast {
         File context = runtimeImageDir.get().asFile
         File repository = new File(context, 'maven-repo')
-        File manifestFile = new File(context, 'manifests/offline-artifacts.json')
+        File manifestFile = new File(context, 'manifests/bundled-artifacts.json')
         File closureFile = new File(context, 'manifests/dependency-closure.json')
         ['Dockerfile', 'gretl', 'init.gradle', 'build.info', 'maven-repo',
-         'manifests/offline-artifacts.json', 'manifests/dependency-closure.json', 'manifests/checksums.sha256'].each { String required ->
+         'manifests/bundled-artifacts.json', 'manifests/dependency-closure.json', 'manifests/checksums.sha256'].each { String required ->
             if (!new File(context, required).exists()) {
-                throw new GradleException("Offline runtime-image context is missing '${required}' under ${context}.")
+                throw new GradleException("Dependency-closed runtime-image context is missing '${required}' under ${context}.")
             }
         }
         def requireFile = { File file, String description ->
             if (!file.isFile() || file.length() == 0) {
-                throw new GradleException("Missing offline distribution ${description}: ${file}")
+                throw new GradleException("Missing bundled runtime-image artifact ${description}: ${file}")
             }
             file
         }
@@ -786,25 +786,25 @@ tasks.register('verifyRuntimeImageOfflineDistribution') {
         manifest.artifacts.each { record ->
             String relativePath = record.relativePath.toString()
             if (!manifestPaths.add(relativePath)) {
-                throw new GradleException("Offline artifact manifest contains duplicate path: ${relativePath}")
+                throw new GradleException("Bundled artifact manifest contains duplicate path: ${relativePath}")
             }
             if (relativePath.startsWith('/') || relativePath.contains('..')) {
-                throw new GradleException("Offline artifact manifest contains non-relative path: ${relativePath}")
+                throw new GradleException("Bundled artifact manifest contains non-relative path: ${relativePath}")
             }
             if (relativePath.contains('-sources.jar') || relativePath.contains('-javadoc.jar')
                     || relativePath.endsWith('.lock') || relativePath.endsWith('gc.properties')) {
-                throw new GradleException("Forbidden file in offline distribution: ${relativePath}")
+                throw new GradleException("Forbidden file in bundled runtime-image distribution: ${relativePath}")
             }
             File file = new File(repository, relativePath)
             requireFile(file, relativePath)
             if (file.length() != record.size as long || sha256File(file) != record.sha256.toString()) {
-                throw new GradleException("Checksum or size mismatch for offline artifact ${relativePath}")
+                throw new GradleException("Checksum or size mismatch for bundled artifact ${relativePath}")
             }
         }
         String initText = new File(context, 'init.gradle').getText('UTF-8')
         if (initText.contains('mavenLocal()') || initText.contains('fileTree') || initText.contains('flatDir')
                 || initText.contains('0.1.0-SNAPSHOT') || initText.contains('services.gradle.org')) {
-            throw new GradleException('Offline init.gradle contains a forbidden repository, fallback or stale version.')
+            throw new GradleException('Runtime-image init.gradle contains a forbidden repository, fallback or stale version.')
         }
         String repositoryText = repository.toPath().toFile().toString()
         repository.eachFileRecurse { File file ->
@@ -814,7 +814,7 @@ tasks.register('verifyRuntimeImageOfflineDistribution') {
                     throw new GradleException("Forbidden file in repository: ${file}")
                 }
                 if (file.getText('UTF-8').contains(repositoryText) && !file.name.endsWith('.jar')) {
-                    throw new GradleException("Offline metadata contains a host path: ${file}")
+                    throw new GradleException("Bundled metadata contains a host path: ${file}")
                 }
             }
         }
@@ -838,7 +838,7 @@ tasks.register('verifyRuntimeImageOfflineDistribution') {
             if (!visited.add(coordinate)) continue
             String[] parts = coordinate.split(':', 3)
             if (parts.length != 3 || parts.any { it.contains('+') || it.contains('[') || it.contains(']') }) {
-                throw new GradleException("Dynamic or invalid dependency coordinate in offline closure: ${coordinate}")
+                throw new GradleException("Dynamic or invalid dependency coordinate in runtime-image dependency closure: ${coordinate}")
             }
             File pomFile = artifact(parts[0], parts[1], parts[2], 'pom')
             requireFile(pomFile, "POM ${coordinate}")
@@ -859,13 +859,13 @@ tasks.register('verifyRuntimeImageOfflineDistribution') {
         }
         ['commons-io:commons-io', 'org.xerial:sqlite-jdbc', 'org.postgresql:postgresql', 'org.duckdb:duckdb_jdbc'].each { required ->
             if (!visited.any { it.startsWith(required + ':') }) {
-                throw new GradleException("Offline dependency closure is missing ${required}")
+                throw new GradleException("Runtime-image dependency closure is missing ${required}")
             }
         }
         if (!visited.any { it.startsWith('org.geotools:gt-main:') }
                 || !visited.any { it.startsWith('org.geotools:gt-shapefile:') }
                 || !visited.any { it.startsWith('org.geotools:gt-epsg-hsql:') }) {
-            throw new GradleException('Offline GeoTools dependency closure is incomplete.')
+            throw new GradleException('Runtime-image GeoTools dependency closure is incomplete.')
         }
         def geotoolsJar = artifact('ch.so.agi', 'gretl-geotools', version, 'jar')
         new java.util.jar.JarFile(geotoolsJar).withCloseable { jar ->
@@ -880,14 +880,14 @@ tasks.register('verifyRuntimeImageOfflineDistribution') {
         if ((closure.nodes ?: []).isEmpty()) {
             throw new GradleException('Dependency-closure report is empty.')
         }
-        println "Verified ${manifest.artifacts.size()} offline files and ${visited.size()} exact Maven coordinates."
+        println "Verified ${manifest.artifacts.size()} bundled files and ${visited.size()} exact Maven coordinates."
     }
 }
 
-tasks.register('verifyRuntimeImageOfflinePrerequisites') {
+tasks.register('verifyRuntimeImageDependencyClosurePrerequisites') {
     group = 'verification'
-    description = 'Verifies Docker and the offline image build context before mandatory image tests.'
-    dependsOn tasks.named('verifyRuntimeImageOfflineDistribution')
+    description = 'Verifies Docker and the dependency-closed image context before mandatory image tests.'
+    dependsOn tasks.named('verifyRuntimeImageDependencyClosureDistribution')
     doLast {
         try {
             [['docker', 'version', '--format', '{{.Server.Version}}'],
@@ -900,7 +900,7 @@ tasks.register('verifyRuntimeImageOfflinePrerequisites') {
                 println output.trim()
             }
         } catch (Exception e) {
-            throw new GradleException('Docker is required for runtimeImageOfflineTest; no silent skip is allowed.', e)
+            throw new GradleException('Docker is required for runtimeImageDependencyClosureTest; no silent skip is allowed.', e)
         }
     }
 }
@@ -908,13 +908,13 @@ tasks.register('verifyRuntimeImageOfflinePrerequisites') {
 tasks.register('verifyRuntimeImagePrerequisites') {
     group = 'verification'
     description = 'Compatibility alias for runtime-image Docker prerequisites.'
-    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
+    dependsOn tasks.named('verifyRuntimeImageDependencyClosurePrerequisites')
 }
 
-tasks.register('buildRuntimeImageForOfflineTest') {
+tasks.register('buildRuntimeImageForTest') {
     group = 'verification'
-    description = 'Builds and records the immutable Docker image used by the strict offline gate.'
-    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
+    description = 'Builds and records the immutable Docker image used by the dependency-closure gate.'
+    dependsOn tasks.named('verifyRuntimeImageDependencyClosurePrerequisites')
     inputs.dir runtimeImageDir
     inputs.property('imageTag', runtimeImageTestTag)
     inputs.property('gretlVersion', projectVersionString)
@@ -998,12 +998,6 @@ tasks.register('buildRuntimeImageForOfflineTest') {
     }
 }
 
-tasks.register('buildRuntimeImageForTest') {
-    group = 'verification'
-    description = 'Compatibility alias for the immutable offline test image build.'
-    dependsOn tasks.named('buildRuntimeImageForOfflineTest')
-}
-
 tasks.register('verifyRuntimeImageContract') {
     group = 'verification'
     dependsOn ':gretl-test-support:runtimeImageContractTest'
@@ -1015,12 +1009,12 @@ tasks.register('runtimeImageContractTest') {
     dependsOn tasks.named('verifyRuntimeImageContract')
 }
 
-tasks.register('runtimeImageOfflineTest') {
+tasks.register('runtimeImageDependencyClosureTest') {
     group = 'verification'
-    description = 'Runs the mandatory black-box GRETL runtime-image offline gate.'
-    dependsOn tasks.named('buildRuntimeImageForOfflineTest')
-    dependsOn tasks.named('verifyRuntimeImageOfflinePrerequisites')
-    dependsOn ':gretl-test-support:runtimeImageOfflineTest'
+    description = 'Verifies the dependency closure of the bundled-only GRETL runtime image.'
+    dependsOn tasks.named('buildRuntimeImageForTest')
+    dependsOn tasks.named('verifyRuntimeImageDependencyClosurePrerequisites')
+    dependsOn ':gretl-test-support:runtimeImageDependencyClosureTest'
 }
 
 tasks.register('runtimeImageServiceTest') {
@@ -1031,14 +1025,15 @@ tasks.register('runtimeImageServiceTest') {
 tasks.register('runtimeImageSmokeTest') {
     group = 'verification'
     dependsOn tasks.named('verifyRuntimeImageContract')
-    dependsOn tasks.named('runtimeImageOfflineTest')
+    dependsOn tasks.named('runtimeImageDependencyClosureTest')
     dependsOn ':gretl-core:runtimeImageFunctionalSmokeTest'
     dependsOn ':gretl-core:runtimeImageIntegrationSmokeTest'
     dependsOn ':gretl-geotools:runtimeImageFunctionalSmokeTest'
 }
 
-tasks.register('runtimeImageE2eTest') {
+tasks.register('runtimeImageIntegrationTest') {
     group = 'verification'
+    description = 'Runs networked runtime-image integration tests with bundled-only dependency resolution.'
     dependsOn ':gretl-core:runtimeImageFunctionalTest'
     dependsOn ':gretl-core:runtimeImageIntegrationTest'
     dependsOn ':gretl-geotools:runtimeImageFunctionalTest'
@@ -1048,9 +1043,10 @@ tasks.register('runtimeImageTest') {
     group = 'verification'
     description = 'Runs the complete mandatory GRETL runtime-image release gate.'
     dependsOn tasks.named('verifyRuntimeImageContract')
-    dependsOn tasks.named('runtimeImageOfflineTest')
+    dependsOn tasks.named('runtimeImageDependencyClosureTest')
+    dependsOn tasks.named('runtimeImageSmokeTest')
+    dependsOn tasks.named('runtimeImageIntegrationTest')
     dependsOn tasks.named('runtimeImageServiceTest')
-    dependsOn tasks.named('runtimeImageE2eTest')
 }
 
 tasks.register('ciCheck') {
