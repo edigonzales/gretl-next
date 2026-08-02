@@ -60,6 +60,9 @@ jobs:
       - name: Complete runtime image gate
         run: ./gradlew runtimeImageTest --stacktrace
 
+      - name: Verify canonical task coverage
+        run: ./gradlew :gretl-job-tests:coverageTest --stacktrace
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,51 @@
+schemaVersion: 2
+id: network-s3-roundtrip
+description: Uploads, copies, downloads and deletes an object across isolated S3 lease buckets.
+category: network
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - verifyS3Roundtrip
+expectedTasks:
+  - path: :upload
+    className: ch.so.agi.gretl.tasks.S3Upload
+  - path: :copy
+    className: ch.so.agi.gretl.tasks.S3Bucket2Bucket
+  - path: :download
+    className: ch.so.agi.gretl.tasks.S3Download
+  - path: :delete
+    className: ch.so.agi.gretl.tasks.S3Delete
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - s3
+  - service-fixture
+fixtures:
+  - id: s3
+    type: s3
+    bindings:
+      - source: endpoint
+        target: gradle-property
+        name: s3Endpoint
+      - source: region
+        target: gradle-property
+        name: s3Region
+      - source: accessKey
+        target: gradle-property
+        name: s3AccessKey
+      - source: secretKey
+        target: gradle-property
+        name: s3SecretKey
+      - source: sourceBucket
+        target: gradle-property
+        name: s3SourceBucket
+      - source: targetBucket
+        target: gradle-property
+        name: s3TargetBucket
+assertions: network-s3-roundtrip
+timeoutSeconds: 600

@@ -1,0 +1,51 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.Ili2pgDelete
+import ch.so.agi.gretl.tasks.Ili2pgExport
+import ch.so.agi.gretl.tasks.Ili2pgImport
+import ch.so.agi.gretl.tasks.Ili2pgImportSchema
+import ch.so.agi.gretl.tasks.Ili2pgReplace
+import ch.so.agi.gretl.tasks.Ili2pgUpdate
+import ch.so.agi.gretl.tasks.Ili2pgValidate
+
+def pgUrl = providers.gradleProperty('pgUrl').get()
+def pgUser = providers.gradleProperty('pgUser').get()
+def pgPassword = providers.gradleProperty('pgPassword').get()
+def schema = providers.gradleProperty('pgSchema').get()
+def modelDir = file('input').toString()
+
+tasks.register('schema', Ili2pgImportSchema) {
+    database pgUrl, pgUser, pgPassword
+    models 'Beispiel2'; modeldir modelDir; dbschema schema
+    defaultSrsCode '2056'; createBasketCol true; createTidCol true
+}
+tasks.register('importData', Ili2pgImport) {
+    dependsOn 'schema'
+    database pgUrl, pgUser, pgPassword; dbschema schema
+    transferFiles 'input/Beispiel2a.xtf', 'input/Beispiel2b.xtf'
+    dataset(['DatasetA', 'DatasetB']); importTid true
+}
+tasks.register('replaceA', Ili2pgReplace) {
+    dependsOn 'importData'
+    database pgUrl, pgUser, pgPassword; dbschema schema
+    transferFiles 'input/Beispiel2a.xtf'; dataset 'DatasetA'; importTid true
+}
+tasks.register('updateA', Ili2pgUpdate) {
+    dependsOn 'replaceA'
+    database pgUrl, pgUser, pgPassword; dbschema schema
+    transferFiles 'input/Beispiel2a.xtf'; dataset 'DatasetA'; importTid true
+}
+tasks.register('validateData', Ili2pgValidate) {
+    dependsOn 'updateA'
+    database pgUrl, pgUser, pgPassword; models 'Beispiel2'; modeldir modelDir; dbschema schema; dataset 'DatasetA'
+    logFile layout.buildDirectory.file('validation.log')
+}
+tasks.register('exportData', Ili2pgExport) {
+    dependsOn 'validateData'
+    database pgUrl, pgUser, pgPassword; models 'Beispiel2'; modeldir modelDir; dbschema schema
+    dataFiles layout.buildDirectory.file('export/DatasetA-out.xtf'); dataset 'DatasetA'
+}
+tasks.register('deleteData', Ili2pgDelete) {
+    dependsOn 'exportData'
+    database pgUrl, pgUser, pgPassword; dbschema schema; dataset(['DatasetA', 'DatasetB'])
+}

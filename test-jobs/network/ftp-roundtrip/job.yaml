@@ -1,0 +1,48 @@
+schemaVersion: 2
+id: network-ftp-roundtrip
+description: Uploads, lists, downloads and deletes a binary file in an isolated FTP lease directory.
+category: network
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - verifyFtpRoundtrip
+expectedTasks:
+  - path: :upload
+    className: ch.so.agi.gretl.tasks.FtpUpload
+  - path: :list
+    className: ch.so.agi.gretl.tasks.FtpList
+  - path: :download
+    className: ch.so.agi.gretl.tasks.FtpDownload
+  - path: :delete
+    className: ch.so.agi.gretl.tasks.FtpDelete
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - ftp
+  - service-fixture
+fixtures:
+  - id: ftp
+    type: ftp
+    bindings:
+      - source: server
+        target: gradle-property
+        name: ftpServer
+      - source: username
+        target: gradle-property
+        name: ftpUser
+      - source: password
+        target: gradle-property
+        name: ftpPassword
+      - source: remoteDirectory
+        target: gradle-property
+        name: ftpRemoteDirectory
+      - source: passiveMode
+        target: gradle-property
+        name: ftpPassiveMode
+assertions: network-ftp-roundtrip
+timeoutSeconds: 600

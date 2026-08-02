@@ -1,0 +1,31 @@
+schemaVersion: 2
+id: interlis-ili2duckdb-roundtrip
+description: Imports an INTERLIS schema and transfer file into DuckDB and exports it again.
+category: interlis
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: optional
+entryTasks:
+  - exportData
+expectedTasks:
+  - path: :schema
+    className: ch.so.agi.gretl.tasks.Ili2duckdbImportSchema
+  - path: :importData
+    className: ch.so.agi.gretl.tasks.Ili2duckdbImport
+  - path: :exportData
+    className: ch.so.agi.gretl.tasks.Ili2duckdbExport
+capabilities:
+  - interlis
+  - duckdb
+fixtures:
+  - id: duckdbExtensions
+    type: duckdb_extensions
+    bindings: []
+assertions: interlis-ili2duckdb-roundtrip
+timeoutSeconds: 900

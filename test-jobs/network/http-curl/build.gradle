@@ -1,0 +1,51 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.Curl
+
+def base = providers.gradleProperty('httpBaseUrl').get()
+def httpUserValue = providers.gradleProperty('httpUser').get()
+def httpPasswordValue = providers.gradleProperty('httpPassword').get()
+def httpTokenValue = providers.gradleProperty('httpRunToken').get()
+
+tasks.register('postText', Curl) {
+    serverUrl base + '/text'
+    user httpUserValue
+    password httpPasswordValue
+    headers(['X-GRETL-RUN-TOKEN': httpTokenValue])
+    method Curl.MethodType.POST
+    expectedStatusCode 201
+    expectedBody 'accepted'
+    data 'hello-text'
+}
+tasks.register('postBinary', Curl) {
+    dependsOn 'postText'
+    serverUrl base + '/binary'
+    user httpUserValue
+    password httpPasswordValue
+    headers(['X-GRETL-RUN-TOKEN': httpTokenValue])
+    method Curl.MethodType.POST
+    expectedStatusCode 200
+    expectedBody 'ok'
+    dataBinary 'input/payload.bin'
+}
+tasks.register('postForm', Curl) {
+    dependsOn 'postBinary'
+    serverUrl base + '/form'
+    user httpUserValue
+    password httpPasswordValue
+    headers(['X-GRETL-RUN-TOKEN': httpTokenValue])
+    method Curl.MethodType.POST
+    expectedStatusCode 200
+    expectedBody 'form-ok'
+    formData([payload: file('input/payload.bin')])
+}
+tasks.register('download', Curl) {
+    dependsOn 'postForm'
+    serverUrl base + '/download'
+    user httpUserValue
+    password httpPasswordValue
+    headers(['X-GRETL-RUN-TOKEN': httpTokenValue])
+    expectedStatusCode 200
+    outputFile layout.buildDirectory.file('download/payload.bin')
+}
+tasks.register('httpRoundtrip') { dependsOn 'download' }

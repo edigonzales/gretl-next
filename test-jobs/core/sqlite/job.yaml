@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 id: core-sqlite
 description: Executes a SQLite schema and data script with the core SQL task.
 category: database
@@ -19,5 +19,6 @@ executionTargets:
 capabilities:
   - filesystem
   - sqlite
+fixtures: []
 assertions: core-sqlite
 timeoutSeconds: 300

@@ -11,11 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import ch.so.agi.gretl.test.fixture.TestJobFixtureRequirement;
 
 public final class TestJobDescriptorValidator {
     private static final Pattern ID = Pattern.compile("[a-z][a-z0-9]*(?:-[a-z0-9]+)*");
     private static final Pattern CLASS = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)+");
-    private static final Set<String> CATEGORIES = Set.of("core", "geotools", "combined", "database", "network", "validator");
+    private static final Set<String> CATEGORIES = Set.of("core", "geotools", "combined", "database", "network", "interlis", "validator");
     private static final Set<String> FORBIDDEN = Set.of("includeBuild", "mavenLocal()", "flatDir", "withPluginClasspath",
             "gretl-core/build", "gretl-geotools/build", "build/classes", "build/resources", "apply plugin:");
 
@@ -32,7 +33,7 @@ public final class TestJobDescriptorValidator {
         if (descriptor == null) {
             return List.of(new TestJobValidationError("descriptor", "must not be null"));
         }
-        if (descriptor.schemaVersion() != 1) add(errors, "schemaVersion", "must be 1");
+        if (descriptor.schemaVersion() != 2) add(errors, "schemaVersion", "must be 2");
         if (!ID.matcher(descriptor.id()).matches()) add(errors, "id", "must match " + ID.pattern());
         if (descriptor.description().isBlank()) add(errors, "description", "must not be blank");
         if (!CATEGORIES.contains(descriptor.category())) add(errors, "category", "unsupported category");
@@ -52,6 +53,11 @@ public final class TestJobDescriptorValidator {
                 if (!build.file().endsWith(expectedSuffix)) add(errors, field + ".file", "does not match its language");
                 inspectBuild(source, field + ".file", errors);
             }
+            for (var entry : build.executionTargets().entrySet()) {
+                if (!descriptor.executionTargets().containsKey(entry.getKey())) {
+                    add(errors, field + ".executionTargets." + entry.getKey().yamlName(), "job has no default target declaration");
+                }
+            }
         }
         if (descriptor.entryTasks().isEmpty()) add(errors, "entryTasks", "at least one task is required");
         descriptor.entryTasks().forEach((task) -> {
@@ -67,6 +73,16 @@ public final class TestJobDescriptorValidator {
         }
         for (TestJobExecutionTarget target : TestJobExecutionTarget.values()) {
             if (!descriptor.executionTargets().containsKey(target)) add(errors, "executionTargets." + target.yamlName(), "is required");
+        }
+        Set<String> fixtureIds = new HashSet<>();
+        Set<String> bindingNames = new HashSet<>();
+        for (int i = 0; i < descriptor.fixtures().size(); i++) {
+            TestJobFixtureRequirement fixture = descriptor.fixtures().get(i);
+            if (!fixtureIds.add(fixture.id())) add(errors, "fixtures[" + i + "].id", "must be unique");
+            for (var binding : fixture.bindings()) {
+                String key = fixture.id() + "\u0000" + binding.target() + "\u0000" + binding.name();
+                if (!bindingNames.add(key)) add(errors, "fixtures[" + i + "].bindings", "destination must be unique");
+            }
         }
         if (descriptor.assertions().isBlank()) add(errors, "assertions", "must not be blank");
         Duration timeout = descriptor.timeout();

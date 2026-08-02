@@ -19,9 +19,16 @@ class CatalogValidationTest {
 
         assertEquals(Set.of(
                 "combined-core-geotools-pipeline",
+                "core-duckdb-spatial",
                 "core-gzip",
                 "core-sqlite",
-                "geotools-read-shapefile"),
+                "database-postgis-sql",
+                "geotools-read-shapefile",
+                "interlis-ili2duckdb-roundtrip",
+                "interlis-ili2pg-lifecycle",
+                "network-ftp-roundtrip",
+                "network-http-curl",
+                "network-s3-roundtrip"),
                 catalog.all().stream().map(TestJobDescriptor::id).collect(Collectors.toSet()));
         assertEquals(catalog.all().stream().map(TestJobDescriptor::id).sorted().toList(),
                 catalog.all().stream().map(TestJobDescriptor::id).toList());

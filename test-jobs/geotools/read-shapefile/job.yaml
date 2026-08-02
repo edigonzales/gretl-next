@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 id: geotools-read-shapefile
 description: Reads a shapefile through the isolated GeoTools worker.
 category: geotools
@@ -19,5 +19,6 @@ executionTargets:
 capabilities:
   - filesystem
   - geotools-worker
+fixtures: []
 assertions: geotools-read-shapefile
 timeoutSeconds: 300

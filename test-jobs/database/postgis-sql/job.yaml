@@ -1,0 +1,39 @@
+schemaVersion: 2
+id: database-postgis-sql
+description: Executes static SQL in an isolated PostGIS lease schema.
+category: database
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - fillDatabase
+expectedTasks:
+  - path: :fillDatabase
+    className: ch.so.agi.gretl.tasks.SqlExecutor
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - postgis
+  - service-fixture
+fixtures:
+  - id: postgis
+    type: postgis
+    bindings:
+      - source: jdbcUrl
+        target: gradle-property
+        name: pgUrl
+      - source: username
+        target: gradle-property
+        name: pgUser
+      - source: password
+        target: gradle-property
+        name: pgPassword
+      - source: schema
+        target: gradle-property
+        name: pgSchema
+assertions: database-postgis-sql
+timeoutSeconds: 600

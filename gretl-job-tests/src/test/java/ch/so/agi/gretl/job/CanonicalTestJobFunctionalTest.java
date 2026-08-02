@@ -2,7 +2,6 @@ package ch.so.agi.gretl.job;
 
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 import ch.so.agi.gretl.test.job.CommonTestJobAssertions;
-import ch.so.agi.gretl.test.job.DefaultTestJobExecutionBackendFactory;
 import ch.so.agi.gretl.test.job.DefaultTestJobMaterializer;
 import ch.so.agi.gretl.test.job.FileSystemTestJobCatalog;
 import ch.so.agi.gretl.test.job.MaterializedTestJob;
@@ -12,6 +11,10 @@ import ch.so.agi.gretl.test.job.TestJobBackendContext;
 import ch.so.agi.gretl.test.job.TestJobBuildVariant;
 import ch.so.agi.gretl.test.job.TestJobDescriptor;
 import ch.so.agi.gretl.test.job.TestJobExecutionRequirement;
+import ch.so.agi.gretl.test.job.TestJobExecutionCase;
+import ch.so.agi.gretl.test.job.TestJobExecutionSelector;
+import ch.so.agi.gretl.test.job.TestJobExecutionSession;
+import ch.so.agi.gretl.test.job.TestJobExecutionSessionConfiguration;
 import ch.so.agi.gretl.test.job.TestJobExecutionTarget;
 import ch.so.agi.gretl.test.job.TestJobRunRequest;
 import ch.so.agi.gretl.test.job.TestJobRunResult;
@@ -59,43 +62,50 @@ class CanonicalTestJobFunctionalTest {
     private static TestJobExecutionTarget target;
     private static Path materializedRoot;
     private static TestJobRunner runner;
-    private static DefaultTestJobExecutionBackendFactory backendFactory;
+    private static TestJobExecutionSession session;
 
     @BeforeAll
     static void setUp() {
         catalog = FileSystemTestJobCatalog.load(requiredPath("gretl.test.jobsRoot"));
         target = TestJobExecutionTarget.valueOf(required("gretl.job.backend"));
         materializedRoot = requiredPath("gretl.test.materializedJobs");
-        backendFactory = new DefaultTestJobExecutionBackendFactory();
-        runner = new TestJobRunner(new DefaultTestJobMaterializer(), backendFactory,
-                new TestJobAssertionRegistry(List.of(
+        TestJobAssertionRegistry assertions = new TestJobAssertionRegistry(List.of(
                         new GzipAssertions(), new SqliteAssertions(),
-                        new CombinedRasterAssertions(), new ReadShapefileAssertions())),
-                backendContext());
+                        new CombinedRasterAssertions(), new ReadShapefileAssertions(),
+                        new P2CanonicalAssertions("core-duckdb-spatial"),
+                        new P2CanonicalAssertions("network-http-curl"),
+                        new P2CanonicalAssertions("network-ftp-roundtrip"),
+                        new P2CanonicalAssertions("network-s3-roundtrip"),
+                        new P2CanonicalAssertions("database-postgis-sql"),
+                        new P2CanonicalAssertions("interlis-ili2duckdb-roundtrip"),
+                        new P2CanonicalAssertions("interlis-ili2pg-lifecycle")));
+        session = TestJobExecutionSession.open(new TestJobExecutionSessionConfiguration(
+                materializedRoot, target, backendContext(), new DefaultTestJobMaterializer(), assertions,
+                TestJobExecutionSession.defaultFixtureRegistry(),
+                ch.so.agi.gretl.test.job.MaterializedJobRetentionPolicy.KEEP_ALWAYS));
+        runner = session.runner();
     }
 
     @AfterAll
     static void tearDown() {
-        if (backendFactory != null) {
-            backendFactory.close();
+        if (session != null) {
+            session.close();
         }
     }
 
     @TestFactory
     Stream<DynamicTest> executesCanonicalJobs() {
-        boolean serviceOnly = Boolean.parseBoolean(System.getProperty("gretl.job.serviceOnly", "false"));
+        boolean includeOptional = Boolean.getBoolean("gretl.job.includeOptional");
+        Set<String> categoryFilter = java.util.Arrays.stream(
+                        System.getProperty("gretl.job.categories", "").split(","))
+                .map(String::trim).filter(value -> !value.isEmpty()).collect(java.util.stream.Collectors.toSet());
         List<DynamicTest> tests = new ArrayList<>();
-        for (TestJobDescriptor job : catalog.all()) {
-            if (job.requirementFor(target) == TestJobExecutionRequirement.NOT_APPLICABLE) {
+        for (TestJobExecutionCase executionCase : new TestJobExecutionSelector().select(catalog, target, includeOptional)) {
+            if (!categoryFilter.isEmpty() && !categoryFilter.contains(executionCase.descriptor().category())) {
                 continue;
             }
-            List<TestJobBuildVariant> builds = serviceOnly
-                    ? job.builds().stream().filter(build -> build.language().name().equals("GROOVY")).limit(1).toList()
-                    : job.builds();
-            for (TestJobBuildVariant build : builds) {
-                String name = target + " / " + job.id() + " / " + build.id();
-                tests.add(DynamicTest.dynamicTest(name, () -> run(job, build)));
-            }
+            String name = target + " / " + executionCase.descriptor().id() + " / " + executionCase.buildVariant().id();
+            tests.add(DynamicTest.dynamicTest(name, () -> run(executionCase.descriptor(), executionCase.buildVariant())));
         }
         return tests.stream();
     }
@@ -184,7 +194,7 @@ class CanonicalTestJobFunctionalTest {
             try (InputStream input = new GZIPInputStream(Files.newInputStream(output))) {
                 actual = input.readAllBytes();
             }
-            assertArrayEquals(Files.readAllBytes(job.resolve("expected/payload.txt")), actual);
+            assertArrayEquals(Files.readAllBytes(job.resolveExpected("payload.txt")), actual);
         }
     }
 
@@ -266,7 +276,7 @@ class CanonicalTestJobFunctionalTest {
             assertTrue(result.output().contains("Feature count:"), result.output());
             assertTrue(result.output().contains("Target CRS: EPSG:2056"), result.output());
             assertFalse(result.output().contains("GRETL_WORKER|"), result.output());
-            assertTrue(Files.isRegularFile(job.resolve("expected/features.json")));
+            assertTrue(Files.isRegularFile(job.resolveExpected("features.json")));
         }
     }
 }

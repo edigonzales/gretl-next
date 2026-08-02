@@ -2,6 +2,8 @@ package ch.so.agi.gretl.test.job;
 
 import ch.so.agi.gretl.test.execution.GretlBuildResult;
 
+import java.util.Set;
+
 public final class CommonTestJobAssertions {
     public static void assertSuccessful(GretlBuildResult result) {
         if (!result.successful()) throw new AssertionError("GRETL build failed: " + result.output());
@@ -18,6 +20,14 @@ public final class CommonTestJobAssertions {
 
     public static void assertNoRemoteDownloadLog(GretlBuildResult result) {
         if (result.output().matches("(?is).*\\b(download|downloading|downloading)\\b.*")) throw new AssertionError("Remote download message found: " + result.output());
+    }
+
+    public static void assertSecretsAbsent(GretlBuildResult result, Set<String> secrets) {
+        for (String secret : secrets) {
+            if (secret != null && !secret.isEmpty() && result.output().contains(secret)) {
+                throw new AssertionError("Secret value leaked into GRETL output: " + secret);
+            }
+        }
     }
 
     private CommonTestJobAssertions() { }

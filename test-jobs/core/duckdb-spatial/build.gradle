@@ -1,0 +1,8 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.DuckDbSqlExecutor
+
+tasks.register('executeSpatialSql', DuckDbSqlExecutor) {
+    database layout.buildDirectory.file('spatial/spatial.duckdb')
+    sqlFiles 'input/spatial.sql'
+}

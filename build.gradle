@@ -1055,6 +1055,7 @@ tasks.register('runtimeImageTest') {
     dependsOn tasks.named('runtimeImageServiceTest')
     dependsOn ':gretl-job-tests:canonicalJobRuntimeImageTest'
     dependsOn ':gretl-job-tests:canonicalJobServiceTest'
+    dependsOn ':gretl-job-tests:canonicalJobOptionalServiceTest'
 }
 
 tasks.register('ciCheck') {
@@ -1064,6 +1065,7 @@ tasks.register('ciCheck') {
     dependsOn ':gretl-core:integrationTest'
     dependsOn tasks.named('publishedArtifactTest')
     dependsOn tasks.named('runtimeImageTest')
+    dependsOn ':gretl-job-tests:coverageTest'
 }
 
 // These gates all exercise Docker/Testcontainers. Keep them serialized when

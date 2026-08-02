@@ -3,6 +3,10 @@ package ch.so.agi.gretl.test.job;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import ch.so.agi.gretl.test.fixture.TestFixtureType;
+import ch.so.agi.gretl.test.fixture.TestJobBindingTarget;
+import ch.so.agi.gretl.test.fixture.TestJobFixtureBinding;
+import ch.so.agi.gretl.test.fixture.TestJobFixtureRequirement;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,8 +25,11 @@ import java.util.Set;
 public final class TestJobYamlReader {
     private static final Set<String> TOP_LEVEL_FIELDS = Set.of(
             "schemaVersion", "id", "description", "category", "builds", "entryTasks",
-            "expectedTasks", "executionTargets", "capabilities", "assertions", "timeoutSeconds");
-    private static final Set<String> BUILD_FIELDS = Set.of("id", "file", "language");
+            "expectedTasks", "executionTargets", "capabilities", "fixtures", "assertions", "timeoutSeconds");
+    private static final Set<String> BUILD_FIELDS = Set.of("id", "file", "language", "executionTargets");
+    private static final Set<String> DECLARATION_FIELDS = Set.of("requirement", "reason");
+    private static final Set<String> FIXTURE_FIELDS = Set.of("id", "type", "bindings");
+    private static final Set<String> BINDING_FIELDS = Set.of("source", "target", "name");
     private static final Set<String> EXPECTED_TASK_FIELDS = Set.of("path", "className");
     private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -34,6 +41,11 @@ public final class TestJobYamlReader {
                 throw error(file, "descriptor", "must be a YAML object");
             }
             rejectUnknown(root, TOP_LEVEL_FIELDS, file, "top-level");
+            int schemaVersion = integer(root, "schemaVersion", file);
+            if (schemaVersion == 1) {
+                throw error(file, "schemaVersion", "Schema version 1 is no longer supported.");
+            }
+            if (schemaVersion != 2) throw error(file, "schemaVersion", "must be 2");
 
             List<TestJobBuildVariant> builds = new ArrayList<>();
             JsonNode buildsNode = required(root, "builds", file);
@@ -50,7 +62,8 @@ public final class TestJobYamlReader {
                 }
                 builds.add(new TestJobBuildVariant(
                         text(node, "id", file, "builds[" + i + "]"),
-                        text(node, "file", file, "builds[" + i + "]"), language));
+                        text(node, "file", file, "builds[" + i + "]"), language,
+                        declarations(node, "executionTargets", file, "builds[" + i + "]")));
             }
 
             List<String> entryTasks = strings(root, "entryTasks", file);
@@ -81,9 +94,11 @@ public final class TestJobYamlReader {
                 }
             }
 
+            List<TestJobFixtureRequirement> fixtures = fixtures(root, file);
+
             int timeoutSeconds = root.has("timeoutSeconds") ? integer(root, "timeoutSeconds", file) : 300;
             return new TestJobDescriptor(
-                    integer(root, "schemaVersion", file),
+                    schemaVersion,
                     text(root, "id", file, "id"),
                     text(root, "description", file, "description"),
                     text(root, "category", file, "category"),
@@ -92,12 +107,78 @@ public final class TestJobYamlReader {
                     expectedTasks,
                     targets,
                     new LinkedHashSet<>(strings(root, "capabilities", file)),
+                    fixtures,
                     text(root, "assertions", file, "assertions"),
                     Duration.ofSeconds(timeoutSeconds),
                     file.getParent());
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot read test job descriptor '" + file + "'.", e);
         }
+    }
+
+    private List<TestJobFixtureRequirement> fixtures(JsonNode root, Path file) {
+        JsonNode node = required(root, "fixtures", file);
+        if (!node.isArray()) throw error(file, "fixtures", "must be an array");
+        List<TestJobFixtureRequirement> values = new ArrayList<>();
+        for (int i = 0; i < node.size(); i++) {
+            JsonNode fixture = node.get(i);
+            String prefix = "fixtures[" + i + "]";
+            rejectUnknown(fixture, FIXTURE_FIELDS, file, prefix);
+            JsonNode bindings = required(fixture, "bindings", file);
+            if (!bindings.isArray()) throw error(file, prefix + ".bindings", "must be an array");
+            List<TestJobFixtureBinding> bindingValues = new ArrayList<>();
+            Set<String> names = new HashSet<>();
+            for (int j = 0; j < bindings.size(); j++) {
+                JsonNode binding = bindings.get(j);
+                String bindingPrefix = prefix + ".bindings[" + j + "]";
+                rejectUnknown(binding, BINDING_FIELDS, file, bindingPrefix);
+                String name = text(binding, "name", file, bindingPrefix);
+                if (!names.add(name)) throw error(file, bindingPrefix + ".name", "must be unique within fixture");
+                TestJobBindingTarget target;
+                try { target = TestJobBindingTarget.fromYaml(text(binding, "target", file, bindingPrefix)); }
+                catch (IllegalArgumentException e) { throw error(file, bindingPrefix + ".target", e.getMessage()); }
+                bindingValues.add(new TestJobFixtureBinding(text(binding, "source", file, bindingPrefix), target, name));
+            }
+            TestFixtureType type;
+            try { type = TestFixtureType.fromYaml(text(fixture, "type", file, prefix)); }
+            catch (IllegalArgumentException e) { throw error(file, prefix + ".type", e.getMessage()); }
+            values.add(new TestJobFixtureRequirement(text(fixture, "id", file, prefix), type, bindingValues));
+        }
+        return List.copyOf(values);
+    }
+
+    private Map<TestJobExecutionTarget, TestJobExecutionDeclaration> declarations(
+            JsonNode node, String field, Path file, String prefix) {
+        Map<TestJobExecutionTarget, TestJobExecutionDeclaration> result = new EnumMap<>(TestJobExecutionTarget.class);
+        if (!node.has(field)) return Map.of();
+        JsonNode targets = node.get(field);
+        if (!targets.isObject()) throw error(file, prefix + "." + field, "must be an object");
+        Iterator<Map.Entry<String, JsonNode>> fields = targets.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            TestJobExecutionTarget target;
+            try { target = TestJobExecutionTarget.fromYaml(entry.getKey()); }
+            catch (IllegalArgumentException e) { throw error(file, prefix + "." + field + "." + entry.getKey(), e.getMessage()); }
+            JsonNode value = entry.getValue();
+            TestJobExecutionRequirement requirement;
+            String reason = null;
+            if (value.isTextual()) {
+                requirement = TestJobExecutionRequirement.fromYaml(value.asText());
+            } else {
+                rejectUnknown(value, DECLARATION_FIELDS, file, prefix + "." + field + "." + entry.getKey());
+                requirement = TestJobExecutionRequirement.fromYaml(text(value, "requirement", file,
+                        prefix + "." + field + "." + entry.getKey()));
+                if (value.has("reason")) reason = text(value, "reason", file,
+                        prefix + "." + field + "." + entry.getKey());
+            }
+            try {
+                result.put(target, new TestJobExecutionDeclaration(requirement,
+                        java.util.Optional.ofNullable(reason)));
+            } catch (IllegalArgumentException e) {
+                throw error(file, prefix + "." + field + "." + entry.getKey(), e.getMessage());
+            }
+        }
+        return Map.copyOf(result);
     }
 
     private static void rejectUnknown(JsonNode node, Set<String> allowed, Path file, String field) {

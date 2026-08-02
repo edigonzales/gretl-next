@@ -1,0 +1,42 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.FtpDelete
+import ch.so.agi.gretl.tasks.FtpDownload
+import ch.so.agi.gretl.tasks.FtpList
+import ch.so.agi.gretl.tasks.FtpUpload
+
+def ftpServerValue = providers.gradleProperty('ftpServer').get()
+def ftpUserValue = providers.gradleProperty('ftpUser').get()
+def ftpPasswordValue = providers.gradleProperty('ftpPassword').get()
+def ftpDirectoryValue = providers.gradleProperty('ftpRemoteDirectory').get()
+def ftpPassiveMode = providers.gradleProperty('ftpPassiveMode').get().toBoolean()
+def common = {
+    server ftpServerValue
+    user ftpUserValue
+    password ftpPasswordValue
+    remoteDir ftpDirectoryValue
+    passiveMode ftpPassiveMode
+}
+
+tasks.register('upload', FtpUpload) {
+    common.delegate = delegate; common()
+    fileType 'BINARY'
+    localFile 'input/payload.bin'
+}
+tasks.register('list', FtpList) {
+    dependsOn 'upload'
+    common.delegate = delegate; common()
+}
+tasks.register('download', FtpDownload) {
+    dependsOn 'upload'
+    common.delegate = delegate; common()
+    fileType 'BINARY'
+    remoteFile 'payload.bin'
+    localDir layout.buildDirectory.dir('download')
+}
+tasks.register('delete', FtpDelete) {
+    dependsOn 'list', 'download'
+    common.delegate = delegate; common()
+    remoteFile 'payload.bin'
+}
+tasks.register('verifyFtpRoundtrip') { dependsOn 'delete' }

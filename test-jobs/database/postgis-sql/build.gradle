@@ -1,0 +1,9 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.SqlExecutor
+
+tasks.register('fillDatabase', SqlExecutor) {
+    database providers.gradleProperty('pgUrl').get(), providers.gradleProperty('pgUser').get(),
+            providers.gradleProperty('pgPassword').get()
+    sqlFiles 'input/fill.sql'
+}

@@ -23,12 +23,23 @@ public final class DefaultTestJobMaterializer implements TestJobMaterializer {
     @Override
     public MaterializedTestJob materialize(TestJobDescriptor descriptor, TestJobBuildVariant build,
                                            TestJobExecutionTarget target, Path destinationRoot) {
+        return materialize(descriptor, build, target, destinationRoot,
+                TestJobExecutionId.create(descriptor, build, target));
+    }
+
+    @Override
+    public MaterializedTestJob materialize(TestJobDescriptor descriptor, TestJobBuildVariant build,
+                                           TestJobExecutionTarget target, Path destinationRoot,
+                                           TestJobExecutionId executionId) {
         Path sourceRoot = descriptor.sourceDirectory().toAbsolutePath().normalize();
         Path destination = destinationRoot.toAbsolutePath().normalize()
-                .resolve(descriptor.id()).resolve(build.id()).resolve(target.name().toLowerCase());
+                .resolve(target.name().toLowerCase().replace('_', '-')).resolve(descriptor.id()).resolve(build.id())
+                .resolve(executionId.value());
         if (destination.startsWith(sourceRoot)) throw new IllegalArgumentException("Materialized job destination must be outside catalog: " + destination);
         try {
-            deleteRecursively(destination);
+            if (Files.exists(destination, LinkOption.NOFOLLOW_LINKS)) {
+                throw new IllegalStateException("Materialized execution directory already exists: " + destination);
+            }
             Files.createDirectories(destination);
             copySelectedFiles(sourceRoot, destination, build.file());
             Path settings = destination.resolve("settings.gradle");
@@ -48,27 +59,11 @@ public final class DefaultTestJobMaterializer implements TestJobMaterializer {
             Files.writeString(trace, "", StandardCharsets.UTF_8);
             Files.writeString(bootstrap, traceScript(), StandardCharsets.UTF_8);
             verifyBuildFileUnchanged(sourceRoot.resolve(build.file()), destination.resolve(build.file()));
-            return new MaterializedTestJob(descriptor, build, target, destination,
-                    destination.resolve(build.file()), settings, trace);
+            return new MaterializedTestJob(descriptor, build, target, executionId,
+                    destination, destination.resolve(build.file()), settings, trace,
+                    sourceRoot.resolve("expected"));
         } catch (IOException e) {
             throw new IllegalStateException("Cannot materialize test job " + descriptor.id() + " at " + destination, e);
-        }
-    }
-
-    private void deleteRecursively(Path directory) throws IOException {
-        if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
-            return;
-        }
-        try (var paths = Files.walk(directory)) {
-            paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
-                try {
-                    Files.deleteIfExists(path);
-                } catch (IOException e) {
-                    throw new MaterializationException(e);
-                }
-            });
-        } catch (MaterializationException e) {
-            throw e.ioException;
         }
     }
 
@@ -77,6 +72,7 @@ public final class DefaultTestJobMaterializer implements TestJobMaterializer {
             paths.filter(path -> !path.equals(sourceRoot))
                     .filter(path -> !containsGeneratedDirectory(sourceRoot.relativize(path)))
                     .filter(path -> !path.getFileName().toString().equals("job.yaml"))
+                    .filter(path -> !containsExpectedDirectory(sourceRoot.relativize(path)))
                     .filter(path -> !isBuildVariant(path.getFileName().toString()) || path.getFileName().toString().equals(selectedBuild))
                     .forEach(source -> {
                         Path relative = sourceRoot.relativize(source);
@@ -104,6 +100,13 @@ public final class DefaultTestJobMaterializer implements TestJobMaterializer {
     private boolean containsGeneratedDirectory(Path relative) {
         for (Path part : relative) {
             if (part.toString().equals("build") || part.toString().equals(".gradle") || part.toString().equals(".git")) return true;
+        }
+        return false;
+    }
+
+    private boolean containsExpectedDirectory(Path relative) {
+        for (Path part : relative) {
+            if (part.toString().equals("expected")) return true;
         }
         return false;
     }

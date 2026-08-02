@@ -1,0 +1,45 @@
+schemaVersion: 2
+id: network-http-curl
+description: Exercises text, binary, multipart and download HTTP requests through one canonical build.
+category: network
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+entryTasks:
+  - httpRoundtrip
+expectedTasks:
+  - path: :postText
+    className: ch.so.agi.gretl.tasks.Curl
+  - path: :postBinary
+    className: ch.so.agi.gretl.tasks.Curl
+  - path: :postForm
+    className: ch.so.agi.gretl.tasks.Curl
+  - path: :download
+    className: ch.so.agi.gretl.tasks.Curl
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: required
+capabilities:
+  - http
+  - service-fixture
+fixtures:
+  - id: http
+    type: http
+    bindings:
+      - source: baseUrl
+        target: gradle-property
+        name: httpBaseUrl
+      - source: username
+        target: gradle-property
+        name: httpUser
+      - source: password
+        target: gradle-property
+        name: httpPassword
+      - source: runToken
+        target: gradle-property
+        name: httpRunToken
+assertions: network-http-curl
+timeoutSeconds: 600

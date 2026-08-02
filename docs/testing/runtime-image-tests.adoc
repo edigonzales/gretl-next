@@ -48,6 +48,7 @@ required targets and fachliche output assertions before execution.
 ./gradlew :gretl-job-tests:canonicalJobPublishedTest
 ./gradlew :gretl-job-tests:canonicalJobRuntimeImageTest
 ./gradlew :gretl-job-tests:canonicalJobServiceTest
+./gradlew :gretl-job-tests:canonicalJobOptionalServiceTest
 ./gradlew :gretl-job-tests:coverageTest
 ----
 
@@ -109,3 +110,6 @@ The task-specific reports are under each module's `build/reports/tests` and
 writes the trace-backed reports to `build/reports/test-jobs/coverage.json` and
 `coverage.adoc`. Cleanup removes one-shot containers,
 service containers, temporary Gradle homes and test networks.
+
+The P2 fixture/session model and canonical job catalog are documented in
+`docs/testing/canonical-job-p2.adoc`.

@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.test.job;
 
+import ch.so.agi.gretl.test.fixture.TestJobFixtureRequirement;
+
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -18,6 +20,7 @@ public record TestJobDescriptor(
         List<ExpectedTaskExecution> expectedTasks,
         Map<TestJobExecutionTarget, TestJobExecutionRequirement> executionTargets,
         Set<String> capabilities,
+        List<TestJobFixtureRequirement> fixtures,
         String assertions,
         Duration timeout,
         Path sourceDirectory) {
@@ -31,10 +34,21 @@ public record TestJobDescriptor(
         expectedTasks = List.copyOf(Objects.requireNonNull(expectedTasks, "expectedTasks must not be null"));
         executionTargets = Map.copyOf(Objects.requireNonNull(executionTargets, "executionTargets must not be null"));
         capabilities = Set.copyOf(Objects.requireNonNull(capabilities, "capabilities must not be null"));
+        fixtures = List.copyOf(Objects.requireNonNull(fixtures, "fixtures must not be null"));
         Objects.requireNonNull(assertions, "assertions must not be null");
         Objects.requireNonNull(timeout, "timeout must not be null");
         sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory must not be null")
                 .toAbsolutePath().normalize();
+    }
+
+    public TestJobDescriptor(int schemaVersion, String id, String description, String category,
+                             List<TestJobBuildVariant> builds, List<String> entryTasks,
+                             List<ExpectedTaskExecution> expectedTasks,
+                             Map<TestJobExecutionTarget, TestJobExecutionRequirement> executionTargets,
+                             Set<String> capabilities, String assertions, Duration timeout,
+                             Path sourceDirectory) {
+        this(schemaVersion, id, description, category, builds, entryTasks, expectedTasks,
+                executionTargets, capabilities, List.of(), assertions, timeout, sourceDirectory);
     }
 
     public TestJobBuildVariant requireBuild(String variantId) {

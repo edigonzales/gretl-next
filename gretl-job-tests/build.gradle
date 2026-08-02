@@ -28,6 +28,8 @@ dependencies {
     testImplementation "org.geotools:gt-shapefile:${geotoolsVersion}"
     testImplementation "org.geotools:gt-epsg-hsql:${geotoolsVersion}"
     testRuntimeOnly "org.xerial:sqlite-jdbc:${sqliteJdbcVersion}"
+    testRuntimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
+    testRuntimeOnly "org.duckdb:duckdb_jdbc:${duckdbVersion}"
 }
 
 def jobsRoot = rootProject.layout.projectDirectory.dir('test-jobs')
@@ -66,6 +68,7 @@ tasks.register('writeCanonicalJobPluginClasspath') {
 
 def configureJobTest = { Test task, String backend, boolean published, boolean runtime ->
     task.dependsOn tasks.named('validateTestJobCatalog')
+    task.inputs.dir(jobsRoot)
     task.systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
     task.systemProperty 'gretl.test.materializedJobs', materializedJobs.get().asFile.absolutePath
     task.systemProperty 'gretl.job.backend', backend
@@ -96,6 +99,7 @@ tasks.register('validateTestJobCatalog', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    inputs.dir(jobsRoot)
     useJUnitPlatform()
     filter { includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest' }
 }
@@ -140,7 +144,32 @@ tasks.register('canonicalJobServiceTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     configureJobTest(delegate, 'RUNTIME_IMAGE_SERVICE', false, true)
-    systemProperty 'gretl.job.serviceOnly', 'true'
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+['core', 'database', 'network', 'interlis'].each { String category ->
+    tasks.register("canonicalJob${category.capitalize()}Test", Test) {
+        group = 'verification'
+        description = "Runs canonical ${category} jobs through the source plugin classpath backend."
+        dependsOn tasks.named('writeCanonicalJobPluginClasspath')
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        configureJobTest(delegate, 'PLUGIN_CLASSPATH', false, false)
+        systemProperty 'gretl.job.categories', category
+        useJUnitPlatform()
+        filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+    }
+}
+
+tasks.register('canonicalJobOptionalServiceTest', Test) {
+    group = 'verification'
+    description = 'Runs optional canonical jobs through the runtime-image service backend.'
+    dependsOn rootProject.tasks.named('buildRuntimeImageForTest'), tasks.named('writeCanonicalJobPluginClasspath')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'RUNTIME_IMAGE_SERVICE', false, true)
+    systemProperty 'gretl.job.includeOptional', 'true'
     useJUnitPlatform()
     filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
 }
@@ -155,6 +184,8 @@ tasks.register('coverageTest', Test) {
     group = 'verification'
     description = 'Verifies the task coverage matrix against canonical job execution traces.'
     dependsOn tasks.named('canonicalJobTest')
+    inputs.file(rootProject.layout.projectDirectory.file('docs/testing/task-coverage.yaml'))
+    inputs.dir(jobsRoot)
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     systemProperty 'gretl.test.repositoryRoot', rootProject.projectDir.absolutePath

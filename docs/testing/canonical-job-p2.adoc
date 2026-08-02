@@ -1,0 +1,46 @@
+= P2 canonical consumer jobs
+
+P2 jobs are persistent consumer projects below `test-jobs/`. Their `job.yaml`
+uses schema version 2 and declares build variants, expected task classes,
+target requirements and fixture bindings. Materialization copies only the
+consumer project; `expected/` remains outside that project and is addressed
+through the assertion context.
+
+Each execution belongs to one session. The session owns the backend factory,
+fixture network, fixture registry/orchestrator, runtime service and service
+Gradle home. Execution directories are unique below
+`<root>/<target>/<job>/<variant>/<execution-id>`. Fixture leases are closed
+before the session-owned resources, and secret values are redacted from
+commands and output checks.
+
+The P2 catalog currently covers these jobs:
+
+* `core-duckdb-spatial`
+* `network-http-curl`
+* `network-ftp-roundtrip`
+* `network-s3-roundtrip`
+* `interlis-ili2duckdb-roundtrip`
+* `database-postgis-sql`
+* `interlis-ili2pg-lifecycle`
+
+The standard selector runs `required` targets. Optional targets are included
+only with `-Dgretl.job.includeOptional=true`; category-focused source gates use
+`-Dgretl.job.categories=core,database,network,interlis`. Coverage is granted
+only by positive task traces and is maintained in
+`docs/testing/task-coverage.yaml`.
+
+[source,bash]
+----
+./gradlew :gretl-job-tests:validateTestJobCatalog
+./gradlew :gretl-job-tests:canonicalJobSourceTest
+./gradlew :gretl-job-tests:canonicalJobPublishedTest
+./gradlew :gretl-job-tests:canonicalJobRuntimeImageTest
+./gradlew :gretl-job-tests:canonicalJobServiceTest
+./gradlew :gretl-job-tests:canonicalJobOptionalServiceTest
+./gradlew :gretl-job-tests:coverageTest
+----
+
+Fixtures expose separate host and runtime endpoint views. HTTP records
+requests, FTP and S3 use per-lease namespaces/buckets, PostGIS uses a per-lease
+schema, and DuckDB extension installation is treated as a session-owned
+read-only resource.

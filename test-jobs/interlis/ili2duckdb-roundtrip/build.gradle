@@ -1,0 +1,32 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.Ili2duckdbExport
+import ch.so.agi.gretl.tasks.Ili2duckdbImport
+import ch.so.agi.gretl.tasks.Ili2duckdbImportSchema
+
+def modelDir = file('input').toString()
+def database = layout.buildDirectory.file('db/data.duckdb')
+tasks.register('schema', Ili2duckdbImportSchema) {
+    databaseFile database
+    modelNames 'GB2AV'
+    modelDirectories modelDir
+    schema 'gb2av'
+    coalesceJson.set(true)
+    createBasketCol.set(true)
+}
+tasks.register('importData', Ili2duckdbImport) {
+    dependsOn 'schema'
+    databaseFile database
+    modelNames 'GB2AV'
+    modelDirectories modelDir
+    schema 'gb2av'
+    transferFiles 'input/transfer.xml'
+}
+tasks.register('exportData', Ili2duckdbExport) {
+    dependsOn 'importData'
+    databaseFile database
+    modelNames 'GB2AV'
+    modelDirectories modelDir
+    schema 'gb2av'
+    dataFiles layout.buildDirectory.file('export/export.xml')
+}

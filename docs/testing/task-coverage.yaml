@@ -37,8 +37,15 @@ tasks:
   Curl:
     className: ch.so.agi.gretl.tasks.Curl
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes the HTTP task.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-http-curl
+        taskPath: :postText
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   Db2Db:
     className: ch.so.agi.gretl.tasks.Db2Db
     module: gretl-core
@@ -47,28 +54,63 @@ tasks:
   DuckDbSqlExecutor:
     className: ch.so.agi.gretl.tasks.DuckDbSqlExecutor
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes the DuckDB SQL task.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: core-duckdb-spatial
+        taskPath: :executeSpatialSql
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   FtpDelete:
     className: ch.so.agi.gretl.tasks.FtpDelete
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes FTP deletion.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-ftp-roundtrip
+        taskPath: :delete
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   FtpDownload:
     className: ch.so.agi.gretl.tasks.FtpDownload
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes FTP download.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-ftp-roundtrip
+        taskPath: :download
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   FtpList:
     className: ch.so.agi.gretl.tasks.FtpList
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes FTP listing.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-ftp-roundtrip
+        taskPath: :list
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   FtpUpload:
     className: ch.so.agi.gretl.tasks.FtpUpload
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes FTP upload.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-ftp-roundtrip
+        taskPath: :upload
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   Gpkg2Dxf:
     className: ch.so.agi.gretl.tasks.Gpkg2Dxf
     module: gretl-core
@@ -109,18 +151,39 @@ tasks:
   Ili2duckdbExport:
     className: ch.so.agi.gretl.tasks.Ili2duckdbExport
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2duckdb export.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2duckdb-roundtrip
+        taskPath: :exportData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2duckdbImport:
     className: ch.so.agi.gretl.tasks.Ili2duckdbImport
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2duckdb import.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2duckdb-roundtrip
+        taskPath: :importData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2duckdbImportSchema:
     className: ch.so.agi.gretl.tasks.Ili2duckdbImportSchema
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2duckdb schema import.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2duckdb-roundtrip
+        taskPath: :schema
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2gpkgImport:
     className: ch.so.agi.gretl.tasks.Ili2gpkgImport
     module: gretl-core
@@ -129,38 +192,87 @@ tasks:
   Ili2pgDelete:
     className: ch.so.agi.gretl.tasks.Ili2pgDelete
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg deletion.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :deleteData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgExport:
     className: ch.so.agi.gretl.tasks.Ili2pgExport
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg export.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :exportData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgImport:
     className: ch.so.agi.gretl.tasks.Ili2pgImport
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg import.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :importData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgImportSchema:
     className: ch.so.agi.gretl.tasks.Ili2pgImportSchema
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg schema import.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :schema
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgReplace:
     className: ch.so.agi.gretl.tasks.Ili2pgReplace
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg replacement.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :replaceA
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgUpdate:
     className: ch.so.agi.gretl.tasks.Ili2pgUpdate
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg update.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :updateA
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   Ili2pgValidate:
     className: ch.so.agi.gretl.tasks.Ili2pgValidate
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes ili2pg validation.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: interlis-ili2pg-lifecycle
+        taskPath: :validateData
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: optional
   IliValidator:
     className: ch.so.agi.gretl.tasks.IliValidator
     module: gretl-core
@@ -203,23 +315,51 @@ tasks:
   S3Bucket2Bucket:
     className: ch.so.agi.gretl.tasks.S3Bucket2Bucket
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes the S3 bucket copy task.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-s3-roundtrip
+        taskPath: :copy
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   S3Delete:
     className: ch.so.agi.gretl.tasks.S3Delete
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes S3 deletion.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-s3-roundtrip
+        taskPath: :delete
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   S3Download:
     className: ch.so.agi.gretl.tasks.S3Download
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes S3 download.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-s3-roundtrip
+        taskPath: :download
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   S3Upload:
     className: ch.so.agi.gretl.tasks.S3Upload
     module: gretl-core
-    classification: NOT_YET_COVERED
-    reason: No canonical job currently executes S3 upload.
+    classification: DIRECT_JOB_EXECUTION
+    scenarios:
+      - job: network-s3-roundtrip
+        taskPath: :upload
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
   ShpExport:
     className: ch.so.agi.gretl.tasks.ShpExport
     module: gretl-core
@@ -242,6 +382,13 @@ tasks:
     scenarios:
       - job: core-sqlite
         taskPath: :initializeDatabase
+        targets:
+          pluginClasspath: required
+          publishedArtifact: required
+          runtimeImageOneShot: required
+          runtimeImageService: required
+      - job: database-postgis-sql
+        taskPath: :fillDatabase
         targets:
           pluginClasspath: required
           publishedArtifact: required

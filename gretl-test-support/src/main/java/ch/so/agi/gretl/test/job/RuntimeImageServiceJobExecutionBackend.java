@@ -41,7 +41,7 @@ public final class RuntimeImageServiceJobExecutionBackend implements TestJobExec
         var arguments = new RuntimeImageLifecycleArguments().arguments(
                 ch.so.agi.gretl.test.execution.RuntimeExecutionMode.SERVICE,
                 runtimeArguments(request, relative));
-        ProcessResult result = service.execGretl(relative, arguments, request.secretValues(), request.timeout());
+        ProcessResult result = service.execGretl(relative, arguments, request.environment(), request.secretValues(), request.timeout());
         return new GretlBuildResult(result.exitCode(), result.standardOutput(), result.standardError(), result.duration(),
                 result.sanitizedCommand(), new GradleTaskOutputParser().parse(result.output()));
     }

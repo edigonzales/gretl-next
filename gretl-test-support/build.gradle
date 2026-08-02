@@ -29,7 +29,12 @@ configurations {
 dependencies {
     api gradleTestKit()
     api "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    api "org.testcontainers:testcontainers:${testcontainersVersion}"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}"
+    implementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    implementation "io.floci:testcontainers-floci:${testcontainersFlociVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"

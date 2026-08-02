@@ -1,0 +1,52 @@
+schemaVersion: 2
+id: interlis-ili2pg-lifecycle
+description: Runs the complete schema, import, replace, update, validate, export and delete lifecycle in PostGIS.
+category: interlis
+builds:
+  - id: groovy
+    file: build.gradle
+    language: GROOVY
+executionTargets:
+  pluginClasspath: required
+  publishedArtifact: required
+  runtimeImageOneShot: required
+  runtimeImageService: optional
+entryTasks:
+  - deleteData
+expectedTasks:
+  - path: :schema
+    className: ch.so.agi.gretl.tasks.Ili2pgImportSchema
+  - path: :importData
+    className: ch.so.agi.gretl.tasks.Ili2pgImport
+  - path: :replaceA
+    className: ch.so.agi.gretl.tasks.Ili2pgReplace
+  - path: :updateA
+    className: ch.so.agi.gretl.tasks.Ili2pgUpdate
+  - path: :validateData
+    className: ch.so.agi.gretl.tasks.Ili2pgValidate
+  - path: :exportData
+    className: ch.so.agi.gretl.tasks.Ili2pgExport
+  - path: :deleteData
+    className: ch.so.agi.gretl.tasks.Ili2pgDelete
+capabilities:
+  - interlis
+  - postgis
+  - service-fixture
+fixtures:
+  - id: postgis
+    type: postgis
+    bindings:
+      - source: jdbcUrl
+        target: gradle-property
+        name: pgUrl
+      - source: username
+        target: gradle-property
+        name: pgUser
+      - source: password
+        target: gradle-property
+        name: pgPassword
+      - source: schema
+        target: gradle-property
+        name: pgSchema
+assertions: interlis-ili2pg-lifecycle
+timeoutSeconds: 1200

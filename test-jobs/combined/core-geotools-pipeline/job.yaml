@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 id: combined-core-geotools-pipeline
 description: Generates, reclassifies and packages a raster through both GRETL plugins.
 category: combined
@@ -26,5 +26,6 @@ executionTargets:
 capabilities:
   - filesystem
   - geotools-worker
+fixtures: []
 assertions: combined-core-geotools-pipeline
 timeoutSeconds: 600

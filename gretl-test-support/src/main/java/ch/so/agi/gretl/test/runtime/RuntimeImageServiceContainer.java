@@ -89,12 +89,19 @@ public final class RuntimeImageServiceContainer implements AutoCloseable {
 
     public ProcessResult execGretl(Path relativeProjectDir, List<String> arguments,
                                    Set<String> secrets, Duration timeout) {
+        return execGretl(relativeProjectDir, arguments, Map.of(), secrets, timeout);
+    }
+
+    public ProcessResult execGretl(Path relativeProjectDir, List<String> arguments,
+                                   Map<String, String> environment,
+                                   Set<String> secrets, Duration timeout) {
         Path relative = relativeProjectDir.normalize();
         if (relative.isAbsolute() || relative.startsWith("..")) {
             throw new IllegalArgumentException("relativeProjectDir must stay below the service jobs root");
         }
-        List<String> command = new ArrayList<>(List.of("docker", "exec", containerName, "gretl",
-                "--project-dir=/home/gradle/project/" + relative));
+        List<String> command = new ArrayList<>(List.of("docker", "exec"));
+        environment.forEach((key, value) -> command.addAll(List.of("--env", key + "=" + value)));
+        command.addAll(List.of(containerName, "gretl", "--project-dir=/home/gradle/project/" + relative));
         command.addAll(arguments);
         return docker.execute(command, timeout, secrets);
     }

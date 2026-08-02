@@ -1,0 +1,34 @@
+plugins { id 'ch.so.agi.gretl' }
+
+import ch.so.agi.gretl.tasks.S3Bucket2Bucket
+import ch.so.agi.gretl.tasks.S3Delete
+import ch.so.agi.gretl.tasks.S3Download
+import ch.so.agi.gretl.tasks.S3Upload
+
+def s3EndpointValue = providers.gradleProperty('s3Endpoint').get()
+def s3RegionValue = providers.gradleProperty('s3Region').get()
+def s3AccessKeyValue = providers.gradleProperty('s3AccessKey').get()
+def s3SecretKeyValue = providers.gradleProperty('s3SecretKey').get()
+def s3SourceBucketValue = providers.gradleProperty('s3SourceBucket').get()
+def s3TargetBucketValue = providers.gradleProperty('s3TargetBucket').get()
+
+tasks.register('upload', S3Upload) {
+    accessKey s3AccessKeyValue; secretKey s3SecretKeyValue; endpoint s3EndpointValue; region s3RegionValue
+    bucketName s3SourceBucketValue; sourceFile 'input/one.txt'; acl 'private'
+}
+tasks.register('copy', S3Bucket2Bucket) {
+    dependsOn 'upload'
+    accessKey s3AccessKeyValue; secretKey s3SecretKeyValue; endpoint s3EndpointValue; region s3RegionValue
+    sourceBucket s3SourceBucketValue; targetBucket s3TargetBucketValue; acl 'private'
+}
+tasks.register('download', S3Download) {
+    dependsOn 'copy'
+    accessKey s3AccessKeyValue; secretKey s3SecretKeyValue; endpoint s3EndpointValue; region s3RegionValue
+    bucketName s3TargetBucketValue; key 'one.txt'; downloadDir layout.buildDirectory.dir('download')
+}
+tasks.register('delete', S3Delete) {
+    dependsOn 'download'
+    accessKey s3AccessKeyValue; secretKey s3SecretKeyValue; endpoint s3EndpointValue; region s3RegionValue
+    bucketName s3TargetBucketValue; key 'one.txt'
+}
+tasks.register('verifyS3Roundtrip') { dependsOn 'delete' }
