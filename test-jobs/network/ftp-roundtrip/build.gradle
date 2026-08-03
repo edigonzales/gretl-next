@@ -39,4 +39,12 @@ tasks.register('delete', FtpDelete) {
     common.delegate = delegate; common()
     remoteFile 'payload.bin'
 }
-tasks.register('verifyFtpRoundtrip') { dependsOn 'delete' }
+tasks.register('verifyFtpRoundtrip') {
+    dependsOn 'delete'
+    doLast {
+        def listing = tasks.named('list').get().files.sort()
+        def output = layout.buildDirectory.file('verification/listing.txt').get().asFile
+        output.parentFile.mkdirs()
+        output.text = listing.join(System.lineSeparator()) + System.lineSeparator()
+    }
+}

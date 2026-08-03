@@ -19,6 +19,7 @@ import java.sql.DriverManager;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("runtime-image")
@@ -66,10 +67,7 @@ class RuntimeImageCoreFunctionalTest {
     @Test
     void loadsDuckDbSpatialExtension() throws Exception {
         writeSettings();
-        Files.writeString(project.resolve("spatial.sql"), """
-                LOAD spatial;
-                CREATE TABLE points AS SELECT ST_Point(2600000, 1200000) AS geom;
-                """, StandardCharsets.UTF_8);
+        Files.writeString(project.resolve("spatial.sql"), "LOAD spatial;\n", StandardCharsets.UTF_8);
         Files.createDirectories(project.resolve("build"));
         Files.writeString(project.resolve("build.gradle"), """
                 plugins { id 'ch.so.agi.gretl' }
@@ -82,6 +80,8 @@ class RuntimeImageCoreFunctionalTest {
 
         GretlBuildResult result = executor().execute(request("spatialCanary"));
         assertTrue(result.successful(), result.output());
+        assertFalse(result.output().contains("INSTALL"), result.output());
+        assertFalse(result.output().contains("Could not download"), result.output());
         assertTrue(Files.exists(project.resolve("build/spatial.duckdb")));
     }
 

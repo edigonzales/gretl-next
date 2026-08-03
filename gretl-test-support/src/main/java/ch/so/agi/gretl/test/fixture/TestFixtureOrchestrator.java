@@ -9,16 +9,17 @@ import ch.so.agi.gretl.test.job.TestJobExecutionTarget;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class TestFixtureOrchestrator implements AutoCloseable {
     private final TestFixtureRegistry registry;
-    private final TestFixtureNetwork network;
+    private final TestFixtureNetworkManager networkManager;
     private final TestJobFixtureBindingResolver resolver;
     private boolean closed;
 
-    public TestFixtureOrchestrator(TestFixtureRegistry registry, TestFixtureNetwork network) {
+    public TestFixtureOrchestrator(TestFixtureRegistry registry, TestFixtureNetworkManager networkManager) {
         this.registry = registry;
-        this.network = network;
+        this.networkManager = networkManager;
         this.resolver = new TestJobFixtureBindingResolver();
     }
 
@@ -31,7 +32,7 @@ public final class TestFixtureOrchestrator implements AutoCloseable {
                 executionId);
         EnumSet<TestFixtureType> types = EnumSet.noneOf(TestFixtureType.class);
         for (TestJobFixtureRequirement requirement : descriptor.fixtures()) types.add(requirement.type());
-        registry.startRequired(types, network);
+        registry.startRequired(types, networkManager);
         Map<String, TestFixtureLease> leases = new LinkedHashMap<>();
         try {
             for (TestJobFixtureRequirement requirement : descriptor.fixtures()) {
@@ -39,10 +40,11 @@ public final class TestFixtureOrchestrator implements AutoCloseable {
                 leases.put(requirement.id(), fixture.acquire(identity));
             }
             TestJobEnvironment environment = resolver.resolve(descriptor, target, leases);
-            if (target == TestJobExecutionTarget.RUNTIME_IMAGE_ONE_SHOT
-                    || target == TestJobExecutionTarget.RUNTIME_IMAGE_SERVICE) {
+            if ((target == TestJobExecutionTarget.RUNTIME_IMAGE_ONE_SHOT
+                    || target == TestJobExecutionTarget.RUNTIME_IMAGE_SERVICE)
+                    && networkManager.current().isPresent()) {
                 environment = environment.merge(new TestJobEnvironment(Map.of(), Map.of(), java.util.Set.of(),
-                        java.util.Optional.of(network.dockerNetworkId())));
+                        networkManager.currentNetworkId()));
             }
             return new PreparedTestJobEnvironment(environment, leases);
         } catch (RuntimeException failure) {
@@ -53,7 +55,7 @@ public final class TestFixtureOrchestrator implements AutoCloseable {
         }
     }
 
-    public TestFixtureNetwork network() { return network; }
+    public Optional<TestFixtureNetwork> currentNetwork() { return networkManager.current(); }
 
     public TestFixtureRegistry registry() { return registry; }
 

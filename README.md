@@ -34,6 +34,7 @@ toolchains.
 ./gradlew --version
 ./gradlew clean check
 ./gradlew :gretl-core:integrationTest
+./gradlew sourceIntegrationTest
 ./gradlew publishedArtifactTest
 ./gradlew stageRuntimeImage
 ./gradlew runtimeImageSmokeTest
@@ -44,8 +45,8 @@ toolchains.
 ```
 
 `./gradlew clean check` is the fast local check and does not require Docker.
-The `:gretl-core:integrationTest` task starts PostgreSQL/PostGIS containers with
-Testcontainers and is run separately.
+`sourceIntegrationTest` is the Docker-backed source gate and includes
+PostgreSQL/PostGIS behavior plus fixture-backed canonical consumer jobs.
 
 The normal `test` and `integrationTest` tasks execute Gradle TestKit projects
 with the source plugin classpath. `:gretl-core:publishedFunctionalTest`,
@@ -73,7 +74,7 @@ The default image tag is `sogis/gretl-modular:test`; override it with
 
 Runtime-image tests require a running Docker daemon and fail explicitly when
 Docker is unavailable. The image-test build records the immutable image ID in
-`build/runtime-image/test/image-id.txt`; override its tag with
+`build/runtime-image/dependency-closure-test/image-id.txt`; override its tag with
 `-PgretlRuntimeImageTestTag=...`:
 
 ```bash
@@ -81,7 +82,6 @@ Docker is unavailable. The image-test build records the immutable image ID in
 ./gradlew runtimeImageContractTest
 ./gradlew runtimeImageDependencyClosureTest
 ./gradlew runtimeImageServiceTest
-./gradlew runtimeImageIntegrationTest
 ```
 
 The default consumer contract is the modern `plugins {}` DSL. The GRETL runtime
@@ -90,7 +90,8 @@ dependency downloads while a job is running. Gradle may still resolve from the
 image-local repository, a deliberately mounted local repository or local
 caches. This does not disable the job's application network: jobs may still
 connect to PostGIS, S3, FTP, HTTP and other services. One-shot and service
-lifecycle are independent from this dependency policy. See [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
+lifecycle are independent from this dependency policy. See the [central testing
+guide](docs/testing/testing.adoc), [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
 and the [task coverage matrix](docs/testing/task-coverage.yaml).
 
 ## Publishing Snapshots
@@ -180,3 +181,4 @@ through Gradle, but are not tested or supported as a GRETL contract.
 - [Task reference](docs/reference/reference.adoc)
 - [Architecture](docs/architecture.md)
 - [Control Plane](docs/control-plane.md)
+- [Testing](docs/testing/testing.adoc)

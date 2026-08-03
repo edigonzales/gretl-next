@@ -1,0 +1,120 @@
+= GRETL Testsystem
+
+Diese Seite ist die verbindliche Übersicht über die Testgates. GRETL testet
+und unterstützt als Gradle-DSL ausschliesslich Groovy mit `build.gradle` und
+`plugins { ... }`. Kotlin-DSL-Builds sind kein GRETL-Test- oder
+Supportvertrag.
+
+== Schneller lokaler Check
+
+`./gradlew clean check` ist Docker-frei. Er umfasst Unit- und normale
+Functional-Tests, die Katalogvalidierung, die fixture-freien erforderlichen
+kanonischen Consumer-Jobs sowie den Schutz davor, dass interne Testjobs oder
+Testmodule veröffentlicht werden.
+
+Die kanonischen Jobs verwenden Schema Version 2 und persistierte Groovy-
+Buildvarianten unter `test-jobs/`. Der Validator akzeptiert für diese Jobs nur
+`build.gradle`; `build.gradle.kts` und ein `language`-Feld in `job.yaml` sind
+nicht zulässig.
+
+== Source- und Artefakt-Gates
+
+`canonicalJobLocalSourceTest` führt erforderliche Jobs ohne Fixtures über den
+isolierten Source-Plugin-Classpath aus. `canonicalJobFixtureSourceTest` führt
+die erforderlichen fixturegebundenen Jobs aus. Der Aggregator
+`canonicalJobSourceTest` umfasst beide Tasks, ist aber nicht Teil des schnellen
+`check`.
+
+Das Root-Gate `sourceIntegrationTest` verbindet die Docker-backed Core-
+Integrationstests mit `canonicalJobFixtureSourceTest`. Für publizierte
+Artefakte gilt weiterhin `publishedArtifactTest`; es prüft Marker, POMs,
+transitive Abhängigkeiten und echte Consumer-Auflösung aus dem isolierten
+Testrepository.
+
+== Testebenen und Beweise
+
+|===
+| Ebene | Docker | Beweis
+
+| `check` | nein | Unit, Functional, Katalog, fixturefreie Source-Jobs
+| `sourceIntegrationTest` | ja | externe Source-Integration und Fixture-Leases
+| `publishedArtifactTest` | ja | Marker, POM, Dependency-Auflösung und Consumer
+| `runtimeImageTest` | ja | Imagevertrag, Offline-Closure, One-shot, Service und Pflichtjobs
+| `coverageTest` | nein (verwendet vorhandene Traces) | positive Tasktraces gegen die Matrix
+|===
+
+Ein neues GRETL-Task wird in `docs/testing/task-coverage.yaml` klassifiziert.
+Ein direkt ausgeführtes kanonisches Szenario muss eine persistierte Job-
+Definition, eine erwartete Taskklasse und fachliche Assertions besitzen. Ein
+neuer Job erhält ein Schema-2-`job.yaml`, eine Groovy-`build.gradle`,
+`expected/`-Daten und eine registrierte Assertionklasse. Fixturebindung,
+Target-Anforderungen und optionale Targets werden im Manifest beschrieben;
+keine Secrets werden in die Builddatei geschrieben.
+
+== Required und Optional
+
+Die Auswahl wird über folgende Properties gesteuert:
+
+* `gretl.job.requirementSelection`: `required`, `optional` oder `all`
+* `gretl.job.fixtureSelection`: `without-fixtures`, `with-fixtures` oder `all`
+* `gretl.job.categories`: kommaseparierte Kategorien, leer bedeutet alle
+
+`canonicalJobServiceTest` verwendet `required`; die optionalen Fälle laufen
+ausschliesslich mit `canonicalJobOptionalServiceTest` und `optional`. Der
+optionale Task ist nicht Bestandteil von `runtimeImageTest` oder `ciCheck`.
+Für beide Varianten ist `extendedRuntimeImageTest` vorgesehen. Ein optionaler
+Coverage-Trace darf im obligatorischen Gate fehlen; falls er vorhanden ist,
+muss er fachlich positiv und von der erwarteten Taskklasse sein.
+
+== Runtime Image
+
+`runtimeImageTest` umfasst den Imagevertrag, die dependency-closed
+Gradle-Auflösung, One-shot- und Service-Lifecycle, das Application Network und
+die obligatorischen kanonischen Runtime-Jobs. `extendedRuntimeImageTest`
+ergänzt die optionalen Service-Szenarien.
+
+Das Image-ID-Artefakt liegt unter
+`build/runtime-image/dependency-closure-test/image-id.txt`. Runtime-Jobs lösen
+Gradle offline aus dem Image-Repository auf; diese Regel betrifft nur die
+Buildabhängigkeiten, nicht die Anwendungsnetzwerke der Fixtures.
+
+== Fixtures und Cleanup
+
+Fixture-Netzwerke werden lazy erzeugt. Fixture-freie Source- und Published-
+Sessions öffnen kein Netzwerk; die Service-Session erzeugt ihr gemeinsames
+Netzwerk vor dem Containerstart. DuckDB-Extensions sind eine
+netzwerkfreie Fixture: `prepareDuckDbExtensionsForCanonicalTests` installiert
+die Extension für Hosttests, während Runtime-Jobs den Imagepfad
+`/opt/gretl/duckdb-extensions` verwenden.
+
+HTTP, FTP, S3 und PostGIS stellen Host- und Runtime-Endpoint-Views bereit.
+Leases sind pro Lauf isoliert. HTTP-Logs enthalten niemals Authorization,
+Passwörter oder vollständige Credentials. Cleanup läuft auch nach Fehlern;
+Cleanupfehler werden als suppressed exceptions am Primärfehler erhalten.
+Die Floci-Bibliothek ist auf Version `1.10.0` gepinnt. Diese Bibliothek kapselt
+das S3-Image und bietet in dieser Version keine Digest-Override-API; der
+tatsächlich verwendete Image-Name `floci/floci:latest` wird deshalb als
+expliziter Contract dokumentiert und nicht als digest-gepinnt bezeichnet.
+
+Reports liegen unter `build/reports/tests`, `build/test-results` und für die
+Coverage unter `build/reports/test-jobs`. Bei Fehlern sind insbesondere
+materialisierte Jobs und die Runtime-Diagnose zur Ursachenanalyse relevant;
+Secrets dürfen nicht in Artefakten erscheinen.
+
+== Verbindliche Befehle
+
+[source,bash]
+----
+./gradlew clean check
+./gradlew sourceIntegrationTest
+./gradlew publishedArtifactTest
+./gradlew runtimeImageTest
+./gradlew extendedRuntimeImageTest
+./gradlew :gretl-job-tests:canonicalJobSourceTest
+./gradlew :gretl-job-tests:coverageTest
+----
+
+Weitere Details stehen in
+link:canonical-job-p2.adoc[der kanonischen Job-Dokumentation],
+link:runtime-image-tests.adoc[der Runtime-Image-Dokumentation] und der
+link:task-coverage.yaml[Coverage-Matrix].

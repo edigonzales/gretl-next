@@ -28,34 +28,16 @@ jobs:
       - name: Build and unit test
         run: ./gradlew clean check
 
-      - name: Run integration tests from source classpath
-        run: ./gradlew :gretl-core:integrationTest
+      - name: Run Docker-backed source integration gate
+        run: ./gradlew sourceIntegrationTest --stacktrace
 
       - name: Test published GRETL plugin artifacts
         run: ./gradlew publishedArtifactTest --stacktrace
-
-      - name: Run combined Core and GeoTools P0 gate
-        run: ./gradlew coreGeoToolsCombinedTest --stacktrace
 
       - name: Show Docker environment
         run: |
           docker version
           docker info
-
-      - name: Verify GRETL runtime-image dependency closure
-        run: ./gradlew runtimeImageDependencyClosureTest --stacktrace
-
-      - name: Runtime image contract
-        run: ./gradlew runtimeImageContractTest --stacktrace
-
-      - name: Runtime image service and daemon gate
-        run: ./gradlew runtimeImageServiceTest --stacktrace
-
-      - name: Runtime image smoke gate
-        run: ./gradlew runtimeImageSmokeTest --stacktrace
-
-      - name: Runtime image integration gate
-        run: ./gradlew runtimeImageIntegrationTest --stacktrace
 
       - name: Complete runtime image gate
         run: ./gradlew runtimeImageTest --stacktrace
@@ -71,8 +53,7 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/test-results/
-            gretl-combined-tests/build/reports/tests/
-            gretl-combined-tests/build/test-results/
+            build/reports/test-jobs/**
 
       - name: Upload integration test reports
         if: always()
@@ -101,14 +82,13 @@ jobs:
           name: published-test-repository-on-failure
           path: build/published-test/maven-repo
 
-      - name: Upload combined TestKit diagnostics on failure
+      - name: Upload canonical materialized jobs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: combined-testkit-diagnostics
-          path: |
-            gretl-combined-tests/build/test-kit/
-            gretl-combined-tests/build/combined-plugin-classpath/
+          name: canonical-materialized-jobs
+          path: gretl-job-tests/build/materialized-jobs/
+
 
   publish:
     runs-on: ubuntu-latest

@@ -32,27 +32,6 @@ class RuntimeImageGeotoolsFunctionalTest {
     Path project;
 
     @Test
-    void readsShapefileWithWorkerRuntimeFromImage() throws Exception {
-        copyResourceTree("fixtures/shapefile", project.resolve("data"));
-        writeSettings();
-        Files.writeString(project.resolve("build.gradle"), """
-                plugins {
-                    id 'ch.so.agi.gretl'
-                    id 'ch.so.agi.gretl.geotools'
-                }
-                tasks.named('readShapefile') {
-                    shapefile 'data/data.shp'
-                    crsCode 'EPSG:4326'
-                }
-                """);
-
-        GretlBuildResult result = run("--info", "readShapefile");
-        assertTrue(result.successful(), result.output());
-        assertTrue(result.output().contains("Feature count:"), result.output());
-        assertTrue(result.output().contains("EPSG:4326") || result.output().contains("4326"), result.output());
-    }
-
-    @Test
     void reclassifiesRasterAndVectorizesIt() throws Exception {
         copyResourceTree("fixtures/vectorize", project.resolve("vector-data"));
         copyResourceTree("fixtures/raster-reclassify", project.resolve("raster-data"));

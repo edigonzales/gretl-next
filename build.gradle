@@ -565,6 +565,18 @@ tasks.register('publishedArtifactTest') {
     dependsOn ':gretl-job-tests:assertJobTestsNotPublished'
 }
 
+tasks.register('prepareDuckDbExtensionsForCanonicalTests', JavaExec) {
+    group = 'verification'
+    description = 'Installs the DuckDB spatial extension for canonical host-side tests.'
+    dependsOn ':gretl-core:classes'
+    classpath = project(':gretl-core').sourceSets.main.runtimeClasspath
+    mainClass = 'ch.so.agi.gretl.internal.duckdb.DuckDbExtensionInstaller'
+    args 'spatial'
+    def outputDirectory = layout.buildDirectory.dir('duckdb-extensions/canonical-tests')
+    systemProperty 'duckdb.extensionDirectory', outputDirectory.get().asFile.absolutePath
+    outputs.dir(outputDirectory)
+}
+
 tasks.register('coreGeoToolsCombinedTest') {
     group = 'verification'
     description = 'Runs the complete combined Core and GeoTools P0 test suite.'
@@ -577,7 +589,7 @@ tasks.register('coreGeoToolsCombinedTest') {
 tasks.named('check').configure {
     dependsOn ':gretl-combined-tests:test'
     dependsOn ':gretl-job-tests:validateTestJobCatalog'
-    dependsOn ':gretl-job-tests:canonicalJobSourceTest'
+    dependsOn ':gretl-job-tests:canonicalJobLocalSourceTest'
     dependsOn ':gretl-job-tests:assertJobTestsNotPublished'
 }
 
@@ -1032,17 +1044,6 @@ tasks.register('runtimeImageSmokeTest') {
     group = 'verification'
     dependsOn tasks.named('verifyRuntimeImageContract')
     dependsOn tasks.named('runtimeImageDependencyClosureTest')
-    dependsOn ':gretl-core:runtimeImageFunctionalSmokeTest'
-    dependsOn ':gretl-core:runtimeImageIntegrationSmokeTest'
-    dependsOn ':gretl-geotools:runtimeImageFunctionalSmokeTest'
-}
-
-tasks.register('runtimeImageIntegrationTest') {
-    group = 'verification'
-    description = 'Runs networked runtime-image integration tests with no remote Gradle downloads.'
-    dependsOn ':gretl-core:runtimeImageFunctionalTest'
-    dependsOn ':gretl-core:runtimeImageIntegrationTest'
-    dependsOn ':gretl-geotools:runtimeImageFunctionalTest'
 }
 
 tasks.register('runtimeImageTest') {
@@ -1051,10 +1052,24 @@ tasks.register('runtimeImageTest') {
     dependsOn tasks.named('verifyRuntimeImageContract')
     dependsOn tasks.named('runtimeImageDependencyClosureTest')
     dependsOn tasks.named('runtimeImageSmokeTest')
-    dependsOn tasks.named('runtimeImageIntegrationTest')
     dependsOn tasks.named('runtimeImageServiceTest')
+    dependsOn ':gretl-core:runtimeImageFunctionalTest'
+    dependsOn ':gretl-geotools:runtimeImageFunctionalTest'
     dependsOn ':gretl-job-tests:canonicalJobRuntimeImageTest'
     dependsOn ':gretl-job-tests:canonicalJobServiceTest'
+}
+
+tasks.register('sourceIntegrationTest') {
+    group = 'verification'
+    description = 'Runs Docker-backed source integration and canonical fixture jobs.'
+    dependsOn ':gretl-core:integrationTest'
+    dependsOn ':gretl-job-tests:canonicalJobFixtureSourceTest'
+}
+
+tasks.register('extendedRuntimeImageTest') {
+    group = 'verification'
+    description = 'Runs the mandatory runtime gate plus optional service scenarios.'
+    dependsOn tasks.named('runtimeImageTest')
     dependsOn ':gretl-job-tests:canonicalJobOptionalServiceTest'
 }
 
@@ -1062,7 +1077,7 @@ tasks.register('ciCheck') {
     group = 'verification'
     description = 'Runs the complete CI gate before snapshot publication.'
     dependsOn tasks.named('check')
-    dependsOn ':gretl-core:integrationTest'
+    dependsOn tasks.named('sourceIntegrationTest')
     dependsOn tasks.named('publishedArtifactTest')
     dependsOn tasks.named('runtimeImageTest')
     dependsOn ':gretl-job-tests:coverageTest'
@@ -1076,6 +1091,12 @@ tasks.named('publishedArtifactTest').configure {
 }
 tasks.named('runtimeImageTest').configure {
     mustRunAfter tasks.named('publishedArtifactTest')
+}
+tasks.named('sourceIntegrationTest').configure {
+    mustRunAfter tasks.named('check')
+}
+tasks.named('publishedArtifactTest').configure {
+    mustRunAfter tasks.named('sourceIntegrationTest')
 }
 
 tasks.register('checkAgentSkillMetadata', Exec) {

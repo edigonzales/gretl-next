@@ -23,8 +23,8 @@ ID (`sha256:...`) and pass `--pull=never`; the human-readable tag can be set wit
 ./gradlew runtimeImageSmokeTest
 ./gradlew runtimeImageDependencyClosureTest
 ./gradlew runtimeImageServiceTest
-./gradlew runtimeImageIntegrationTest
 ./gradlew runtimeImageTest
+./gradlew extendedRuntimeImageTest
 ./gradlew ciCheck
 ----
 
@@ -32,6 +32,8 @@ ID (`sha256:...`) and pass `--pull=never`; the human-readable tag can be set wit
 explicit prerequisite error; tests are not silently skipped. `check` remains
 Docker-free. `ciCheck` runs source checks, published-artifact checks, external
 integration tests and the complete runtime-image gate before publication.
+Optional service scenarios are excluded from `runtimeImageTest` and `ciCheck`;
+run `extendedRuntimeImageTest` to execute them explicitly.
 
 == Canonical test jobs
 

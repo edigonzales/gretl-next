@@ -23,6 +23,12 @@ public final class PostgisTestFixtureLease implements TestFixtureLease {
         return fixture.endpoint(schema, username, password, database, target);
     }
     @Override public boolean isHealthy() { return !closed && fixture.isRunning(); }
+    public String schema() { return schema; }
+    public synchronized java.sql.Connection openHostConnection() {
+        if (closed) throw new IllegalStateException("PostGIS fixture lease is closed");
+        try { return java.sql.DriverManager.getConnection(fixture.hostJdbcUrl(schema), username, password); }
+        catch (java.sql.SQLException e) { throw new IllegalStateException("Could not open PostGIS host connection", e); }
+    }
     @Override public synchronized void close() {
         if (closed) return;
         closed = true;

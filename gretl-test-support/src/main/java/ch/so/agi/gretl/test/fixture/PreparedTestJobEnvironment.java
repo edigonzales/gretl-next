@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Collections;
 
 public final class PreparedTestJobEnvironment implements AutoCloseable {
     private final TestJobEnvironment environment;
@@ -13,7 +14,8 @@ public final class PreparedTestJobEnvironment implements AutoCloseable {
     public PreparedTestJobEnvironment(TestJobEnvironment environment,
                                       Map<String, ? extends TestFixtureLease> leases) {
         this.environment = Objects.requireNonNull(environment, "environment must not be null");
-        this.leases = Map.copyOf(new LinkedHashMap<>(Objects.requireNonNull(leases, "leases must not be null")));
+        this.leases = Collections.unmodifiableMap(new LinkedHashMap<>(
+                Objects.requireNonNull(leases, "leases must not be null")));
     }
 
     public TestJobEnvironment environment() { return environment; }

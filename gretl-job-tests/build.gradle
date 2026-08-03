@@ -38,13 +38,18 @@ def sourceTestKitDirectory = layout.buildDirectory.dir('test-kit/source')
 def publishedTestKitDirectory = layout.buildDirectory.dir('test-kit/published')
 def publishedRepository = rootProject.layout.buildDirectory.dir('published-test/maven-repo')
 def materializedJobs = layout.buildDirectory.dir('materialized-jobs')
+def duckDbExtensionDirectory = rootProject.layout.buildDirectory.dir('duckdb-extensions/canonical-tests')
 
 tasks.named('test') {
     // Functional matrix tests run through their dedicated one-backend tasks.
     // The ordinary module test task remains a Docker-free catalog smoke test.
     systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    systemProperty 'gretl.test.repositoryRoot', rootProject.projectDir.absolutePath
     useJUnitPlatform()
-    filter { includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest' }
+    filter {
+        includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest'
+        includeTestsMatching 'ch.so.agi.gretl.job.TestingDocumentationContractTest'
+    }
 }
 
 tasks.register('writeCanonicalJobPluginClasspath') {
@@ -90,6 +95,8 @@ def configureJobTest = { Test task, String backend, boolean published, boolean r
         task.systemProperty 'gretl.test.runtimeImage.gradleVersion', '7.6.4'
         task.systemProperty 'gretl.test.runtimeImage.javaVersion', '17'
         task.systemProperty 'gretl.test.runtimeImage.user', rootProject.providers.gradleProperty('gretlRuntimeImageUser').orElse('').get()
+    } else {
+        task.systemProperty 'gretl.test.duckdbExtensionDirectory', duckDbExtensionDirectory.get().asFile.absolutePath
     }
 }
 
@@ -99,26 +106,52 @@ tasks.register('validateTestJobCatalog', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     systemProperty 'gretl.test.jobsRoot', jobsRoot.asFile.absolutePath
+    systemProperty 'gretl.test.repositoryRoot', rootProject.projectDir.absolutePath
     inputs.dir(jobsRoot)
     useJUnitPlatform()
-    filter { includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest' }
+    filter {
+        includeTestsMatching 'ch.so.agi.gretl.job.CatalogValidationTest'
+        includeTestsMatching 'ch.so.agi.gretl.job.TestingDocumentationContractTest'
+    }
 }
 
-tasks.register('canonicalJobSourceTest', Test) {
+tasks.register('canonicalJobLocalSourceTest', Test) {
     group = 'verification'
-    description = 'Runs canonical jobs through the isolated plugin classpath backend.'
+    description = 'Runs fixture-free required canonical jobs through the isolated plugin classpath backend.'
     dependsOn tasks.named('writeCanonicalJobPluginClasspath')
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     configureJobTest(delegate, 'PLUGIN_CLASSPATH', false, false)
+    systemProperty 'gretl.job.requirementSelection', 'required'
+    systemProperty 'gretl.job.fixtureSelection', 'without-fixtures'
     useJUnitPlatform()
     filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobFixtureSourceTest', Test) {
+    group = 'verification'
+    description = 'Runs fixture-backed required canonical jobs through the isolated plugin classpath backend.'
+    dependsOn tasks.named('writeCanonicalJobPluginClasspath'), rootProject.tasks.named('prepareDuckDbExtensionsForCanonicalTests')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureJobTest(delegate, 'PLUGIN_CLASSPATH', false, false)
+    systemProperty 'gretl.job.requirementSelection', 'required'
+    systemProperty 'gretl.job.fixtureSelection', 'with-fixtures'
+    useJUnitPlatform()
+    filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
+}
+
+tasks.register('canonicalJobSourceTest') {
+    group = 'verification'
+    description = 'Runs the complete required source canonical-job matrix.'
+    dependsOn tasks.named('canonicalJobLocalSourceTest'), tasks.named('canonicalJobFixtureSourceTest')
 }
 
 tasks.register('canonicalJobPublishedTest', Test) {
     group = 'verification'
     description = 'Runs canonical jobs against the isolated published-test Maven repository.'
-    dependsOn rootProject.tasks.named('verifyPublishedTestRepository'), tasks.named('writeCanonicalJobPluginClasspath')
+    dependsOn rootProject.tasks.named('verifyPublishedTestRepository'), tasks.named('writeCanonicalJobPluginClasspath'),
+            rootProject.tasks.named('prepareDuckDbExtensionsForCanonicalTests')
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     configureJobTest(delegate, 'PUBLISHED_ARTIFACT', true, false)
@@ -144,6 +177,7 @@ tasks.register('canonicalJobServiceTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     configureJobTest(delegate, 'RUNTIME_IMAGE_SERVICE', false, true)
+    systemProperty 'gretl.job.requirementSelection', 'required'
     useJUnitPlatform()
     filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
 }
@@ -169,7 +203,7 @@ tasks.register('canonicalJobOptionalServiceTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     configureJobTest(delegate, 'RUNTIME_IMAGE_SERVICE', false, true)
-    systemProperty 'gretl.job.includeOptional', 'true'
+    systemProperty 'gretl.job.requirementSelection', 'optional'
     useJUnitPlatform()
     filter { includeTestsMatching 'ch.so.agi.gretl.job.CanonicalTestJobFunctionalTest' }
 }
@@ -215,5 +249,5 @@ tasks.register('assertJobTestsNotPublished') {
 }
 
 tasks.named('check').configure {
-    dependsOn tasks.named('validateTestJobCatalog'), tasks.named('canonicalJobSourceTest'), tasks.named('assertJobTestsNotPublished')
+    dependsOn tasks.named('validateTestJobCatalog'), tasks.named('canonicalJobLocalSourceTest'), tasks.named('assertJobTestsNotPublished')
 }

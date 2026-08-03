@@ -32,14 +32,20 @@ public final class TestFixtureRegistry implements AutoCloseable {
         return fixture;
     }
 
-    public synchronized void startRequired(Collection<TestFixtureType> types, TestFixtureNetwork network) {
+    public synchronized void startRequired(Collection<TestFixtureType> types,
+                                            TestFixtureNetworkManager networkManager) {
         if (closed) throw new IllegalStateException("Fixture registry is closed");
+        Objects.requireNonNull(types, "types must not be null");
+        Objects.requireNonNull(networkManager, "networkManager must not be null");
         List<TestFixture> started = new ArrayList<>();
         try {
-            for (TestFixtureType type : types.stream().distinct().toList()) {
-                TestFixture fixture = require(type);
+            List<TestFixture> required = types.stream().distinct().map(this::require).toList();
+            boolean needsNetwork = required.stream().anyMatch(TestFixture::requiresDockerNetwork);
+            TestFixtureStartContext context = new TestFixtureStartContext(
+                    needsNetwork ? java.util.Optional.of(networkManager.require()) : java.util.Optional.empty());
+            for (TestFixture fixture : required) {
                 if (!fixture.isRunning()) {
-                    fixture.start(network);
+                    fixture.start(context);
                     started.add(fixture);
                 }
             }

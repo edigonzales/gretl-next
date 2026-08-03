@@ -103,24 +103,34 @@ public final class TaskCoverageVerifier {
             }
         }
         for (TestJobExecutionTarget target : TestJobExecutionTarget.values()) {
-            if (scenario.requirementFor(target) != TestJobExecutionRequirement.REQUIRED) continue;
-            boolean found = traces.stream().flatMap(trace -> trace.entries().stream())
-                    .anyMatch(trace -> matches(trace, scenario, target, entry.className()));
-            if (!found) {
+            TestJobExecutionRequirement requirement = scenario.requirementFor(target);
+            List<TaskExecutionTraceEntry> present = traces.stream().flatMap(trace -> trace.entries().stream())
+                    .filter(trace -> identifies(trace, scenario, target))
+                    .toList();
+            boolean found = present.stream().anyMatch(trace -> matches(trace, entry.className()));
+            if (requirement == TestJobExecutionRequirement.REQUIRED && !found) {
                 String missing = entry.className() + " / " + scenario.jobId() + " / "
                         + scenario.taskPath() + " / " + target.yamlName();
                 missingBackends.add(missing);
                 errors.add("Missing positive trace for " + missing);
+            } else if (requirement == TestJobExecutionRequirement.OPTIONAL
+                    && !present.isEmpty() && !found) {
+                errors.add("Present optional trace is not a positive "
+                        + entry.className() + " trace for " + scenario.jobId() + " / "
+                        + scenario.taskPath() + " / " + target.yamlName());
             }
         }
     }
 
-    private boolean matches(TaskExecutionTraceEntry trace, TaskCoverageScenario scenario,
-                             TestJobExecutionTarget target, String className) {
+    private boolean identifies(TaskExecutionTraceEntry trace, TaskCoverageScenario scenario,
+                               TestJobExecutionTarget target) {
         return trace.backend() == target
                 && trace.jobId().equals(scenario.jobId())
-                && trace.taskPath().equals(scenario.taskPath())
-                && trace.taskClassName().equals(className)
+                && trace.taskPath().equals(scenario.taskPath());
+    }
+
+    private boolean matches(TaskExecutionTraceEntry trace, String className) {
+        return trace.taskClassName().equals(className)
                 && POSITIVE_OUTCOMES.contains(trace.outcome());
     }
 }

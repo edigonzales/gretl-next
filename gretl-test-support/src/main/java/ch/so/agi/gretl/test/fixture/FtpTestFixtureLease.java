@@ -21,6 +21,9 @@ public final class FtpTestFixtureLease implements TestFixtureLease {
         return fixture.endpoint(directory, username, password, target);
     }
     @Override public boolean isHealthy() { return !closed && fixture.isRunning(); }
+    public synchronized java.util.List<String> listRemoteFiles() { if (closed) throw new IllegalStateException("FTP fixture lease is closed"); return fixture.listFiles(directory); }
+    public synchronized boolean remoteFileExists(String name) { if (closed) throw new IllegalStateException("FTP fixture lease is closed"); return fixture.fileExists(directory, name); }
+    public synchronized byte[] readRemoteFile(String name) { if (closed) throw new IllegalStateException("FTP fixture lease is closed"); return fixture.readFile(directory, name); }
     @Override public synchronized void close() {
         if (closed) return;
         closed = true;

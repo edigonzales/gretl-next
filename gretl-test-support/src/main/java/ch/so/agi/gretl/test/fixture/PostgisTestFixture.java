@@ -22,9 +22,10 @@ public final class PostgisTestFixture implements TestFixture {
     private boolean closed;
 
     @Override public TestFixtureType type() { return TestFixtureType.POSTGIS; }
-    @Override public synchronized void start(TestFixtureNetwork network) {
+    @Override public synchronized void start(TestFixtureStartContext context) {
         if (closed) throw new IllegalStateException("PostGIS fixture is closed");
         if (this.network != null) return;
+        TestFixtureNetwork network = context.requireNetwork(type());
         this.network = network;
         container.withNetwork(network.testcontainersNetwork()).start();
         try (var connection = DriverManager.getConnection(container.getJdbcUrl(), container.getUsername(), container.getPassword());
@@ -66,6 +67,11 @@ public final class PostgisTestFixture implements TestFixture {
         } catch (java.sql.SQLException e) {
             throw new IllegalStateException("Could not clean PostGIS fixture lease", e);
         }
+    }
+
+    String hostJdbcUrl(String schema) {
+        return container.getJdbcUrl() + (container.getJdbcUrl().contains("?") ? "&" : "?")
+                + "currentSchema=" + schema + ",public";
     }
 
     private void createSchema(String schema) {

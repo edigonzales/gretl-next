@@ -21,6 +21,9 @@ capabilities:
 fixtures:
   - id: duckdbExtensions
     type: duckdb_extensions
-    bindings: []
+    bindings:
+      - source: extensionDirectory
+        target: environment-variable
+        name: DUCKDB_EXTENSION_DIRECTORY
 assertions: core-duckdb-spatial
 timeoutSeconds: 600

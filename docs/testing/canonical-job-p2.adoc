@@ -23,8 +23,9 @@ The P2 catalog currently covers these jobs:
 * `database-postgis-sql`
 * `interlis-ili2pg-lifecycle`
 
-The standard selector runs `required` targets. Optional targets are included
-only with `-Dgretl.job.includeOptional=true`; category-focused source gates use
+The standard selector runs `required` targets. Optional targets run only with
+the explicit `canonicalJobOptionalServiceTest` task, which selects
+`-Dgretl.job.requirementSelection=optional`; category-focused source gates use
 `-Dgretl.job.categories=core,database,network,interlis`. Coverage is granted
 only by positive task traces and is maintained in
 `docs/testing/task-coverage.yaml`.
@@ -32,11 +33,12 @@ only by positive task traces and is maintained in
 [source,bash]
 ----
 ./gradlew :gretl-job-tests:validateTestJobCatalog
+./gradlew :gretl-job-tests:canonicalJobLocalSourceTest
+./gradlew :gretl-job-tests:canonicalJobFixtureSourceTest
 ./gradlew :gretl-job-tests:canonicalJobSourceTest
 ./gradlew :gretl-job-tests:canonicalJobPublishedTest
 ./gradlew :gretl-job-tests:canonicalJobRuntimeImageTest
 ./gradlew :gretl-job-tests:canonicalJobServiceTest
-./gradlew :gretl-job-tests:canonicalJobOptionalServiceTest
 ./gradlew :gretl-job-tests:coverageTest
 ----
 

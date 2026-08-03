@@ -19,7 +19,12 @@ public final class CommonTestJobAssertions {
     }
 
     public static void assertNoRemoteDownloadLog(GretlBuildResult result) {
-        if (result.output().matches("(?is).*\\b(download|downloading|downloading)\\b.*")) throw new AssertionError("Remote download message found: " + result.output());
+        String output = result.output();
+        boolean remoteDownload = output.matches("(?is).*\\bdownloading\\b.*")
+                || output.matches("(?is).*\\bdownloaded from\\b.*")
+                || output.matches("(?is).*\\bcould not resolve .*\\bfrom\\b\\s+https?://.*")
+                || output.matches("(?is).*\\bcould not (get|head) https?://.*");
+        if (remoteDownload) throw new AssertionError("Remote download message found: " + output);
     }
 
     public static void assertSecretsAbsent(GretlBuildResult result, Set<String> secrets) {

@@ -8,7 +8,7 @@ public final class TestFixtureNetwork implements AutoCloseable {
     private final Network network;
     private boolean closed;
 
-    private TestFixtureNetwork(Network network) {
+    TestFixtureNetwork(Network network) {
         this.network = Objects.requireNonNull(network, "network must not be null");
     }
 

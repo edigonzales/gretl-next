@@ -4,6 +4,8 @@ import ch.so.agi.gretl.test.fixture.TestFixtureRegistry;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Supplier;
+import ch.so.agi.gretl.test.fixture.TestFixtureNetwork;
 
 public record TestJobExecutionSessionConfiguration(
         Path materializedJobsRoot,
@@ -12,7 +14,8 @@ public record TestJobExecutionSessionConfiguration(
         TestJobMaterializer materializer,
         TestJobAssertionRegistry assertionRegistry,
         TestFixtureRegistry fixtureRegistry,
-        MaterializedJobRetentionPolicy retentionPolicy) {
+        MaterializedJobRetentionPolicy retentionPolicy,
+        Supplier<TestFixtureNetwork> fixtureNetworkFactory) {
     public TestJobExecutionSessionConfiguration {
         materializedJobsRoot = Objects.requireNonNull(materializedJobsRoot, "materializedJobsRoot must not be null")
                 .toAbsolutePath().normalize();
@@ -22,6 +25,7 @@ public record TestJobExecutionSessionConfiguration(
         assertionRegistry = Objects.requireNonNull(assertionRegistry, "assertionRegistry must not be null");
         fixtureRegistry = Objects.requireNonNull(fixtureRegistry, "fixtureRegistry must not be null");
         retentionPolicy = retentionPolicy == null ? MaterializedJobRetentionPolicy.DELETE_ON_SUCCESS : retentionPolicy;
+        fixtureNetworkFactory = fixtureNetworkFactory == null ? TestFixtureNetwork::create : fixtureNetworkFactory;
     }
 
     public TestJobExecutionSessionConfiguration(Path materializedJobsRoot,
@@ -31,5 +35,27 @@ public record TestJobExecutionSessionConfiguration(
                                                 TestFixtureRegistry fixtureRegistry) {
         this(materializedJobsRoot, target, backendContext, new DefaultTestJobMaterializer(),
                 assertionRegistry, fixtureRegistry, MaterializedJobRetentionPolicy.DELETE_ON_SUCCESS);
+    }
+
+    public TestJobExecutionSessionConfiguration(Path materializedJobsRoot,
+                                                TestJobExecutionTarget target,
+                                                TestJobBackendContext backendContext,
+                                                TestJobMaterializer materializer,
+                                                TestJobAssertionRegistry assertionRegistry,
+                                                TestFixtureRegistry fixtureRegistry,
+                                                MaterializedJobRetentionPolicy retentionPolicy) {
+        this(materializedJobsRoot, target, backendContext, materializer, assertionRegistry,
+                fixtureRegistry, retentionPolicy, TestFixtureNetwork::create);
+    }
+
+    public TestJobExecutionSessionConfiguration(Path materializedJobsRoot,
+                                                TestJobExecutionTarget target,
+                                                TestJobBackendContext backendContext,
+                                                TestJobAssertionRegistry assertionRegistry,
+                                                TestFixtureRegistry fixtureRegistry,
+                                                Supplier<TestFixtureNetwork> fixtureNetworkFactory) {
+        this(materializedJobsRoot, target, backendContext, new DefaultTestJobMaterializer(),
+                assertionRegistry, fixtureRegistry, MaterializedJobRetentionPolicy.DELETE_ON_SUCCESS,
+                fixtureNetworkFactory);
     }
 }

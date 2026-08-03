@@ -8,32 +8,34 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.util.Map;
 import java.util.Optional;
-import java.net.ServerSocket;
 
 public final class FtpTestFixture implements TestFixture {
     public static final String IMAGE = "docker.io/delfer/alpine-ftp-server@sha256:60bb774d8408d9d4d5c74d05d1c086a34ce192c6c1a142ffac268cac0dbc6fac";
-    private final int passivePort = freePort();
-    private final FixedHostPortGenericContainer<?> container = new FixedHostPortGenericContainer<>(IMAGE)
-            .withNetworkAliases("ftp")
-            .withEnv("USERS", "user|password|/ftp/user")
-            .withEnv("ADDRESS", "127.0.0.1")
-            .withEnv("MIN_PORT", String.valueOf(passivePort))
-            .withEnv("MAX_PORT", String.valueOf(passivePort))
-            .withExposedPorts(21)
-            .withFixedExposedPort(passivePort, passivePort)
-            .withCreateContainerCmdModifier(command -> command.withHostName("ftp").withAliases("ftp"))
-            .waitingFor(Wait.forListeningPort());
+    private FixedHostPortGenericContainer<?> container;
+    private int passivePort;
     private TestFixtureNetwork network;
     private boolean closed;
 
     @Override public TestFixtureType type() { return TestFixtureType.FTP; }
-    @Override public synchronized void start(TestFixtureNetwork network) {
+    @Override public synchronized void start(TestFixtureStartContext context) {
         if (closed) throw new IllegalStateException("FTP fixture is closed");
         if (this.network != null) return;
+        TestFixtureNetwork network = context.requireNetwork(type());
+        new FixedHostPortAllocator().executeWithRetry(3, port -> {
+            FixedHostPortGenericContainer<?> candidate = createContainer(network, port);
+            try {
+                candidate.start();
+                container = candidate;
+                passivePort = port;
+                return null;
+            } catch (RuntimeException failure) {
+                if (candidate.isRunning()) candidate.stop();
+                throw failure;
+            }
+        });
         this.network = network;
-        container.withNetwork(network.testcontainersNetwork()).start();
     }
-    @Override public boolean isRunning() { return container.isRunning(); }
+    @Override public synchronized boolean isRunning() { return container != null && container.isRunning(); }
     @Override public synchronized TestFixtureLease acquire(TestJobExecutionIdentity identity) {
         if (!isRunning()) throw new IllegalStateException("FTP fixture is not running");
         String directory = "/ftp/user/" + identity.shortToken();
@@ -66,10 +68,30 @@ public final class FtpTestFixture implements TestFixture {
         }
     }
 
+    java.util.List<String> listFiles(String directory) {
+        FTPClient ftp = connect();
+        try { return java.util.Arrays.stream(ftp.listFiles(directory)).map(org.apache.commons.net.ftp.FTPFile::getName).sorted().toList(); }
+        catch (java.io.IOException e) { throw new IllegalStateException("Could not list FTP fixture lease", e); }
+        finally { try { ftp.disconnect(); } catch (java.io.IOException ignored) { } }
+    }
+
+    boolean fileExists(String directory, String name) {
+        return listFiles(directory).contains(name);
+    }
+
+    byte[] readFile(String directory, String name) {
+        FTPClient ftp = connect();
+        try (var output = new java.io.ByteArrayOutputStream()) {
+            if (!ftp.retrieveFile(directory + "/" + name, output)) throw new IllegalStateException("FTP file does not exist: " + name);
+            return output.toByteArray();
+        } catch (java.io.IOException e) { throw new IllegalStateException("Could not read FTP fixture file", e); }
+        finally { try { ftp.disconnect(); } catch (java.io.IOException ignored) { } }
+    }
+
     @Override public synchronized void close() {
         if (closed) return;
         closed = true;
-        if (container.isRunning()) container.stop();
+        if (container != null && container.isRunning()) container.stop();
     }
 
     private void createDirectory(String directory) {
@@ -98,11 +120,17 @@ public final class FtpTestFixture implements TestFixture {
         ftp.removeDirectory(directory);
     }
 
-    private static int freePort() {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            return socket.getLocalPort();
-        } catch (java.io.IOException e) {
-            throw new IllegalStateException("Could not allocate FTP passive port", e);
-        }
+    private FixedHostPortGenericContainer<?> createContainer(TestFixtureNetwork network, int port) {
+        return new FixedHostPortGenericContainer<>(IMAGE)
+                .withNetwork(network.testcontainersNetwork())
+                .withNetworkAliases("ftp")
+                .withEnv("USERS", "user|password|/ftp/user")
+                .withEnv("ADDRESS", "127.0.0.1")
+                .withEnv("MIN_PORT", String.valueOf(port))
+                .withEnv("MAX_PORT", String.valueOf(port))
+                .withExposedPorts(21)
+                .withFixedExposedPort(port, port)
+                .withCreateContainerCmdModifier(command -> command.withHostName("ftp").withAliases("ftp"))
+                .waitingFor(Wait.forListeningPort());
     }
 }

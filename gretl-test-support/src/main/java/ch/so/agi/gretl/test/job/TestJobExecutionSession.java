@@ -6,6 +6,7 @@ import ch.so.agi.gretl.test.fixture.PostgisTestFixture;
 import ch.so.agi.gretl.test.fixture.RecordingHttpTestFixture;
 import ch.so.agi.gretl.test.fixture.S3TestFixture;
 import ch.so.agi.gretl.test.fixture.TestFixtureNetwork;
+import ch.so.agi.gretl.test.fixture.TestFixtureNetworkManager;
 import ch.so.agi.gretl.test.fixture.TestFixtureOrchestrator;
 import ch.so.agi.gretl.test.fixture.TestFixtureRegistry;
 
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 public final class TestJobExecutionSession implements AutoCloseable {
     private final TestJobExecutionSessionConfiguration configuration;
-    private final TestFixtureNetwork network;
+    private final TestFixtureNetworkManager networkManager;
     private final TestFixtureOrchestrator fixtureOrchestrator;
     private final TestJobExecutionBackendFactory backendFactory;
     private final TestJobRunner runner;
@@ -22,10 +23,13 @@ public final class TestJobExecutionSession implements AutoCloseable {
 
     private TestJobExecutionSession(TestJobExecutionSessionConfiguration configuration) {
         this.configuration = configuration;
-        this.network = TestFixtureNetwork.create();
-        this.fixtureOrchestrator = new TestFixtureOrchestrator(configuration.fixtureRegistry(), network);
-        TestJobBackendContext context = withNetwork(configuration.backendContext(), network.dockerNetworkId(),
-                configuration.materializedJobsRoot());
+        this.networkManager = new TestFixtureNetworkManager(configuration.fixtureNetworkFactory());
+        if (configuration.target() == TestJobExecutionTarget.RUNTIME_IMAGE_SERVICE) {
+            networkManager.require();
+        }
+        this.fixtureOrchestrator = new TestFixtureOrchestrator(configuration.fixtureRegistry(), networkManager);
+        TestJobBackendContext context = withNetwork(configuration.backendContext(),
+                networkManager.currentNetworkId(), configuration.materializedJobsRoot());
         this.backendFactory = new DefaultTestJobExecutionBackendFactory(context);
         this.runner = new TestJobRunner(configuration.materializer(), backendFactory,
                 configuration.assertionRegistry(), context, fixtureOrchestrator);
@@ -34,9 +38,7 @@ public final class TestJobExecutionSession implements AutoCloseable {
     public static TestJobExecutionSession open(TestJobExecutionSessionConfiguration configuration) {
         TestJobExecutionSession session = new TestJobExecutionSession(configuration);
         try {
-            if (configuration.target() == TestJobExecutionTarget.RUNTIME_IMAGE_SERVICE) {
-                session.backend();
-            }
+            if (configuration.target() == TestJobExecutionTarget.RUNTIME_IMAGE_SERVICE) session.backend();
             return session;
         } catch (RuntimeException failure) {
             try { session.close(); } catch (RuntimeException cleanup) { failure.addSuppressed(cleanup); }
@@ -49,7 +51,9 @@ public final class TestJobExecutionSession implements AutoCloseable {
     public TestJobRunner runner() { return runner; }
     public TestFixtureOrchestrator fixtures() { return fixtureOrchestrator; }
     public TestJobExecutionBackend backend() { return backendFactory.require(configuration.target()); }
-    public TestFixtureNetwork network() { return network; }
+    public Optional<TestFixtureNetwork> currentNetwork() { return networkManager.current(); }
+    public TestFixtureNetwork requireNetwork() { return networkManager.require(); }
+    public TestFixtureNetwork network() { return requireNetwork(); }
 
     @Override
     public synchronized void close() {
@@ -60,7 +64,7 @@ public final class TestJobExecutionSession implements AutoCloseable {
         catch (RuntimeException e) { failure = e; }
         try { fixtureOrchestrator.close(); }
         catch (RuntimeException e) { if (failure == null) failure = e; else failure.addSuppressed(e); }
-        try { network.close(); }
+        try { networkManager.close(); }
         catch (RuntimeException e) { if (failure == null) failure = e; else failure.addSuppressed(e); }
         if (failure != null) throw failure;
     }
@@ -70,7 +74,7 @@ public final class TestJobExecutionSession implements AutoCloseable {
                 new S3TestFixture(), new PostgisTestFixture(), new DuckDbExtensionsTestFixture()));
     }
 
-    private static TestJobBackendContext withNetwork(TestJobBackendContext context, String network,
+    private static TestJobBackendContext withNetwork(TestJobBackendContext context, Optional<String> network,
                                                       java.nio.file.Path jobsRoot) {
         Optional<java.nio.file.Path> serviceRoot = context.serviceJobsRoot().isPresent()
                 ? context.serviceJobsRoot() : Optional.of(jobsRoot);
@@ -78,6 +82,6 @@ public final class TestJobExecutionSession implements AutoCloseable {
                 ? context.serviceGradleHome() : Optional.of(jobsRoot.resolveSibling("service-gradle-home"));
         return new TestJobBackendContext(context.explicitPluginClasspathFile(), context.testKitDirectory(),
                 context.publishedRepository(), context.pluginVersion(), context.runtimeImage(), serviceRoot,
-                serviceHome, Optional.of(network), context.runtimeUser());
+                serviceHome, network, context.runtimeUser());
     }
 }

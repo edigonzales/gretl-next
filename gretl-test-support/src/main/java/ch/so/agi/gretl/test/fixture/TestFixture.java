@@ -5,7 +5,11 @@ import ch.so.agi.gretl.test.job.TestJobExecutionIdentity;
 public interface TestFixture extends AutoCloseable {
     TestFixtureType type();
 
-    void start(TestFixtureNetwork network);
+    default boolean requiresDockerNetwork() {
+        return true;
+    }
+
+    void start(TestFixtureStartContext context);
 
     boolean isRunning();
 

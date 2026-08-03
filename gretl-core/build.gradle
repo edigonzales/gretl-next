@@ -30,12 +30,6 @@ sourceSets {
         compileClasspath += sourceSets.test.output + sourceSets.main.output
         runtimeClasspath += sourceSets.test.runtimeClasspath + output + compileClasspath
     }
-    runtimeImageIntegrationTest {
-        resources.srcDir sourceSets.test.resources
-        resources.srcDir sourceSets.integrationTest.resources
-        compileClasspath += sourceSets.integrationTest.output + sourceSets.main.output
-        runtimeClasspath += sourceSets.integrationTest.runtimeClasspath + output + compileClasspath
-    }
 }
 
 configurations {
@@ -43,8 +37,6 @@ configurations {
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
     runtimeImageFunctionalTestImplementation.extendsFrom testImplementation
     runtimeImageFunctionalTestRuntimeOnly.extendsFrom testRuntimeOnly
-    runtimeImageIntegrationTestImplementation.extendsFrom integrationTestImplementation
-    runtimeImageIntegrationTestRuntimeOnly.extendsFrom integrationTestRuntimeOnly
 }
 
 configurations.configureEach {
@@ -171,11 +163,6 @@ configureRuntimeImageTest('runtimeImageFunctionalTest',
         'Runs core functional canaries against the built runtime image.', sourceSets.runtimeImageFunctionalTest, 'runtime-image')
 configureRuntimeImageTest('runtimeImageFunctionalSmokeTest',
         'Runs the core runtime-image smoke canaries.', sourceSets.runtimeImageFunctionalTest, 'runtime-image-smoke')
-configureRuntimeImageTest('runtimeImageIntegrationTest',
-        'Runs core Docker-service scenarios through the runtime image.', sourceSets.runtimeImageIntegrationTest, 'runtime-image')
-configureRuntimeImageTest('runtimeImageIntegrationSmokeTest',
-        'Runs the core runtime-image integration smoke canaries.', sourceSets.runtimeImageIntegrationTest, 'runtime-image-smoke')
-
 tasks.named('test') {
     useJUnitPlatform {
         excludeTags 'published-artifact-only'
