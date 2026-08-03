@@ -6,7 +6,7 @@ public enum TaskCoverageClassification {
     DIRECT_JOB_EXECUTION,
     STRUCTURAL_CONTRACT_ONLY,
     DEPENDENCY_PRESENT_ONLY,
-    NOT_YET_COVERED,
+    NO_CANONICAL_JOB_TRACE,
     NOT_APPLICABLE;
 
     public static TaskCoverageClassification fromYaml(String value) {

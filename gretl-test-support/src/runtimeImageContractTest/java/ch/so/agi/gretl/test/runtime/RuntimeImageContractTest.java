@@ -61,6 +61,7 @@ class RuntimeImageContractTest {
         assertTrue(result.standardOutput().contains("GRETL Modular " + image.gretlVersion()), result.output());
         assertTrue(result.standardOutput().contains("Gradle " + image.expectedGradleVersion()), result.output());
         assertTrue(result.standardOutput().contains("Java " + image.expectedJavaMajorVersion()), result.output());
+        assertTrue(result.standardOutput().contains("DuckDB extensions "), result.output());
     }
 
     @Test

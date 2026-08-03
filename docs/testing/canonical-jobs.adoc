@@ -1,6 +1,6 @@
-= P2 canonical consumer jobs
+= Canonical consumer jobs
 
-P2 jobs are persistent consumer projects below `test-jobs/`. Their `job.yaml`
+Canonical jobs are persistent consumer projects below `test-jobs/`. Their `job.yaml`
 uses schema version 2 and declares build variants, expected task classes,
 target requirements and fixture bindings. Materialization copies only the
 consumer project; `expected/` remains outside that project and is addressed
@@ -13,15 +13,9 @@ Gradle home. Execution directories are unique below
 before the session-owned resources, and secret values are redacted from
 commands and output checks.
 
-The P2 catalog currently covers these jobs:
-
-* `core-duckdb-spatial`
-* `network-http-curl`
-* `network-ftp-roundtrip`
-* `network-s3-roundtrip`
-* `interlis-ili2duckdb-roundtrip`
-* `database-postgis-sql`
-* `interlis-ili2pg-lifecycle`
+The catalog is discovered directly from `test-jobs/**/job.yaml`. This directory
+is the authoritative inventory; the documentation deliberately does not repeat
+its job list or count.
 
 The standard selector runs `required` targets. Optional targets run only with
 the explicit `canonicalJobOptionalServiceTest` task, which selects

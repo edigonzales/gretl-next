@@ -193,8 +193,12 @@ public class RasterReclassifyEngine {
         if (!inputPath.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".asc")) {
             return null;
         }
-        try {
-            for (String line : Files.readAllLines(inputPath, StandardCharsets.UTF_8).stream().limit(12).toList()) {
+        try (var reader = Files.newBufferedReader(inputPath, StandardCharsets.UTF_8)) {
+            for (int lineNumber = 0; lineNumber < 12; lineNumber++) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
                 String[] parts = line.trim().split("\\s+");
                 if (parts.length >= 2 && parts[0].equalsIgnoreCase("NODATA_value")) {
                     return Double.parseDouble(parts[1]);

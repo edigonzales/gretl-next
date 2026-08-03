@@ -117,7 +117,7 @@ class CoreGeoToolsPipelineFunctionalTest extends CombinedPluginTestSupport {
                         assert tasks.withType(XslTransformer).isEmpty()
                         assert tasks.withType(RasterReclassify).isEmpty()
                         assert tasks.names.count { it == 'readShapefile' } == 1
-                        println "COMBINED_PLUGIN_SERVICES=" + gradle.sharedServices.registrations*.name.sort()
+                        println 'COMBINED_PLUGIN_REAPPLICATION=OK'
                     }
                 }
                 pluginManager.apply('ch.so.agi.gretl')
@@ -127,8 +127,7 @@ class CoreGeoToolsPipelineFunctionalTest extends CombinedPluginTestSupport {
 
         BuildResult result = run("inspectCombined");
 
-        assertTrue(result.getOutput().contains("gretlCoreService"));
-        assertTrue(result.getOutput().contains("gretlGeoToolsService"));
+        assertTrue(result.getOutput().contains("COMBINED_PLUGIN_REAPPLICATION=OK"));
         assertFalse(result.getOutput().contains("already registered"));
     }
 

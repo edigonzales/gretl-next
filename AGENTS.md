@@ -54,8 +54,10 @@ For Spring Boot dependency upgrades, run:
 
 - Keep the public GRETL task DSL stable unless the change explicitly requires a
   breaking migration.
-- Do not add GeoTools, JTS, ImageIO, CRS/EPSG, raster or other heavy geospatial
-  dependencies to this module.
+- Do not add GeoTools, JAI/ImageIO, CRS/EPSG, raster or other heavy geospatial
+  dependencies to this module. Legacy JTS remains only for INTERLIS and the
+  existing lightweight Shapefile/GeoPackage compatibility code; do not expand
+  that dependency boundary without an explicit design change.
 - Keep passwords and secrets out of Gradle task inputs.
 - Prefer focused unit and TestKit tests for task behavior.
 

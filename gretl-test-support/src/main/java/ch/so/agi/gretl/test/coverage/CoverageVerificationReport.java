@@ -7,7 +7,7 @@ public record CoverageVerificationReport(
         List<String> directJobExecution,
         List<String> structuralContractOnly,
         List<String> dependencyPresentOnly,
-        List<String> notYetCovered,
+        List<String> noCanonicalJobTrace,
         List<String> notApplicable,
         List<String> missingBackendExecutions) {
     public CoverageVerificationReport {
@@ -15,7 +15,7 @@ public record CoverageVerificationReport(
         directJobExecution = List.copyOf(directJobExecution);
         structuralContractOnly = List.copyOf(structuralContractOnly);
         dependencyPresentOnly = List.copyOf(dependencyPresentOnly);
-        notYetCovered = List.copyOf(notYetCovered);
+        noCanonicalJobTrace = List.copyOf(noCanonicalJobTrace);
         notApplicable = List.copyOf(notApplicable);
         missingBackendExecutions = List.copyOf(missingBackendExecutions);
     }

@@ -102,6 +102,33 @@ class CurlFunctionalTest extends CoreFunctionalTestSupport {
                 Files.readString(projectDir.resolve("build/out/download.txt"), StandardCharsets.UTF_8));
     }
 
+    @Test
+    void preservesExistingOutputWhenResponseValidationFails() throws Exception {
+        writeSettings();
+        Path output = projectDir.resolve("build/out/download.txt");
+        Files.createDirectories(output.getParent());
+        Files.writeString(output, "previous", StandardCharsets.UTF_8);
+
+        try (TestHttpServer server = TestHttpServer.start(exchange -> respond(exchange, 503, "partial"))) {
+            writeBuild("""
+                    plugins { id 'ch.so.agi.gretl' }
+
+                    import ch.so.agi.gretl.tasks.Curl
+
+                    tasks.register('download', Curl) {
+                        serverUrl '%s/download'
+                        expectedStatusCode 200
+                        outputFile layout.buildDirectory.file('out/download.txt')
+                    }
+                    """.formatted(server.endpoint()));
+
+            var result = runAndFail("download");
+            assertTrue(result.getOutput().contains("Wrong status code returned: 503"), result.getOutput());
+        }
+
+        assertEquals("previous", Files.readString(output, StandardCharsets.UTF_8));
+    }
+
     private static void respond(HttpExchange exchange, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(status, bytes.length);

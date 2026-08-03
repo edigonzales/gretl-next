@@ -139,26 +139,10 @@ public class VectorizeEngine {
             List<Range> classificationRanges = new ArrayList<>();
             classificationRanges.add(RangeFactory.create(cellValue, true, cellValue, true));
             
-            log.lifecycle("GeoTools jaiext flag (org.geotools.coverage.jaiext.enabled): "
-                    + Boolean.getBoolean("org.geotools.coverage.jaiext.enabled"));
-            try {
-                Class.forName("org.jaitools.media.jai.vectorize.VectorizeDescriptor");
-                log.lifecycle("jt-vectorize present present");
-            } catch (ClassNotFoundException e) {
-                log.lifecycle("jt-vectorize missing missing");
-            }
-            
-            // Check for null arguments that might cause the error
             if (coverage == null) {
                 throw new IOException("Coverage is null - unable to process raster " + rasterPath);
             }
-            if (Integer.valueOf(band) == null) {
-                throw new IOException("Band index is null");
-            }
-            if (classificationRanges == null) {
-                throw new IOException("Classification ranges are null");
-            }
-            
+
             SimpleFeatureCollection extracted =
                     process.execute(coverage, Integer.valueOf(band), Boolean.FALSE, null, null, classificationRanges, null);
 

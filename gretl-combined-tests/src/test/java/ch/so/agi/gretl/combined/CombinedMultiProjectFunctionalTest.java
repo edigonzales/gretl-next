@@ -28,13 +28,6 @@ class CombinedMultiProjectFunctionalTest extends CombinedPluginTestSupport {
     }
 
     @Test
-    void sharedServicesAreRegisteredOncePerGradleBuild() throws Exception {
-        configureMultiProject();
-        BuildResult result = run("mixed-a:inspect", "mixed-b:inspect", "--parallel", "--max-workers=4");
-        assertTrue(result.getOutput().contains("SERVICES=[gretlCoreService, gretlGeoToolsService, gretlInterlisService]"));
-    }
-
-    @Test
     void rootAggregateExecutesAllSubprojectTasks() throws Exception {
         configureMultiProject();
         BuildResult result = run("aggregate");
@@ -90,7 +83,6 @@ class CombinedMultiProjectFunctionalTest extends CombinedPluginTestSupport {
     private String marker(String name) {
         return ("tasks.register('inspect') { doLast { "
                 + "println '%s: CORE=' + pluginManager.hasPlugin('ch.so.agi.gretl') + ' GEO=' + pluginManager.hasPlugin('ch.so.agi.gretl.geotools'); "
-                + "println 'SERVICES=' + gradle.sharedServices.registrations*.name.sort(); "
                 + "def marker = layout.buildDirectory.file('marker.txt').get().asFile; marker.parentFile.mkdirs(); marker.text = '%s' "
                 + "} }\n").formatted(name, name);
     }

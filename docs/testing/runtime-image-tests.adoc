@@ -55,9 +55,10 @@ required targets and fachliche output assertions before execution.
 ----
 
 Each job run writes a JSON-lines task trace containing the job, build variant,
-backend, task path, task class and outcome. Coverage is granted only from
-these traces; unexecuted public tasks remain explicitly `NOT_YET_COVERED` in
-`docs/testing/task-coverage.yaml`.
+backend, task path, task class and outcome. Canonical-job coverage is granted
+only from these traces. `NO_CANONICAL_JOB_TRACE` in
+`docs/testing/task-coverage.yaml` means that no canonical multi-backend trace
+exists; it does not imply that the task lacks module or runtime-image tests.
 
 == Dependency-closed runtime-image contract
 
@@ -77,6 +78,12 @@ resolution; it does not disable application network access. Jobs may still
 connect to PostGIS, S3, FTP, HTTP and other application services. The closure gate mounts a fresh
 `/home/gradle/.gradle`; normal service jobs reuse an image-owned persistent home
 without mounting a host Gradle cache.
+
+The Java base image is selected through an immutable multi-architecture digest.
+The Gradle distribution checksum is shared with the wrapper and verified before
+the archive is unpacked. The DuckDB extension directory version is derived from
+the centrally configured JDBC version rather than maintained separately in the
+Dockerfile.
 
 == One-shot and service modes
 
@@ -113,5 +120,5 @@ writes the trace-backed reports to `build/reports/test-jobs/coverage.json` and
 `coverage.adoc`. Cleanup removes one-shot containers,
 service containers, temporary Gradle homes and test networks.
 
-The P2 fixture/session model and canonical job catalog are documented in
-`docs/testing/canonical-job-p2.adoc`.
+The fixture/session model and canonical job catalog are documented in
+`docs/testing/canonical-jobs.adoc`.

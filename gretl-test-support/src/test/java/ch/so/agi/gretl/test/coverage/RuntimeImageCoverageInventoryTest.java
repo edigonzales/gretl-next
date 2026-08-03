@@ -46,7 +46,7 @@ class RuntimeImageCoverageInventoryTest {
             } else {
                 assertTrue(entry.scenarios().isEmpty(), "Non-direct entry has a scenario: " + entry.name());
             }
-            if (entry.classification() == TaskCoverageClassification.NOT_YET_COVERED) {
+            if (entry.classification() == TaskCoverageClassification.NO_CANONICAL_JOB_TRACE) {
                 assertFalse(entry.reason().isBlank(), "Missing gap reason: " + entry.name());
             }
         }

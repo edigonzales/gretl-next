@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.internal.s3;
 
+import ch.so.agi.gretl.internal.io.SafeFileOutput;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,15 +53,20 @@ public class S3Engine {
     public void download(S3DownloadRequest request) throws IOException {
         validateConnection(request.connection());
         requireNotNull(request.downloadDir(), "downloadDir must not be null");
+        if (request.key() != null && !request.key().isBlank()) {
+            SafeFileOutput.resolveDescendant(request.downloadDir(), request.key());
+        }
         Files.createDirectories(request.downloadDir());
         try (S3Client client = client(request.connection())) {
             if (request.key() == null || request.key().isBlank()) {
-                forEachObject(client, request.connection().bucketName(), object ->
-                        downloadOne(client, request.connection().bucketName(), object.key(),
-                                request.downloadDir().resolve(object.key())));
+                forEachObject(client, request.connection().bucketName(), object -> {
+                    Path target = SafeFileOutput.resolveDescendant(request.downloadDir(), object.key());
+                    downloadOne(client, request.connection().bucketName(), object.key(), target);
+                });
             } else {
                 String fileName = request.key().substring(request.key().lastIndexOf('/') + 1);
-                downloadOne(client, request.connection().bucketName(), request.key(), request.downloadDir().resolve(fileName));
+                Path target = SafeFileOutput.resolveDescendant(request.downloadDir(), fileName);
+                downloadOne(client, request.connection().bucketName(), request.key(), target);
             }
         }
     }
@@ -105,11 +113,11 @@ public class S3Engine {
 
     private static void downloadOne(S3Client client, String bucketName, String key, Path target) {
         try {
-            Path parent = target.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            client.getObject(GetObjectRequest.builder().bucket(bucketName).key(key).build(), target);
+            SafeFileOutput.writeAtomically(target, temporary -> {
+                try (var input = client.getObject(GetObjectRequest.builder().bucket(bucketName).key(key).build())) {
+                    Files.copy(input, temporary, StandardCopyOption.REPLACE_EXISTING);
+                }
+            });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

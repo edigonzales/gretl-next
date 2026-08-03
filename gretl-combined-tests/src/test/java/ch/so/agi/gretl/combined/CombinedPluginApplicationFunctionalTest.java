@@ -54,11 +54,6 @@ class CombinedPluginApplicationFunctionalTest extends CombinedPluginTestSupport 
         inspectGroovy("ch.so.agi.gretl", "ch.so.agi.gretl.geotools");
     }
 
-    @Test
-    void applyingBothDoesNotRegisterConflictingServices() throws Exception {
-        inspectGroovy("ch.so.agi.gretl", "ch.so.agi.gretl.geotools");
-    }
-
     private void inspectGroovy(String first, String second) throws Exception {
         writeSettings();
         writeGroovyBuild("""
@@ -80,9 +75,6 @@ class CombinedPluginApplicationFunctionalTest extends CombinedPluginTestSupport 
                         assert project.tasks.named('xslCanary').get() instanceof XslTransformer
                         assert project.tasks.named('rasterCanary').get() instanceof RasterReclassify
                         assert project.extensions.findByName('gretlGeotools') != null
-                        def names = project.gradle.sharedServices.registrations*.name
-                        assert names.count { it == 'gretlCoreService' } == 1
-                        assert names.count { it == 'gretlGeoToolsService' } == 1
                         println 'COMBINED_PLUGIN_INSPECTION=OK'
                     }
                 }

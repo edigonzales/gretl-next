@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.internal.http;
 
+import ch.so.agi.gretl.internal.io.SafeFileOutput;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -51,14 +53,6 @@ public class CurlEngine {
         HttpClient client = HttpClient.newHttpClient();
         HttpResponse<byte[]> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
 
-        if (request.outputFile() != null) {
-            Path parent = request.outputFile().getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Files.write(request.outputFile(), response.body());
-        }
-
         if (response.statusCode() != request.expectedStatusCode()) {
             throw new IOException("Wrong status code returned: " + response.statusCode());
         }
@@ -67,6 +61,9 @@ public class CurlEngine {
             if (!bodyText.contains(request.expectedBody())) {
                 throw new IOException("Response body does not contain expected string: " + bodyText);
             }
+        }
+        if (request.outputFile() != null) {
+            SafeFileOutput.writeAtomically(request.outputFile(), output -> Files.write(output, response.body()));
         }
     }
 

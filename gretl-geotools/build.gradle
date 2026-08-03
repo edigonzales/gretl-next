@@ -36,7 +36,7 @@ dependencies {
     compileOnly project(':gretl-doclet')
 
     testImplementation sourceSets.worker.output
-    testImplementation configurations.workerRuntimeClasspath
+    testImplementation files(configurations.workerRuntimeClasspath)
     testImplementation gradleTestKit()
     testImplementation project(':gretl-test-support')
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"

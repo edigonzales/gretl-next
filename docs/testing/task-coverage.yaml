@@ -1,38 +1,39 @@
-schemaVersion: 3
+schemaVersion: 4
 
-# DIRECT_JOB_EXECUTION is reserved for entries backed by a real canonical-job
-# trace. The remaining public tasks are intentionally explicit about their
-# current gap; dependency presence and task registration are not execution.
+# This matrix measures canonical multi-backend job traces, not total test coverage.
+# DIRECT_JOB_EXECUTION is reserved for entries backed by a positive canonical-job
+# trace. NO_CANONICAL_JOB_TRACE means that task-specific tests may exist, but no
+# canonical job currently supplies the full trace contract.
 tasks:
   Av2ch:
     className: ch.so.agi.gretl.tasks.Av2ch
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes the AV conversion task.
   Av2geobau:
     className: ch.so.agi.gretl.tasks.Av2geobau
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes the GeoBau conversion task.
   Csv2Excel:
     className: ch.so.agi.gretl.tasks.Csv2Excel
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes the CSV to Excel task.
   CsvExport:
     className: ch.so.agi.gretl.tasks.CsvExport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes the database export task.
   CsvImport:
     className: ch.so.agi.gretl.tasks.CsvImport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes the database import task.
   CsvValidator:
     className: ch.so.agi.gretl.tasks.CsvValidator
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes CSV validation.
   Curl:
     className: ch.so.agi.gretl.tasks.Curl
@@ -49,7 +50,7 @@ tasks:
   Db2Db:
     className: ch.so.agi.gretl.tasks.Db2Db
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes a database transfer.
   DuckDbSqlExecutor:
     className: ch.so.agi.gretl.tasks.DuckDbSqlExecutor
@@ -114,27 +115,27 @@ tasks:
   Gpkg2Dxf:
     className: ch.so.agi.gretl.tasks.Gpkg2Dxf
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes GeoPackage to DXF conversion.
   Gpkg2Shp:
     className: ch.so.agi.gretl.tasks.Gpkg2Shp
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes GeoPackage to Shapefile conversion.
   GpkgExport:
     className: ch.so.agi.gretl.tasks.GpkgExport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes GeoPackage export.
   GpkgImport:
     className: ch.so.agi.gretl.tasks.GpkgImport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes GeoPackage import.
   GpkgValidator:
     className: ch.so.agi.gretl.tasks.GpkgValidator
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes GeoPackage validation.
   Gzip:
     className: ch.so.agi.gretl.tasks.Gzip
@@ -187,7 +188,7 @@ tasks:
   Ili2gpkgImport:
     className: ch.so.agi.gretl.tasks.Ili2gpkgImport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes ili2gpkg import.
   Ili2pgDelete:
     className: ch.so.agi.gretl.tasks.Ili2pgDelete
@@ -276,17 +277,17 @@ tasks:
   IliValidator:
     className: ch.so.agi.gretl.tasks.IliValidator
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes INTERLIS validation.
   JsonImport:
     className: ch.so.agi.gretl.tasks.JsonImport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes JSON import.
   JsonValidator:
     className: ch.so.agi.gretl.tasks.JsonValidator
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes JSON validation.
   RasterReclassify:
     className: ch.so.agi.gretl.geotools.tasks.RasterReclassify
@@ -363,17 +364,17 @@ tasks:
   ShpExport:
     className: ch.so.agi.gretl.tasks.ShpExport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes Shapefile export.
   ShpImport:
     className: ch.so.agi.gretl.tasks.ShpImport
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes Shapefile import.
   ShpValidator:
     className: ch.so.agi.gretl.tasks.ShpValidator
     module: gretl-core
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes Shapefile validation.
   SqlExecutor:
     className: ch.so.agi.gretl.tasks.SqlExecutor
@@ -397,7 +398,7 @@ tasks:
   Vectorize:
     className: ch.so.agi.gretl.geotools.tasks.Vectorize
     module: gretl-geotools
-    classification: NOT_YET_COVERED
+    classification: NO_CANONICAL_JOB_TRACE
     reason: No canonical job currently executes raster vectorization.
   XslTransformer:
     className: ch.so.agi.gretl.tasks.XslTransformer

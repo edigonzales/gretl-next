@@ -1,6 +1,6 @@
 # GRETL LSP und VS-Code-Extension: Spezifikation und Arbeitsanweisung für LLM Coding Agents
 
-**Dateiname dieser Spezifikation:** `gretl_lsp_agent_spec.md`  
+**Dateipfad dieser Spezifikation:** `docs/design/gretl-lsp-agent-spec.md`
 **Zielsystem:** GRETL Gradle-Plugin plus neue GRETL-Unterstützung für VS Code  
 **Primäre Umsetzungssprache Language Server:** Java mit LSP4J  
 **Primäre Umsetzungssprache VS-Code-Client:** TypeScript  
@@ -15,7 +15,7 @@
 
 Diese Spezifikation beschreibt sehr detailliert, wie für GRETL ein Language Server Protocol Server und eine kleine VS-Code-Extension aufgebaut werden sollen. Die Umsetzung erfolgt in klar abgegrenzten Phasen. Jede Phase muss ein funktionierendes Artefakt liefern, Tests enthalten, dokumentiert werden und ihren Fortschritt im Repository sichtbar tracken.
 
-Der Agent muss diese Spezifikation als verbindliche Arbeitsgrundlage lesen und befolgen. Jede Phase enthält am Ende ein eigenes Kapitel **Agenten-Prompt**. Dieser Prompt verweist explizit auf diese Spezifikation mit ihrem korrekten Namen `gretl_lsp_agent_spec.md` und erinnert den Agenten daran, vorhandene Skills, AGENTS.md, CLAUDE.md, Codex-/OpenCode-Konventionen und lokale Repository-Instruktionen zu berücksichtigen.
+Der Agent muss diese Spezifikation als verbindliche Arbeitsgrundlage lesen und befolgen. Jede Phase enthält am Ende ein eigenes Kapitel **Agenten-Prompt**. Dieser Prompt verweist explizit auf `docs/design/gretl-lsp-agent-spec.md` und erinnert den Agenten daran, vorhandene Skills, AGENTS.md, CLAUDE.md, Codex-/OpenCode-Konventionen und lokale Repository-Instruktionen zu berücksichtigen.
 
 Diese Spezifikation ist absichtlich ausführlich. Sie ist nicht nur ein Architekturpapier, sondern eine konkrete Implementierungsanweisung auf Projekt-, Paket-, Klassen-, Methoden-, Test- und Dokumentationsebene.
 
@@ -2511,7 +2511,7 @@ Versionen müssen an existierende Repository-Konventionen angepasst werden. Wenn
 ## Agenten-Prompt
 
 ```text
-Setze Phase 0 aus der Spezifikation `gretl_lsp_agent_spec.md` um. Lies zuerst alle lokalen Agent-Instruktionen wie AGENTS.md, CLAUDE.md und relevante `.skills/**/SKILL.md`. Arbeite eng an der Phase: erstelle die LSP-Dokumentationsstruktur, das Phase-Tracking und ein minimales `gretl-lsp`-Projekt. Führe die kleinsten relevanten Tests aus, aktualisiere `docs/lsp/PHASE_STATUS.md` und dokumentiere alle Abweichungen in `docs/lsp/DECISIONS.md`. Behaupte keine erfolgreichen Tests, wenn du sie nicht ausgeführt hast.
+Setze Phase 0 aus der Spezifikation `docs/design/gretl-lsp-agent-spec.md` um. Lies zuerst alle lokalen Agent-Instruktionen wie AGENTS.md, CLAUDE.md und relevante `.skills/**/SKILL.md`. Arbeite eng an der Phase: erstelle die LSP-Dokumentationsstruktur, das Phase-Tracking und ein minimales `gretl-lsp`-Projekt. Führe die kleinsten relevanten Tests aus, aktualisiere `docs/lsp/PHASE_STATUS.md` und dokumentiere alle Abweichungen in `docs/lsp/DECISIONS.md`. Behaupte keine erfolgreichen Tests, wenn du sie nicht ausgeführt hast.
 ```
 
 ---
@@ -2782,7 +2782,7 @@ Testfälle:
 ## Agenten-Prompt
 
 ```text
-Setze Phase 1 aus `gretl_lsp_agent_spec.md` um. Lies zuerst AGENTS.md, CLAUDE.md und relevante Skills. Erweitere `gretl-doclet`, ohne es neu zu schreiben, so dass ein stabiles `gretl-lsp-metadata.json` plus JSON Schema erzeugt wird. Implementiere Klassen auf Builder-/Writer-/Schema-Test-Ebene gemäss Spezifikation. Prüfe besonders `SqlExecutor` mit `database`, `sqlFiles` und `sqlParameters`. Führe die relevanten Gradle-Tests und den Metadaten-Generate-Task aus. Aktualisiere `docs/lsp/METADATA_FORMAT.md` und `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 1 aus `docs/design/gretl-lsp-agent-spec.md` um. Lies zuerst AGENTS.md, CLAUDE.md und relevante Skills. Erweitere `gretl-doclet`, ohne es neu zu schreiben, so dass ein stabiles `gretl-lsp-metadata.json` plus JSON Schema erzeugt wird. Implementiere Klassen auf Builder-/Writer-/Schema-Test-Ebene gemäss Spezifikation. Prüfe besonders `SqlExecutor` mit `database`, `sqlFiles` und `sqlParameters`. Führe die relevanten Gradle-Tests und den Metadaten-Generate-Task aus. Aktualisiere `docs/lsp/METADATA_FORMAT.md` und `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -2896,7 +2896,7 @@ java -jar gretl-lsp/build/libs/gretl-lsp-all.jar --stdio
 ## Agenten-Prompt
 
 ```text
-Setze Phase 2 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere ein startbares Java-LSP-Skelett mit LSP4J, Metadaten-Loader und Fat-JAR-Erzeugung. Der Server muss initialize beantworten und Metadaten laden können. Er darf bei `--stdio` keine Logs auf stdout schreiben. Ergänze Tests und Dokumentation in `docs/lsp/DEVELOPMENT.md` und `docs/lsp/TESTING.md`. Aktualisiere `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 2 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere ein startbares Java-LSP-Skelett mit LSP4J, Metadaten-Loader und Fat-JAR-Erzeugung. Der Server muss initialize beantworten und Metadaten laden können. Er darf bei `--stdio` keine Logs auf stdout schreiben. Ergänze Tests und Dokumentation in `docs/lsp/DEVELOPMENT.md` und `docs/lsp/TESTING.md`. Aktualisiere `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3006,7 +3006,7 @@ Pflichttests:
 ## Agenten-Prompt
 
 ```text
-Setze Phase 3 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere das GRETL-Zwischenmodell, den Groovy-AST-basierten Parser und den toleranten Scanner. Der LSP darf Gradle-Skripte nicht ausführen. Tests müssen gültige und unfertige Gradle-Groovy-Snippets abdecken. Dokumentiere die Parser-Entscheidung in `docs/lsp/DECISIONS.md` und aktualisiere `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 3 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere das GRETL-Zwischenmodell, den Groovy-AST-basierten Parser und den toleranten Scanner. Der LSP darf Gradle-Skripte nicht ausführen. Tests müssen gültige und unfertige Gradle-Groovy-Snippets abdecken. Dokumentiere die Parser-Entscheidung in `docs/lsp/DECISIONS.md` und aktualisiere `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3096,7 +3096,7 @@ client.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
 ## Agenten-Prompt
 
 ```text
-Setze Phase 4 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Analyzer und Diagnostics v1 mit den spezifizierten Diagnostic Codes. Publiziere Diagnostics bei didOpen/didChange und lösche sie bei didClose. Ergänze Unit- und LSP-Protokolltests. Dokumentiere die verfügbaren Diagnostics und aktualisiere `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 4 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Analyzer und Diagnostics v1 mit den spezifizierten Diagnostic Codes. Publiziere Diagnostics bei didOpen/didChange und lösche sie bei didClose. Ergänze Unit- und LSP-Protokolltests. Dokumentiere die verfügbaren Diagnostics und aktualisiere `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3174,7 +3174,7 @@ Implementiere Signature Help für:
 ## Agenten-Prompt
 
 ```text
-Setze Phase 5 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere kontextabhängige Completion, Hover und Signature Help aus `gretl-lsp-metadata.json`. Nutze keine hartcodierten Task-Listen im Produktionscode. Ergänze Unit- und LSP-Protokolltests und aktualisiere Dokumentation sowie `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 5 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere kontextabhängige Completion, Hover und Signature Help aus `gretl-lsp-metadata.json`. Nutze keine hartcodierten Task-Listen im Produktionscode. Ergänze Unit- und LSP-Protokolltests und aktualisiere Dokumentation sowie `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3256,7 +3256,7 @@ Diagnostics:
 ## Agenten-Prompt
 
 ```text
-Setze Phase 6 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Document Symbols, Document Links für File-Referenzen und SQL-Parameteranalyse aus referenzierten `.sql`-Dateien. Keine Datenbankverbindungen. Ergänze Tests für Symbole, Links und SQL-Parameter-Diagnostics. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 6 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Document Symbols, Document Links für File-Referenzen und SQL-Parameteranalyse aus referenzierten `.sql`-Dateien. Keine Datenbankverbindungen. Ergänze Tests für Symbole, Links und SQL-Parameter-Diagnostics. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3383,7 +3383,7 @@ Pfad an reale Jar-Namen anpassen.
 ## Agenten-Prompt
 
 ```text
-Setze Phase 7 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Erstelle eine kleine TypeScript-VS-Code-Extension unter `vscode/gretl-vscode`, die den Java-LSP per `java -jar server/gretl-lsp-all.jar --stdio` startet. Implementiere Settings, Commands, Logs und den F5-Workflow. Ergänze `copyDevGretlServerJar`, TypeScript-Build und Tests. Dokumentiere Inbetriebnahme ausführlich in `vscode/gretl-vscode/README.md` und `docs/lsp/VSCODE_EXTENSION.md`. Aktualisiere `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 7 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Erstelle eine kleine TypeScript-VS-Code-Extension unter `vscode/gretl-vscode`, die den Java-LSP per `java -jar server/gretl-lsp-all.jar --stdio` startet. Implementiere Settings, Commands, Logs und den F5-Workflow. Ergänze `copyDevGretlServerJar`, TypeScript-Build und Tests. Dokumentiere Inbetriebnahme ausführlich in `vscode/gretl-vscode/README.md` und `docs/lsp/VSCODE_EXTENSION.md`. Aktualisiere `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3485,7 +3485,7 @@ MVP HTML ohne externe JS-Abhängigkeiten.
 ## Agenten-Prompt
 
 ```text
-Setze Phase 8 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere ein LSP-Command `gretl.getOverview` und eine read-only VS-Code-Webview für GRETL Job-Graph, Tasks, Diagnostics, SQL-Dateien und SQL-Parameter. Halte die Webview sicher: HTML escaping und CSP. Ergänze Java- und TypeScript-Tests und aktualisiere Dokumentation sowie `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 8 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere ein LSP-Command `gretl.getOverview` und eine read-only VS-Code-Webview für GRETL Job-Graph, Tasks, Diagnostics, SQL-Dateien und SQL-Parameter. Halte die Webview sicher: HTML escaping und CSP. Ergänze Java- und TypeScript-Tests und aktualisiere Dokumentation sowie `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3596,7 +3596,7 @@ Einzelne Code Action pro Diagnostic. Workspace-weite Migration erst später.
 ## Agenten-Prompt
 
 ```text
-Setze Phase 9 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Code Actions für fehlende Pflichtfelder, Property-Tippfehler, unbekannte Dependencies und Migration von alter `=`-Schreibweise zur neuen GRETL-DSL. Edits müssen minimal und gut getestet sein. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 9 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Implementiere Code Actions für fehlende Pflichtfelder, Property-Tippfehler, unbekannte Dependencies und Migration von alter `=`-Schreibweise zur neuen GRETL-DSL. Edits müssen minimal und gut getestet sein. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3741,7 +3741,7 @@ Prüft:
 ## Agenten-Prompt
 
 ```text
-Setze Phase 10 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Erstelle eine GitHub Action, die Doclet-Metadaten erzeugt, Java-LSP testet, Fat-JAR baut, die VS-Code-Extension baut/testet und ein VSIX-Artefakt erzeugt. Ergänze Scripts zur VSIX-Prüfung. Führe die lokalen Äquivalente der CI-Schritte aus, soweit möglich. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
+Setze Phase 10 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Erstelle eine GitHub Action, die Doclet-Metadaten erzeugt, Java-LSP testet, Fat-JAR baut, die VS-Code-Extension baut/testet und ein VSIX-Artefakt erzeugt. Ergänze Scripts zur VSIX-Prüfung. Führe die lokalen Äquivalente der CI-Schritte aus, soweit möglich. Aktualisiere Dokumentation und `docs/lsp/PHASE_STATUS.md`.
 ```
 
 ---
@@ -3851,7 +3851,7 @@ npm run check:vsix
 ## Agenten-Prompt
 
 ```text
-Setze Phase 11 aus `gretl_lsp_agent_spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Stabilisiere LSP und VS-Code-Extension, vervollständige Dokumentation, erstelle ein Beispielprojekt und eine Release-Checkliste. Führe den vollen relevanten Check aus oder dokumentiere exakt, was nicht ausführbar war. Aktualisiere `docs/lsp/PHASE_STATUS.md` und liefere einen Abschlussbericht mit geänderten Dateien, Tests, Ergebnissen und Risiken.
+Setze Phase 11 aus `docs/design/gretl-lsp-agent-spec.md` um. Beachte AGENTS.md, CLAUDE.md und relevante Skills. Stabilisiere LSP und VS-Code-Extension, vervollständige Dokumentation, erstelle ein Beispielprojekt und eine Release-Checkliste. Führe den vollen relevanten Check aus oder dokumentiere exakt, was nicht ausführbar war. Aktualisiere `docs/lsp/PHASE_STATUS.md` und liefere einen Abschlussbericht mit geänderten Dateien, Tests, Ergebnissen und Risiken.
 ```
 
 ---

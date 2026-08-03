@@ -29,8 +29,8 @@ public final class TaskCoverageManifestReader {
             JsonNode root = YAML.readTree(Files.newBufferedReader(file));
             requireObject(root, file, "root");
             rejectUnknown(root, ROOT_FIELDS, file, "root");
-            if (integer(root, "schemaVersion", file, "schemaVersion") != 3) {
-                throw error(file, "schemaVersion", "must be 3");
+            if (integer(root, "schemaVersion", file, "schemaVersion") != 4) {
+                throw error(file, "schemaVersion", "must be 4");
             }
             JsonNode tasksNode = required(root, "tasks", file, "tasks");
             requireObject(tasksNode, file, "tasks");
@@ -52,7 +52,7 @@ public final class TaskCoverageManifestReader {
                     throw error(file, "tasks." + name, "is duplicated");
                 }
             }
-            return new TaskCoverageManifest(3, entries);
+            return new TaskCoverageManifest(4, entries);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot read task coverage manifest '" + file + "'.", e);
         }

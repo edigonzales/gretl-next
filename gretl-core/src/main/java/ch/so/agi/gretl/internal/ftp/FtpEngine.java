@@ -1,5 +1,7 @@
 package ch.so.agi.gretl.internal.ftp;
 
+import ch.so.agi.gretl.internal.io.SafeFileOutput;
+
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
@@ -38,6 +40,9 @@ public class FtpEngine {
         validateConnection(request.connection());
         requireNotNull(request.localDir(), "localDir must not be null");
         requireNotBlank(request.remoteDir(), "remoteDir must not be null");
+        if (request.remoteFiles() != null) {
+            request.remoteFiles().forEach(name -> SafeFileOutput.resolveDescendant(request.localDir(), name));
+        }
         Files.createDirectories(request.localDir());
         try (FtpSession session = open(request.connection())) {
             setFileType(session.client(), request.fileType());
@@ -141,17 +146,15 @@ public class FtpEngine {
 
     private static void downloadOne(FTPClient ftp, String remoteDir, String remoteFileName, Path localDir,
                                     String separator) throws IOException {
-        Path target = localDir.resolve(remoteFileName);
-        Path parent = target.getParent();
-        if (parent != null) {
-            Files.createDirectories(parent);
-        }
+        Path target = SafeFileOutput.resolveDescendant(localDir, remoteFileName);
         String remotePath = join(remoteDir, remoteFileName, separator);
-        try (OutputStream out = Files.newOutputStream(target)) {
-            if (!ftp.retrieveFile(remotePath, out)) {
-                throw new IOException("Could not retrieve file: " + remotePath);
+        SafeFileOutput.writeAtomically(target, temporary -> {
+            try (OutputStream out = Files.newOutputStream(temporary)) {
+                if (!ftp.retrieveFile(remotePath, out)) {
+                    throw new IOException("Could not retrieve file: " + remotePath);
+                }
             }
-        }
+        });
     }
 
     private static String join(String directory, String fileName, String separator) {

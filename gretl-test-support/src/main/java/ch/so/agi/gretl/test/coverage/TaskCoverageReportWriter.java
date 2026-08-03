@@ -23,7 +23,7 @@ public final class TaskCoverageReportWriter {
             json.put("directJobExecution", report.directJobExecution());
             json.put("structuralContractOnly", report.structuralContractOnly());
             json.put("dependencyPresentOnly", report.dependencyPresentOnly());
-            json.put("notYetCovered", report.notYetCovered());
+            json.put("noCanonicalJobTrace", report.noCanonicalJobTrace());
             json.put("notApplicable", report.notApplicable());
             json.put("missingBackendExecutions", report.missingBackendExecutions());
             Files.writeString(jsonFile, JSON.writeValueAsString(json) + System.lineSeparator(), StandardCharsets.UTF_8);
@@ -35,12 +35,20 @@ public final class TaskCoverageReportWriter {
 
     private String asciidoc(CoverageVerificationReport report) {
         StringBuilder output = new StringBuilder();
-        output.append("= GRETL Task Coverage\n\n");
+        output.append("= GRETL Canonical Job Coverage\n\n");
         output.append("Verification: ").append(report.successful() ? "PASS" : "FAIL").append("\n\n");
+        int publicTaskCount = report.directJobExecution().size()
+                + report.structuralContractOnly().size()
+                + report.dependencyPresentOnly().size()
+                + report.noCanonicalJobTrace().size()
+                + report.notApplicable().size();
+        output.append("Public task inventory: ").append(publicTaskCount).append(" classified tasks.\n\n");
+        output.append("Canonical job traces: ").append(report.directJobExecution().size())
+                .append('/').append(publicTaskCount).append(" public tasks.\n\n");
         section(output, "DIRECT_JOB_EXECUTION", report.directJobExecution());
         section(output, "STRUCTURAL_CONTRACT_ONLY", report.structuralContractOnly());
         section(output, "DEPENDENCY_PRESENT_ONLY", report.dependencyPresentOnly());
-        section(output, "NOT_YET_COVERED", report.notYetCovered());
+        section(output, "NO_CANONICAL_JOB_TRACE", report.noCanonicalJobTrace());
         section(output, "NOT_APPLICABLE", report.notApplicable());
         section(output, "Missing required backend traces", report.missingBackendExecutions());
         section(output, "Verification errors", report.errors());

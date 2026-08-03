@@ -1,128 +1,80 @@
-# GRETL Modular Prototype
+# GRETL Modular
 
-This repository is a prototype for splitting GRETL into smaller Gradle plugins.
-It keeps Gradle as the local pipeline/DAG engine, but separates general GRETL
-tasks from GeoTools-heavy processing.
+This repository contains the modular GRETL Gradle runtime. Gradle remains the
+local pipeline and task engine; general data-processing tasks and heavy
+GeoTools processing are separated so consumers load only the runtime they use.
+
+GRETL supports and tests Groovy Gradle builds with the modern `plugins {}` DSL.
+Kotlin DSL may work through Gradle, but it is not a tested GRETL contract.
 
 ## Modules
 
-- `gretl-core`
-  - Gradle plugin ID: `ch.so.agi.gretl`
-  - Ported tasks: `SqlExecutor`, `Db2Db`, `Gzip`, `XslTransformer`
-  - Shared service: `gretlCoreService`
-  - Public task types stay under `ch.so.agi.gretl.tasks.*`.
+- `gretl-core` provides the `ch.so.agi.gretl` plugin and the general GRETL task
+  DSL. The generated [task reference](docs/reference/reference.adoc) is the
+  authoritative task inventory.
+- `gretl-geotools` provides `ch.so.agi.gretl.geotools`. Public task shells stay
+  lightweight; GeoTools processing runs from the embedded worker runtime with
+  Gradle classloader isolation.
+- `gretl-doclet` generates the task reference and LSP metadata from the same
+  task annotations.
+- `gretl-combined-tests`, `gretl-job-tests` and `gretl-test-support` are internal
+  verification modules and are never published or copied into the runtime image.
+- `gretl-control-common`, `gretl-control-server` and `gretl-control-worker`
+  implement the optional Control Plane.
+- `gretl-lsp` implements editor support from generated task metadata.
 
-- `gretl-geotools`
-  - Gradle plugin ID: `ch.so.agi.gretl.geotools`
-  - Ported tasks: `ReadShapefile`, `Vectorize`, `RasterReclassify`
-  - Shared service: `gretlGeoToolsService`
-  - GeoTools code runs through Gradle Worker API with `classLoaderIsolation`.
-- `gretl-control-common`, `gretl-control-server`, `gretl-control-worker`
-  - Lightweight GRETL control plane prototype with a Spring Boot server,
-    Git-backed job manifest, Quartz scheduling, run history, log storage,
-    encrypted server-side secrets and pull workers that start `gretl` processes.
+`gretl-core` deliberately excludes the GeoTools, JAI/ImageIO and CRS registry
+runtime. It still contains the legacy JTS types required by INTERLIS and the
+lightweight Shapefile/GeoPackage compatibility tasks. See the
+[architecture guide](docs/architecture.md) for the complete boundary.
 
-There is intentionally no raster plugin yet. Raster-like GeoTools tasks stay in
-`gretl-geotools` for this prototype.
+## Build and test
 
-## Build And Test
-
-The wrapper is pinned to Gradle 7.6.4. Java 17 is configured through Gradle
-toolchains.
+Use Java 17 and the checked-in Gradle 7.6.4 wrapper:
 
 ```bash
-./gradlew --version
 ./gradlew clean check
-./gradlew :gretl-core:integrationTest
 ./gradlew sourceIntegrationTest
 ./gradlew publishedArtifactTest
-./gradlew stageRuntimeImage
-./gradlew runtimeImageSmokeTest
 ./gradlew runtimeImageTest
+./gradlew :gretl-job-tests:coverageTest
 ./gradlew ciCheck
-./gradlew :gretl-control-server:bootRun
-./gradlew :gretl-control-worker:bootRun
 ```
 
-`./gradlew clean check` is the fast local check and does not require Docker.
-`sourceIntegrationTest` is the Docker-backed source gate and includes
-PostgreSQL/PostGIS behavior plus fixture-backed canonical consumer jobs.
+`clean check` is the Docker-free local gate. `sourceIntegrationTest` adds
+PostgreSQL/PostGIS and fixture-backed source tests. `publishedArtifactTest`
+resolves the actual plugin markers, POMs and transitive dependencies from an
+isolated Maven repository. `runtimeImageTest` verifies the built Docker image,
+offline Gradle resolution, one-shot and service execution, application
+networks, and required canonical jobs.
 
-The normal `test` and `integrationTest` tasks execute Gradle TestKit projects
-with the source plugin classpath. `:gretl-core:publishedFunctionalTest`,
-`:gretl-core:publishedIntegrationTest` and
-`:gretl-geotools:publishedFunctionalTest` instead resolve the real plugin
-markers from the isolated Maven repository under
-`build/published-test/maven-repo`. The aggregate `publishedArtifactTest` task
-publishes and verifies both plugins before running those black-box consumer
-projects. It is the published-artifact release gate; it does not test the
-Docker runtime image or its dependency-closed execution contract. The runtime-image level remains
-a separate deployment gate after the source-classpath and
-published-artifact checks. The generated consumer settings do not use
-`mavenLocal()`.
+The central [testing guide](docs/testing/testing.adoc) describes the complete
+gate hierarchy. The [canonical job coverage matrix](docs/testing/task-coverage.yaml)
+tracks multi-backend job traces; it is not a line-coverage report.
 
-`stageRuntimeImage` creates a Docker build context under
-`build/runtime-image/docker`. If Docker is available, the local runtime image can
-be built with:
+## Runtime image
+
+Stage or build the image with:
 
 ```bash
+./gradlew stageRuntimeImage
 ./gradlew buildRuntimeImage
 ```
 
-The default image tag is `sogis/gretl-modular:test`; override it with
-`-PgretlDockerImage=registry/name:tag`.
+The default development tag is `sogis/gretl-modular:test`; override it with
+`-PgretlDockerImage=registry/name:tag`. Runtime-image tests require a reachable
+Docker daemon and fail explicitly when Docker is unavailable.
 
-Runtime-image tests require a running Docker daemon and fail explicitly when
-Docker is unavailable. The image-test build records the immutable image ID in
-`build/runtime-image/dependency-closure-test/image-id.txt`; override its tag with
-`-PgretlRuntimeImageTestTag=...`:
+The image contains a structured Maven repository at
+`/opt/gretl/maven-repository`, Gradle 7.6.4, Java 17, the GeoTools worker
+runtime and the required DuckDB extensions. The `gretl` launcher always runs
+Gradle with `--offline`. This disables remote build-dependency downloads, not
+application connections to PostGIS, S3, FTP or HTTP services.
 
-```bash
-./gradlew buildRuntimeImageForTest
-./gradlew runtimeImageContractTest
-./gradlew runtimeImageDependencyClosureTest
-./gradlew runtimeImageServiceTest
-```
+Detailed contracts and diagnostics are documented in
+[runtime-image testing](docs/testing/runtime-image-tests.adoc).
 
-The default consumer contract is the modern `plugins {}` DSL. The GRETL runtime
-image launcher starts Gradle with `--offline`, which prevents remote plugin and
-dependency downloads while a job is running. Gradle may still resolve from the
-image-local repository, a deliberately mounted local repository or local
-caches. This does not disable the job's application network: jobs may still
-connect to PostGIS, S3, FTP, HTTP and other services. One-shot and service
-lifecycle are independent from this dependency policy. See the [central testing
-guide](docs/testing/testing.adoc), [Runtime-image testing](docs/testing/runtime-image-tests.adoc)
-and the [task coverage matrix](docs/testing/task-coverage.yaml).
-
-## Publishing Snapshots
-
-Snapshot publications target
-`https://jars.interlis.guru/snapshots`.
-
-Provide credentials either as Gradle properties in `~/.gradle/gradle.properties`
-or via environment variables:
-
-```properties
-gretlPublishUsername=...
-gretlPublishPassword=...
-```
-
-```bash
-export GRETL_PUBLISH_USERNAME=...
-export GRETL_PUBLISH_PASSWORD=...
-```
-
-Publish all configured GRETL artifacts with:
-
-```bash
-./gradlew publishSnapshots
-```
-
-This includes the Gradle plugin publications and plugin marker artifacts for
-`gretl-core` and `gretl-geotools`, plus the additional library and Spring Boot
-artifacts from the other published modules.
-
-## Core Usage Example
+## Core usage example
 
 ```groovy
 plugins {
@@ -130,7 +82,6 @@ plugins {
 }
 
 import ch.so.agi.gretl.tasks.SqlExecutor
-import ch.so.agi.gretl.tasks.Db2Db
 import ch.so.agi.gretl.tasks.Gzip
 
 tasks.register('executeSql', SqlExecutor) {
@@ -138,19 +89,13 @@ tasks.register('executeSql', SqlExecutor) {
     sqlFiles 'sql/init.sql'
 }
 
-tasks.register('copyRows', Db2Db) {
-    sourceDatabase 'jdbc:sqlite:/tmp/source.db'
-    targetDatabase 'jdbc:sqlite:/tmp/target.db'
-    transfer 'sql/select-colors.sql', 'colors', true
-}
-
 tasks.register('compressXml', Gzip) {
     dataFile 'data/input.xml'
-    gzipFile layout.buildDirectory.file('out/input.xml.gz').get().asFile
+    gzipFile layout.buildDirectory.file('out/input.xml.gz')
 }
 ```
 
-## GeoTools Usage Example
+## GeoTools usage example
 
 ```groovy
 plugins {
@@ -165,20 +110,36 @@ gretlGeotools {
 
 tasks.register('vectorizeRaster', Vectorize) {
     inputRaster 'data/input.tif'
-    outputGeopackage layout.buildDirectory.file('vectorized/output.gpkg').get().asFile
+    outputGeopackage layout.buildDirectory.file('vectorized/output.gpkg')
     band 0
     cellValues 55d, 65d
 }
 ```
 
+## Publishing snapshots
+
+Snapshot publications target `https://jars.interlis.guru/snapshots`. Supply
+credentials as Gradle properties or environment variables:
+
+```properties
+gretlPublishUsername=...
+gretlPublishPassword=...
+```
+
+```bash
+export GRETL_PUBLISH_USERNAME=...
+export GRETL_PUBLISH_PASSWORD=...
+./gradlew publishSnapshots
+```
+
+Publication is protected by the CI gates; test modules and generated runtime
+outputs are not publication artifacts.
+
 ## Documentation
 
-GRETL supports and tests Groovy Gradle builds. Kotlin DSL builds may still work
-through Gradle, but are not tested or supported as a GRETL contract.
-
 - [Documentation index](docs/index.md)
-- [Migration from original GRETL](docs/migration-from-gretl.md)
 - [Task reference](docs/reference/reference.adoc)
+- [Migration from original GRETL](docs/migration-from-gretl.md)
 - [Architecture](docs/architecture.md)
-- [Control Plane](docs/control-plane.md)
 - [Testing](docs/testing/testing.adoc)
+- [Control Plane](docs/control-plane.md)

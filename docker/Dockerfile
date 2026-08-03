@@ -1,10 +1,14 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre@sha256:92999aea37688157a53a40bfcb187c30f317422e028045fd5fc5c548fde9e626
 
 ARG GRADLE_VERSION=7.6.4
+ARG GRADLE_SHA256
 ARG GRETL_VERSION
 ARG JAVA_VERSION=17
+ARG DUCKDB_EXTENSION_VERSION
 
 RUN test -n "${GRETL_VERSION}" || (echo "GRETL_VERSION build argument is required" >&2; exit 1)
+RUN test -n "${GRADLE_SHA256}" || (echo "GRADLE_SHA256 build argument is required" >&2; exit 1)
+RUN test -n "${DUCKDB_EXTENSION_VERSION}" || (echo "DUCKDB_EXTENSION_VERSION build argument is required" >&2; exit 1)
 
 ENV GRADLE_HOME=/opt/gradle \
     GRADLE_USER_HOME=/work/gradle-home \
@@ -21,6 +25,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL -o /tmp/gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
+    && echo "${GRADLE_SHA256}  /tmp/gradle.zip" | sha256sum -c - \
     && unzip -q /tmp/gradle.zip -d /opt \
     && mv "/opt/gradle-${GRADLE_VERSION}" "${GRADLE_HOME}" \
     && ln -s "${GRADLE_HOME}/bin/gradle" /usr/local/bin/gradle \
@@ -47,9 +52,9 @@ RUN mkdir -p "${GRADLE_USER_HOME}" \
     && java -cp "${runtime_cp}" ch.so.agi.gretl.internal.duckdb.DuckDbExtensionInstaller postgres spatial excel \
     && platform="$(uname -m)" \
     && case "${platform}" in x86_64) platform=linux_amd64 ;; aarch64) platform=linux_arm64 ;; *) echo "Unsupported DuckDB platform ${platform}" >&2; exit 1 ;; esac \
-    && extension_directory="/opt/gretl/duckdb-extensions/v1.5.2/${platform}" \
+    && extension_directory="/opt/gretl/duckdb-extensions/v${DUCKDB_EXTENSION_VERSION}/${platform}" \
     && first=true \
-    && { printf '{"duckDbVersion":"1.5.2","platform":"%s","extensions":[' "${platform}"; \
+    && { printf '{"duckDbVersion":"%s","platform":"%s","extensions":[' "${DUCKDB_EXTENSION_VERSION}" "${platform}"; \
          for spec in postgres:postgres_scanner spatial:spatial excel:excel; do \
              name="${spec%%:*}"; file="${spec#*:}.duckdb_extension"; path="${extension_directory}/${file}"; \
              test -s "${path}" || { echo "Missing DuckDB extension ${path}" >&2; exit 1; }; \

@@ -1,22 +1,16 @@
 package ch.so.agi.gretl.tasks;
 
-import ch.so.agi.gretl.services.CoreGretlBuildService;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Internal;
 
 import java.io.File;
 import java.nio.file.Path;
 
 public abstract class AbstractCoreGretlTask extends DefaultTask {
-
-    @Internal
-    public abstract Property<CoreGretlBuildService> getCoreService();
 
     protected final void setRegularFile(RegularFileProperty property, Object path) {
         requirePath(path, "regular file");

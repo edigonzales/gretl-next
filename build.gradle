@@ -124,16 +124,37 @@ def runtimeImageTestTag = providers.gradleProperty('gretlRuntimeImageTestTag').o
         providers.provider { "gretl-next-e2e:${projectVersionString.replaceAll('[^A-Za-z0-9_.-]', '-') }" })
 def runtimeImageGradleVersion = providers.gradleProperty('gretlRuntimeImageGradleVersion').orElse('7.6.4')
 def runtimeImageJavaVersion = providers.gradleProperty('gretlRuntimeImageJavaVersion').orElse('17')
+def wrapperProperties = new Properties()
+file('gradle/wrapper/gradle-wrapper.properties').withInputStream { wrapperProperties.load(it) }
+def runtimeImageGradleSha256 = providers.gradleProperty('gretlRuntimeImageGradleSha256')
+        .orElse(wrapperProperties.getProperty('distributionSha256Sum'))
+def duckDbVersionParts = rootProject.ext.duckdbVersion.toString().tokenize('.')
+if (duckDbVersionParts.size() < 3) {
+    throw new GradleException("DuckDB JDBC version must contain at least three components: ${rootProject.ext.duckdbVersion}")
+}
+def runtimeImageDuckDbExtensionVersion = duckDbVersionParts.take(3).join('.')
 def runtimeImageTestTimeoutSeconds = providers.gradleProperty('gretlRuntimeImageTestTimeoutSeconds').orElse('900')
 def runtimeImageUser = providers.gradleProperty('gretlRuntimeImageUser').orElse('')
-def runtimeImageDependencyRecords = []
-def runtimeImageDependencyFiles = []
+def runtimeImageDependencyMetadata = files()
 def xmlEscape = { String value ->
     value.replace('&', '&amp;')
             .replace('<', '&lt;')
             .replace('>', '&gt;')
             .replace('"', '&quot;')
             .replace("'", '&apos;')
+}
+def sha256File = { File file ->
+    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    file.withInputStream { input ->
+        byte[] buffer = new byte[64 * 1024]
+        int read
+        while ((read = input.read(buffer)) >= 0) {
+            if (read > 0) {
+                digest.update(buffer, 0, read)
+            }
+        }
+    }
+    digest.digest().collect { String.format('%02x', it & 0xff) }.join()
 }
 
 // The plugin publications contain the GRETL module POMs.  The runtime image
@@ -146,11 +167,16 @@ tasks.register('materializeRuntimeImageDependencies') {
     description = 'Materializes the resolved GRETL runtime dependency closure as Maven metadata.'
     dependsOn ':gretl-core:publishAllPublicationsToRuntimeImageRepository'
     dependsOn ':gretl-geotools:publishAllPublicationsToRuntimeImageRepository'
-    inputs.files(runtimeImageDependencyFiles)
+    inputs.files(runtimeImageDependencyMetadata)
     outputs.dir runtimeImageRepoDir
 
     doLast {
         File repository = runtimeImageRepoDir.get().asFile
+        List<Map> runtimeImageDependencyRecords = runtimeImageDependencyMetadata.files
+                .sort { left, right -> left.absolutePath <=> right.absolutePath }
+                .collectMany { metadata ->
+                    new groovy.json.JsonSlurper().parse(metadata).records as List<Map>
+                }
         Map<String, Map> dependenciesByCoordinate = runtimeImageDependencyRecords.collectEntries {
             [it.coordinate, it]
         }
@@ -210,7 +236,7 @@ tasks.register('materializeRuntimeImageDependencies') {
             }
             if (artifact != null) {
                 File target = new File(versionDirectory, "${coordinateName}-${coordinateVersion}.jar")
-                if (!target.isFile() || target.length() != artifact.length()) {
+                if (!target.isFile() || sha256File(target) != sha256File(artifact)) {
                     java.nio.file.Files.copy(artifact.toPath(), target.toPath(),
                             java.nio.file.StandardCopyOption.REPLACE_EXISTING)
                 }
@@ -249,53 +275,78 @@ ${childPom}    </dependencies>
 }
 
 gradle.projectsEvaluated {
-    [project(':gretl-core').configurations.runtimeClasspath,
-     project(':gretl-geotools').configurations.runtimeClasspath,
-     project(':gretl-geotools').configurations.workerRuntimeClasspath].each { configuration ->
-        Map<String, Map> recordsByCoordinate = [:]
-        configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-            def module = artifact.moduleVersion.id
-            if (module.group != null && module.group.toString() != 'org.gradle' && artifact.file.name.endsWith('.jar')) {
-                String coordinate = "${module.group}:${module.name}:${module.version}"
-                runtimeImageDependencyFiles.add(artifact.file.absolutePath)
-                recordsByCoordinate[coordinate] = [
-                        coordinate: coordinate,
-                        moduleGroup: module.group.toString(),
-                        moduleName: module.name.toString(),
-                        moduleVersion: module.version.toString(),
-                        jarPath: artifact.file.absolutePath,
-                        children: []
-                ]
-            }
-        }
-        configuration.incoming.resolutionResult.allComponents.each { component ->
-            def module = component.moduleVersion
-            if (module == null || module.group == null || module.group.toString() == 'org.gradle') {
-                return
-            }
-            String coordinate = "${module.group}:${module.name}:${module.version}"
-            Map record = recordsByCoordinate[coordinate] ?: [
-                    coordinate: coordinate,
-                    moduleGroup: module.group.toString(),
-                    moduleName: module.name.toString(),
-                    moduleVersion: module.version.toString(),
-                    jarPath: null,
-                    children: []
-            ]
-            record.children = component.dependencies
-                    .findAll { dependency -> dependency instanceof org.gradle.api.artifacts.result.ResolvedDependencyResult }
-                    .collect { dependency ->
-                        def child = dependency.selected.moduleVersion
-                        child == null ? null : "${child.group}:${child.name}:${child.version}"
+    def registerDependencyMetadata = { Project owner, String taskName, List configurations ->
+        def outputFile = owner.layout.buildDirectory.file("runtime-image-dependencies/${taskName}.json")
+        def metadataTask = owner.tasks.register(taskName) {
+            group = 'distribution'
+            description = 'Writes the resolved runtime dependency graph for image staging.'
+            inputs.files(configurations)
+            outputs.file(outputFile)
+            doLast {
+                Map<String, Map> recordsByCoordinate = [:]
+                configurations.each { configuration ->
+                    configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                        def module = artifact.moduleVersion.id
+                        if (module.group != null && module.group.toString() != 'org.gradle'
+                                && artifact.file.name.endsWith('.jar')) {
+                            String coordinate = "${module.group}:${module.name}:${module.version}"
+                            recordsByCoordinate[coordinate] = [
+                                    coordinate: coordinate,
+                                    moduleGroup: module.group.toString(),
+                                    moduleName: module.name.toString(),
+                                    moduleVersion: module.version.toString(),
+                                    jarPath: artifact.file.absolutePath,
+                                    jarSha256: sha256File(artifact.file),
+                                    children: []
+                            ]
+                        }
                     }
-                    .findAll { it != null }
-            recordsByCoordinate[coordinate] = record
+                    configuration.incoming.resolutionResult.allComponents.each { component ->
+                        def module = component.moduleVersion
+                        if (module == null || module.group == null || module.group.toString() == 'org.gradle') {
+                            return
+                        }
+                        String coordinate = "${module.group}:${module.name}:${module.version}"
+                        Map record = recordsByCoordinate[coordinate] ?: [
+                                coordinate: coordinate,
+                                moduleGroup: module.group.toString(),
+                                moduleName: module.name.toString(),
+                                moduleVersion: module.version.toString(),
+                                jarPath: null,
+                                jarSha256: null,
+                                children: []
+                        ]
+                        record.children = component.dependencies
+                                .findAll { dependency -> dependency instanceof org.gradle.api.artifacts.result.ResolvedDependencyResult }
+                                .collect { dependency ->
+                                    def child = dependency.selected.moduleVersion
+                                    child == null ? null : "${child.group}:${child.name}:${child.version}"
+                                }
+                                .findAll { it != null }
+                                .sort()
+                        recordsByCoordinate[coordinate] = record
+                    }
+                }
+                File output = outputFile.get().asFile
+                output.parentFile.mkdirs()
+                List<Map> records = recordsByCoordinate.values().sort { left, right ->
+                    left.coordinate <=> right.coordinate
+                }
+                output.text = groovy.json.JsonOutput.prettyPrint(
+                        groovy.json.JsonOutput.toJson([records: records])) + System.lineSeparator()
+            }
         }
-        runtimeImageDependencyRecords.addAll(recordsByCoordinate.values())
+        runtimeImageDependencyMetadata.from(metadataTask)
+        tasks.named('materializeRuntimeImageDependencies').configure {
+            dependsOn metadataTask
+        }
     }
-    tasks.named('materializeRuntimeImageDependencies').configure {
-        inputs.files(runtimeImageDependencyFiles)
-    }
+
+    registerDependencyMetadata(project(':gretl-core'), 'writeRuntimeImageDependencyMetadata',
+            [project(':gretl-core').configurations.runtimeClasspath])
+    registerDependencyMetadata(project(':gretl-geotools'), 'writeRuntimeImageDependencyMetadata',
+            [project(':gretl-geotools').configurations.runtimeClasspath,
+             project(':gretl-geotools').configurations.workerRuntimeClasspath])
 }
 
 tasks.register('cleanRuntimeImageDependencyClosureState', Delete) {
@@ -593,20 +644,6 @@ tasks.named('check').configure {
     dependsOn ':gretl-job-tests:assertJobTestsNotPublished'
 }
 
-def sha256File = { File file ->
-    def digest = java.security.MessageDigest.getInstance('SHA-256')
-    file.withInputStream { input ->
-        byte[] buffer = new byte[64 * 1024]
-        int read
-        while ((read = input.read(buffer)) >= 0) {
-            if (read > 0) {
-                digest.update(buffer, 0, read)
-            }
-        }
-    }
-    digest.digest().collect { String.format('%02x', it & 0xff) }.join()
-}
-
 def writeBundledManifests = { File context ->
     File repository = new File(context, 'maven-repo')
     File manifests = new File(context, 'manifests')
@@ -713,6 +750,8 @@ tasks.register('stageRuntimeImage', Sync) {
     dependsOn tasks.named('materializeRuntimeImageDependencies')
     dependsOn ':gretl-core:jar'
     dependsOn ':gretl-geotools:jar'
+    inputs.property('gradleSha256', runtimeImageGradleSha256)
+    inputs.property('duckDbExtensionVersion', runtimeImageDuckDbExtensionVersion)
 
     into runtimeImageDir
 
@@ -732,6 +771,7 @@ tasks.register('stageRuntimeImage', Sync) {
         new File(destinationDir, 'build.info').text = """GRETL Modular ${projectVersionString}
 Gradle ${runtimeImageGradleVersion.get()}
 Java ${runtimeImageJavaVersion.get()}
+DuckDB extensions ${runtimeImageDuckDbExtensionVersion}
 Repository /opt/gretl/maven-repository
 Init /opt/gretl/init/gretl.init.gradle
 Dependency policy local-only Gradle resolution (no remote downloads)
@@ -747,6 +787,8 @@ tasks.register('buildRuntimeImage', Exec) {
     commandLine 'docker', 'build', '--pull=false',
             '--build-arg', "GRETL_VERSION=${projectVersionString}",
             '--build-arg', "GRADLE_VERSION=${runtimeImageGradleVersion.get()}",
+            '--build-arg', "GRADLE_SHA256=${runtimeImageGradleSha256.get()}",
+            '--build-arg', "DUCKDB_EXTENSION_VERSION=${runtimeImageDuckDbExtensionVersion}",
             '-t', dockerImageName.get(), '.'
 }
 
@@ -776,6 +818,15 @@ tasks.register('verifyRuntimeImageDependencyClosureDistribution') {
                 throw new GradleException("Missing bundled runtime-image artifact ${description}: ${file}")
             }
             file
+        }
+        String dockerfile = new File(context, 'Dockerfile').getText('UTF-8')
+        if (!dockerfile.contains('eclipse-temurin:17-jre@sha256:92999aea37688157a53a40bfcb187c30f317422e028045fd5fc5c548fde9e626')
+                || !dockerfile.contains('sha256sum -c -')
+                || !dockerfile.contains('DUCKDB_EXTENSION_VERSION')) {
+            throw new GradleException('Runtime-image Dockerfile does not enforce the pinned base, Gradle checksum and DuckDB version contract.')
+        }
+        if (!(runtimeImageGradleSha256.get() ==~ /[0-9a-f]{64}/)) {
+            throw new GradleException('Gradle distribution SHA-256 must contain 64 lowercase hex characters.')
         }
         String version = projectVersionString
         def artifact = { String group, String module, String artifactVersion, String extension ->
@@ -936,6 +987,10 @@ tasks.register('buildRuntimeImageForTest') {
     inputs.dir runtimeImageDir
     inputs.property('imageTag', runtimeImageTestTag)
     inputs.property('gretlVersion', projectVersionString)
+    inputs.property('gradleVersion', runtimeImageGradleVersion)
+    inputs.property('gradleSha256', runtimeImageGradleSha256)
+    inputs.property('javaVersion', runtimeImageJavaVersion)
+    inputs.property('duckDbExtensionVersion', runtimeImageDuckDbExtensionVersion)
     outputs.files(runtimeImageTestDir.map { it.file('image-id.txt') },
             runtimeImageTestDir.map { it.file('image-descriptor.json') })
 
@@ -954,7 +1009,9 @@ tasks.register('buildRuntimeImageForTest') {
                                 '--tag', runtimeImageTestTag.get(),
                                 '--build-arg', "GRETL_VERSION=${projectVersionString}",
                                 '--build-arg', "GRADLE_VERSION=${runtimeImageGradleVersion.get()}",
+                                '--build-arg', "GRADLE_SHA256=${runtimeImageGradleSha256.get()}",
                                 '--build-arg', "JAVA_VERSION=${runtimeImageJavaVersion.get()}",
+                                '--build-arg', "DUCKDB_EXTENSION_VERSION=${runtimeImageDuckDbExtensionVersion}",
                                 '.']
         Process process = new ProcessBuilder(command as String[])
                 .directory(runtimeImageDir.get().asFile)
@@ -1007,7 +1064,9 @@ tasks.register('buildRuntimeImageForTest') {
                 imageTag: runtimeImageTestTag.get(),
                 gretlVersion: projectVersionString,
                 gradleVersion: runtimeImageGradleVersion.get(),
+                gradleSha256: runtimeImageGradleSha256.get(),
                 javaVersion: runtimeImageJavaVersion.get(),
+                duckDbExtensionVersion: runtimeImageDuckDbExtensionVersion,
                 repositoryPath: '/opt/gretl/maven-repository',
                 readOnlyCachePath: null,
                 initScriptPath: '/opt/gretl/init/gretl.init.gradle',

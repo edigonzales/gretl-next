@@ -29,7 +29,7 @@ public final class TaskCoverageVerifier {
         List<String> direct = new ArrayList<>();
         List<String> structural = new ArrayList<>();
         List<String> dependency = new ArrayList<>();
-        List<String> notYet = new ArrayList<>();
+        List<String> noCanonicalTrace = new ArrayList<>();
         List<String> notApplicable = new ArrayList<>();
         Set<String> classes = Set.copyOf(publicTaskClasses);
         Set<String> seenClasses = new HashSet<>();
@@ -50,7 +50,7 @@ public final class TaskCoverageVerifier {
                 case DIRECT_JOB_EXECUTION -> direct.add(entry.className());
                 case STRUCTURAL_CONTRACT_ONLY -> structural.add(entry.className());
                 case DEPENDENCY_PRESENT_ONLY -> dependency.add(entry.className());
-                case NOT_YET_COVERED -> notYet.add(entry.className());
+                case NO_CANONICAL_JOB_TRACE -> noCanonicalTrace.add(entry.className());
                 case NOT_APPLICABLE -> notApplicable.add(entry.className());
             }
             if (entry.classification() == TaskCoverageClassification.DIRECT_JOB_EXECUTION
@@ -71,7 +71,7 @@ public final class TaskCoverageVerifier {
                 verifyScenario(entry, scenario, catalog, traces, errors, missingBackends);
             }
         }
-        return new CoverageVerificationReport(errors, direct, structural, dependency, notYet,
+        return new CoverageVerificationReport(errors, direct, structural, dependency, noCanonicalTrace,
                 notApplicable, missingBackends);
     }
 

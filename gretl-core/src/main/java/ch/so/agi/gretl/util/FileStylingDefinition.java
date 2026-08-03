@@ -1,86 +1,44 @@
 package ch.so.agi.gretl.util;
 
-import java.io.*;
-
-import java.nio.ByteBuffer;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
-/**
- * The FileStylingDefinition class checks if a given file is encoded in UTF-8
- * and has no Byte-Order-Mark (BOM)
- */
+/** Checks SQL-style input files for strict UTF-8 without a byte-order mark. */
 public class FileStylingDefinition {
-
-    private static final String stringBOM = "\uFEFF";
-    private static final String encoding = "UTF-8";
+    private static final int BUFFER_SIZE = 8192;
 
     private FileStylingDefinition() {
     }
 
-    /**
-     * Checks the given file if it is encoded in UTF-8
-     *
-     * @param inputfile File
-     * @throws Exception if the File is not encoded in UTF-8 an Exception will be
-     *                   thrown
-     */
     public static void checkForUtf8(File inputfile) throws Exception {
-//        byte[] buffer = new byte[256];
-//        System.out.println("******");
-//        System.out.println(inputfile.length());
-        if (inputfile.length() > 0) {
-            byte[] buffer = new byte[(int) inputfile.length()];
-            int fileEnd = -1;
-
-            FileInputStream sqlFileInputStream = new FileInputStream(inputfile);
-            BufferedInputStream bufferedInputFileStream = new BufferedInputStream(sqlFileInputStream);
-
-            CharsetDecoder decoder = createCharsetDecoder();
-
-            int lineBytes = bufferedInputFileStream.read(buffer);
-            while (lineBytes != fileEnd) {
-                try {
-                    decoder.decode(ByteBuffer.wrap(buffer));
-                    lineBytes = bufferedInputFileStream.read(buffer);
-                } catch (CharacterCodingException e) {
-                    throw new GretlException("Wrong encoding (not UTF-8) detected in File " + inputfile.getAbsolutePath());
-                }
+        var decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try (Reader reader = new InputStreamReader(Files.newInputStream(inputfile.toPath()), decoder)) {
+            char[] buffer = new char[BUFFER_SIZE];
+            while (reader.read(buffer) != -1) {
+                // Reading the complete stream through the strict decoder performs the validation.
             }
-            bufferedInputFileStream.close();
+        } catch (CharacterCodingException e) {
+            throw new GretlException("Wrong encoding (not UTF-8) detected in File " + inputfile.getAbsolutePath());
         }
     }
-    
-    /**
-     * Creates an CharsetDecoder which tests the encoding
-     *
-     * @return CharsetDecoder
-     */
-    private static CharsetDecoder createCharsetDecoder() {
-        Charset charset = Charset.forName(encoding);
-        CharsetDecoder decoder = charset.newDecoder();
-        decoder.reset();
 
-        return decoder;
-    }
-
-    /**
-     * Checks if the given file starts with a Byte-Order-Mark (BOM)
-     *
-     * @param inputfile File
-     * @throws Exception if the File holds a BOM an Exception will be thrown
-     */
     public static void checkForBOMInFile(File inputfile) throws Exception {
-        FileInputStream sqlFileInputStream = new FileInputStream(inputfile);
-        BufferedReader bufferedInputFileStream = new BufferedReader(new InputStreamReader(sqlFileInputStream, "UTF-8"));
-
-        String line = bufferedInputFileStream.readLine();
-        if (line.startsWith(stringBOM)) {
-            bufferedInputFileStream.close();
-            throw new GretlException(GretlException.TYPE_FILE_WITH_BOM, "File includes not allowed BOM");
-        } else {
-            bufferedInputFileStream.close();
+        try (InputStream input = Files.newInputStream(inputfile.toPath())) {
+            byte[] prefix = input.readNBytes(3);
+            if (prefix.length == 3
+                    && prefix[0] == (byte) 0xEF
+                    && prefix[1] == (byte) 0xBB
+                    && prefix[2] == (byte) 0xBF) {
+                throw new GretlException(GretlException.TYPE_FILE_WITH_BOM, "File includes not allowed BOM");
+            }
         }
     }
 }

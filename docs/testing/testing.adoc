@@ -31,6 +31,14 @@ Artefakte gilt weiterhin `publishedArtifactTest`; es prüft Marker, POMs,
 transitive Abhängigkeiten und echte Consumer-Auflösung aus dem isolierten
 Testrepository.
 
+`gretl-combined-tests` führt Core und GeoTools im selben realistischen
+Consumer-Build aus. Der Child-Build erhält einen expliziten, deterministischen
+Plugin-Classpath ohne JUnit-, Test-Support- oder Host-GeoTools-Artefakte. Die
+gleiche Suite läuft zusätzlich gegen publizierte Plugin-Marker. Sie prüft beide
+Plugin-Reihenfolgen, den isolierten Worker, Provider-basierte Taskabhängigkeiten,
+inkrementelle Ausführung, Configuration Cache und gemischte Multi-Project-Builds.
+Die primäre Pipeline ist `XslTransformer -> RasterReclassify -> Gzip`.
+
 == Testebenen und Beweise
 
 |===
@@ -44,6 +52,11 @@ Testrepository.
 |===
 
 Ein neues GRETL-Task wird in `docs/testing/task-coverage.yaml` klassifiziert.
+Diese Matrix misst ausschliesslich kanonische Multi-Backend-Jobtraces, nicht die
+gesamte Unit-, Functional- oder Integration-Testabdeckung. Alle 45 öffentlichen
+Tasks besitzen mindestens einen ausführenden Testpfad; aktuell liefern 25 davon
+einen positiven kanonischen Jobtrace. `NO_CANONICAL_JOB_TRACE` bedeutet daher
+nicht „ungetestet“.
 Ein direkt ausgeführtes kanonisches Szenario muss eine persistierte Job-
 Definition, eine erwartete Taskklasse und fachliche Assertions besitzen. Ein
 neuer Job erhält ein Schema-2-`job.yaml`, eine Groovy-`build.gradle`,
@@ -97,7 +110,7 @@ tatsächlich verwendete Image-Name `floci/floci:latest` wird deshalb als
 expliziter Contract dokumentiert und nicht als digest-gepinnt bezeichnet.
 
 Reports liegen unter `build/reports/tests`, `build/test-results` und für die
-Coverage unter `build/reports/test-jobs`. Bei Fehlern sind insbesondere
+Canonical-Job-Coverage unter `build/reports/test-jobs`. Bei Fehlern sind insbesondere
 materialisierte Jobs und die Runtime-Diagnose zur Ursachenanalyse relevant;
 Secrets dürfen nicht in Artefakten erscheinen.
 
@@ -115,6 +128,6 @@ Secrets dürfen nicht in Artefakten erscheinen.
 ----
 
 Weitere Details stehen in
-link:canonical-job-p2.adoc[der kanonischen Job-Dokumentation],
+link:canonical-jobs.adoc[der kanonischen Job-Dokumentation],
 link:runtime-image-tests.adoc[der Runtime-Image-Dokumentation] und der
 link:task-coverage.yaml[Coverage-Matrix].
