@@ -113,6 +113,7 @@ subprojects {
 
 def runtimeImageDir = layout.buildDirectory.dir('runtime-image/docker')
 def runtimeImageRepoDir = layout.buildDirectory.dir('runtime-image/maven-repo')
+def runtimeImageMaterializedRepoDir = layout.buildDirectory.dir('runtime-image/materialized-maven-repo')
 def runtimeImageDependencyClosureDir = layout.buildDirectory.dir('runtime-image/dependency-closure')
 def runtimeImageTestDir = layout.buildDirectory.dir('runtime-image/dependency-closure-test')
 def projectVersionString = project.version.toString()
@@ -168,10 +169,11 @@ tasks.register('materializeRuntimeImageDependencies') {
     dependsOn ':gretl-core:publishAllPublicationsToRuntimeImageRepository'
     dependsOn ':gretl-geotools:publishAllPublicationsToRuntimeImageRepository'
     inputs.files(runtimeImageDependencyMetadata)
-    outputs.dir runtimeImageRepoDir
+    outputs.dir runtimeImageMaterializedRepoDir
 
     doLast {
-        File repository = runtimeImageRepoDir.get().asFile
+        File publishedRepository = runtimeImageRepoDir.get().asFile
+        File repository = runtimeImageMaterializedRepoDir.get().asFile
         List<Map> runtimeImageDependencyRecords = runtimeImageDependencyMetadata.files
                 .sort { left, right -> left.absolutePath <=> right.absolutePath }
                 .collectMany { metadata ->
@@ -197,10 +199,10 @@ tasks.register('materializeRuntimeImageDependencies') {
         // plugin POMs as an exact root as well, so the image contains the
         // coordinates Gradle will request in an isolated offline build.
         List<File> pluginPoms
-        try (def paths = java.nio.file.Files.walk(repository.toPath())) {
+        try (def paths = java.nio.file.Files.walk(publishedRepository.toPath())) {
             pluginPoms = paths
                     .filter { path ->
-                        String value = repository.toPath().relativize(path).toString()
+                        String value = publishedRepository.toPath().relativize(path).toString()
                         (value ==~ /ch\/so\/agi\/gretl-core\/[^\/]+\/gretl-core-[^\/]+\.pom/)
                                 || (value ==~ /ch\/so\/agi\/gretl-geotools\/[^\/]+\/gretl-geotools-[^\/]+\.pom/)
                     }
@@ -354,6 +356,7 @@ tasks.register('cleanRuntimeImageDependencyClosureState', Delete) {
     description = 'Deletes only project-owned dependency-closure staging and diagnostics.'
     delete runtimeImageDependencyClosureDir
     delete runtimeImageRepoDir
+    delete runtimeImageMaterializedRepoDir
     delete runtimeImageDir
     delete runtimeImageTestDir
 }
@@ -764,6 +767,9 @@ tasks.register('stageRuntimeImage', Sync) {
         into 'maven-repo'
         exclude '**/*-sources.jar*'
         exclude '**/*-javadoc.jar*'
+    }
+    from(runtimeImageMaterializedRepoDir) {
+        into 'maven-repo'
     }
 
     doLast {
