@@ -46,26 +46,6 @@ class RuntimeImageGzipTest {
     }
 
     @Test
-    void compressesFileWithKotlinDsl() throws Exception {
-        GradleTestProject project = project("gzip-kotlin");
-        byte[] input = "kotlin bundled gzip".getBytes(StandardCharsets.UTF_8);
-        project.settingsKotlin("rootProject.name = \"gzip-kotlin\"\n")
-                .binaryFile("data/input.txt", input)
-                .buildKotlin("""
-                        import ch.so.agi.gretl.tasks.Gzip
-                        plugins { id("ch.so.agi.gretl") }
-                        tasks.register<Gzip>("compress") {
-                            dataFile("data/input.txt")
-                            gzipFile("build/out/payload.gz")
-                        }
-                        """);
-
-        GretlBuildResult result = run(project, "compress");
-        assertTrue(result.successful(), result.output());
-        assertArrayEquals(input, gunzip(project.path("build/out/payload.gz")));
-    }
-
-    @Test
     void missingInputFailsClearly() {
         GradleTestProject project = project("gzip-missing");
         project.settingsGroovy("rootProject.name = 'gzip-missing'\n")

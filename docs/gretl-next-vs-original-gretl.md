@@ -217,7 +217,6 @@ liefert für den Vergleichscommit aber kein erfolgreiches Release-Signal.
 
 - klare Architektur- und Modulbeschreibung;
 - expliziter Migrationsleitfaden;
-- Kotlin-DSL-Hilfe;
 - umfangreiche DuckDB-Beispiele;
 - Control-Plane-Betriebsbeschreibung;
 - sehr ausführliche LSP-Dokumentation und Tutorials;

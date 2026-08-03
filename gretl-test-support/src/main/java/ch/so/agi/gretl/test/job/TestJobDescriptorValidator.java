@@ -49,8 +49,7 @@ public final class TestJobDescriptorValidator {
             if (source == null || !Files.isRegularFile(source, LinkOption.NOFOLLOW_LINKS)) {
                 add(errors, field + ".file", "does not exist inside the job directory");
             } else {
-                String expectedSuffix = build.language() == TestJobBuildLanguage.GROOVY ? ".gradle" : ".gradle.kts";
-                if (!build.file().endsWith(expectedSuffix)) add(errors, field + ".file", "does not match its language");
+                if (!build.file().endsWith(".gradle")) add(errors, field + ".file", "must be a Groovy Gradle build file");
                 inspectBuild(source, field + ".file", errors);
             }
             for (var entry : build.executionTargets().entrySet()) {

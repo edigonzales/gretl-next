@@ -5,7 +5,6 @@ category: interlis
 builds:
   - id: groovy
     file: build.gradle
-    language: GROOVY
 executionTargets:
   pluginClasspath: required
   publishedArtifact: required

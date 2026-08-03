@@ -29,19 +29,6 @@ class CombinedConfigurationCacheFunctionalTest extends CombinedPluginTestSupport
     }
 
     @Test
-    void kotlinPipelineReusesConfigurationCache() throws Exception {
-        writeSettings();
-        writeKotlinBuild("""
-                plugins {
-                    id("ch.so.agi.gretl")
-                    id("ch.so.agi.gretl.geotools")
-                }
-                tasks.register("canary") { doLast { println("CACHE_CANARY") } }
-                """);
-        assertCacheReused();
-    }
-
-    @Test
     void configurationCachePreservesWorkerIsolation() throws Exception {
         writeSettings();
         writeGroovyBuild("""

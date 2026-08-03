@@ -41,10 +41,6 @@ abstract class CoreFunctionalTestSupport {
         Files.writeString(projectDir.resolve("build.gradle"), content, StandardCharsets.UTF_8);
     }
 
-    void writeKotlinBuild(String content) throws IOException {
-        Files.writeString(projectDir.resolve("build.gradle.kts"), content, StandardCharsets.UTF_8);
-    }
-
     Path copyResource(String resourcePath, String targetPath) throws IOException, URISyntaxException {
         Path target = projectDir.resolve(targetPath);
         Files.createDirectories(target.getParent());

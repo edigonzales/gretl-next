@@ -43,26 +43,6 @@ class RuntimeImageBundledPluginResolutionTest {
     }
 
     @Test
-    void appliesCorePluginWithKotlinDsl() throws Exception {
-        GradleTestProject project = project("core-kotlin");
-        project.settingsKotlin("rootProject.name = \"core-kotlin\"\n")
-                .buildKotlin("""
-                        plugins { id("ch.so.agi.gretl") }
-                        tasks.register("writeMarker") {
-                            doLast {
-                                val output = file("build/marker.txt")
-                                output.parentFile.mkdirs()
-                                output.writeText("kotlin")
-                            }
-                        }
-                        """);
-        GretlBuildResult result = run(project, "writeMarker");
-        assertTrue(result.successful(), result.output());
-        assertTrue(Files.exists(project.path("build/marker.txt")));
-        assertNoDownload(result);
-    }
-
-    @Test
     void appliesCorePluginWithExplicitVersionGroovyDsl() throws Exception {
         String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
         GradleTestProject project = project("core-groovy-explicit");
@@ -74,26 +54,6 @@ class RuntimeImageBundledPluginResolutionTest {
                                 def output = file('build/marker.txt')
                                 output.parentFile.mkdirs()
                                 output.text = 'core'
-                            }
-                        }
-                        """.formatted(version));
-        GretlBuildResult result = run(project, "writeMarker");
-        assertTrue(result.successful(), result.output());
-        assertNoDownload(result);
-    }
-
-    @Test
-    void appliesCorePluginWithExplicitVersionKotlinDsl() throws Exception {
-        String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
-        GradleTestProject project = project("core-kotlin-explicit");
-        project.settingsKotlin("rootProject.name = \"core-kotlin-explicit\"\n")
-                .buildKotlin("""
-                        plugins { id("ch.so.agi.gretl") version "%s" }
-                        tasks.register("writeMarker") {
-                            doLast {
-                                val output = file("build/marker.txt")
-                                output.parentFile.mkdirs()
-                                output.writeText("kotlin")
                             }
                         }
                         """.formatted(version));
@@ -141,51 +101,6 @@ class RuntimeImageBundledPluginResolutionTest {
                                 def output = file('build/geotools.txt')
                                 output.parentFile.mkdirs()
                                 output.text = 'worker-runtime'
-                            }
-                        }
-                        """.formatted(version, version));
-        GretlBuildResult result = run(project, "workerCanary");
-        assertTrue(result.successful(), result.output());
-        assertNoDownload(result);
-    }
-
-    @Test
-    void appliesGeotoolsPluginWithVersionlessKotlinDsl() throws Exception {
-        GradleTestProject project = project("geotools-kotlin");
-        project.settingsKotlin("rootProject.name = \"geotools-kotlin\"\n")
-                .buildKotlin("""
-                        plugins {
-                            id("ch.so.agi.gretl")
-                            id("ch.so.agi.gretl.geotools")
-                        }
-                        tasks.register("workerCanary") {
-                            doLast {
-                                val output = file("build/geotools.txt")
-                                output.parentFile.mkdirs()
-                                output.writeText("worker-runtime")
-                            }
-                        }
-                        """);
-        GretlBuildResult result = run(project, "workerCanary");
-        assertTrue(result.successful(), result.output());
-        assertNoDownload(result);
-    }
-
-    @Test
-    void appliesGeotoolsPluginWithExplicitVersionKotlinDsl() throws Exception {
-        String version = RuntimeImageDescriptor.fromSystemProperties().gretlVersion();
-        GradleTestProject project = project("geotools-kotlin-explicit");
-        project.settingsKotlin("rootProject.name = \"geotools-kotlin-explicit\"\n")
-                .buildKotlin("""
-                        plugins {
-                            id("ch.so.agi.gretl") version "%s"
-                            id("ch.so.agi.gretl.geotools") version "%s"
-                        }
-                        tasks.register("workerCanary") {
-                            doLast {
-                                val output = file("build/geotools.txt")
-                                output.parentFile.mkdirs()
-                                output.writeText("worker-runtime")
                             }
                         }
                         """.formatted(version, version));

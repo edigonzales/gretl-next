@@ -18,20 +18,6 @@ class CombinedPluginApplicationFunctionalTest extends CombinedPluginTestSupport 
     }
 
     @Test
-    void appliesCoreThenGeoToolsWithKotlinDsl() throws Exception {
-        writeSettings();
-        writeKotlinBuild(inspectorKotlin("id(\"ch.so.agi.gretl\")\n                    id(\"ch.so.agi.gretl.geotools\")"));
-        assertInspection(run("inspectCombined"));
-    }
-
-    @Test
-    void appliesGeoToolsThenCoreWithKotlinDsl() throws Exception {
-        writeSettings();
-        writeKotlinBuild(inspectorKotlin("id(\"ch.so.agi.gretl.geotools\")\n                    id(\"ch.so.agi.gretl\")"));
-        assertInspection(run("inspectCombined"));
-    }
-
-    @Test
     void bothPluginsExposeTheirTaskTypes() throws Exception {
         inspectGroovy("ch.so.agi.gretl", "ch.so.agi.gretl.geotools");
     }
@@ -102,31 +88,6 @@ class CombinedPluginApplicationFunctionalTest extends CombinedPluginTestSupport 
                 }
                 """.formatted(first, second));
         assertInspection(run("inspectCombined"));
-    }
-
-    private String inspectorKotlin(String pluginLines) {
-        return """
-                import ch.so.agi.gretl.tasks.Gzip
-                import ch.so.agi.gretl.tasks.XslTransformer
-                import ch.so.agi.gretl.geotools.tasks.RasterReclassify
-
-                plugins {
-                    %s
-                }
-                tasks.register<Gzip>("gzipCanary")
-                tasks.register<XslTransformer>("xslCanary")
-                tasks.register<RasterReclassify>("rasterCanary")
-                tasks.register("inspectCombined") {
-                    doLast {
-                        check(pluginManager.hasPlugin("ch.so.agi.gretl"))
-                        check(pluginManager.hasPlugin("ch.so.agi.gretl.geotools"))
-                        check(tasks.named("gzipCanary").get() is Gzip)
-                        check(tasks.named("xslCanary").get() is XslTransformer)
-                        check(tasks.named("rasterCanary").get() is RasterReclassify)
-                        println("COMBINED_PLUGIN_INSPECTION=OK")
-                    }
-                }
-                """.formatted(pluginLines);
     }
 
     private void assertInspection(BuildResult result) {

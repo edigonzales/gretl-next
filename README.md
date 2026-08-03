@@ -172,9 +172,11 @@ tasks.register('vectorizeRaster', Vectorize) {
 
 ## Documentation
 
+GRETL supports and tests Groovy Gradle builds. Kotlin DSL builds may still work
+through Gradle, but are not tested or supported as a GRETL contract.
+
 - [Documentation index](docs/index.md)
 - [Migration from original GRETL](docs/migration-from-gretl.md)
-- [Kotlin DSL examples](docs/kotlin-dsl.md)
 - [Task reference](docs/reference/reference.adoc)
 - [Architecture](docs/architecture.md)
 - [Control Plane](docs/control-plane.md)

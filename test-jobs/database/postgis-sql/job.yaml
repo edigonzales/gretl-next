@@ -5,7 +5,6 @@ category: database
 builds:
   - id: groovy
     file: build.gradle
-    language: GROOVY
 entryTasks:
   - fillDatabase
 expectedTasks:

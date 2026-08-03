@@ -57,28 +57,4 @@ class GzipFunctionalTest extends CoreFunctionalTestSupport {
         assertTrue(result.getOutput().contains("missing.xml"));
     }
 
-    @Test
-    void supportsKotlinDsl() throws Exception {
-        writeSettings();
-        Path input = copyResource("fixtures/gzip/planregister.xml", "input/planregister.xml");
-        writeKotlinBuild("""
-                import ch.so.agi.gretl.tasks.Gzip
-
-                plugins { id("ch.so.agi.gretl") }
-
-                tasks.register<Gzip>("compressFile") {
-                    dataFile("input/planregister.xml")
-                    gzipFile(layout.buildDirectory.file("nested/out/planregister.xml.gz"))
-                }
-                """);
-
-        run("compressFile");
-
-        Path output = projectDir.resolve("build/nested/out/planregister.xml.gz");
-        assertTrue(Files.exists(output));
-        try (GZIPInputStream in = new GZIPInputStream(Files.newInputStream(output))) {
-            assertEquals(Files.readString(input, StandardCharsets.UTF_8),
-                    new String(in.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
 }

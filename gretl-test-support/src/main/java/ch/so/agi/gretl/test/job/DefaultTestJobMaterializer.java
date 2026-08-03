@@ -94,7 +94,7 @@ public final class DefaultTestJobMaterializer implements TestJobMaterializer {
     }
 
     private boolean isBuildVariant(String file) {
-        return file.equals("build.gradle") || file.equals("build.gradle.kts");
+        return file.equals("build.gradle");
     }
 
     private boolean containsGeneratedDirectory(Path relative) {

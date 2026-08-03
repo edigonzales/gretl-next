@@ -59,10 +59,6 @@ abstract class CombinedPluginTestSupport {
         Files.writeString(projectDir.resolve("build.gradle"), content, StandardCharsets.UTF_8);
     }
 
-    protected void writeKotlinBuild(String content) throws IOException {
-        Files.writeString(projectDir.resolve("build.gradle.kts"), content, StandardCharsets.UTF_8);
-    }
-
     protected Path copyResource(String source, String target) throws IOException, URISyntaxException {
         Path targetPath = projectDir.resolve(target).normalize();
         if (!targetPath.startsWith(projectDir)) {

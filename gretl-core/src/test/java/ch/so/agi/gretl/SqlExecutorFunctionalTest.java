@@ -175,42 +175,6 @@ class SqlExecutorFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void supportsKotlinDslWithParameterSets() throws Exception {
-        writeSettings();
-        Files.writeString(projectDir.resolve("schema.sql"),
-                "CREATE TABLE colors (id INTEGER PRIMARY KEY, name TEXT);", StandardCharsets.UTF_8);
-        Files.writeString(projectDir.resolve("insert.sql"),
-                "INSERT INTO colors (id, name) VALUES (${id}, ${name});", StandardCharsets.UTF_8);
-        writeKotlinBuild("""
-                import ch.so.agi.gretl.tasks.SqlExecutor
-
-                plugins { id("ch.so.agi.gretl") }
-
-                tasks.register<SqlExecutor>("initDb") {
-                    database("jdbc:sqlite:%s/kotlin.db")
-                    sqlFiles("schema.sql")
-                }
-
-                tasks.register<SqlExecutor>("insertRows") {
-                    dependsOn("initDb")
-                    database("jdbc:sqlite:%s/kotlin.db")
-                    sqlFiles("insert.sql")
-                    sqlParameterSets(
-                        mapOf("id" to 1, "name" to "'red'"),
-                        mapOf("id" to 2, "name" to "'blue'")
-                    )
-                }
-                """.formatted(
-                projectDir.toString().replace("\\", "\\\\"),
-                projectDir.toString().replace("\\", "\\\\")));
-
-        run("insertRows");
-
-        assertEquals("red,blue", scalar(projectDir.resolve("kotlin.db"),
-                "select group_concat(name, ',') from (select name from colors order by id)"));
-    }
-
-    @Test
     void doesNotPrintDatabasePassword() throws Exception {
         writeSettings();
         Files.writeString(projectDir.resolve("init.sql"), "CREATE TABLE colors (id INTEGER PRIMARY KEY, name TEXT);", StandardCharsets.UTF_8);

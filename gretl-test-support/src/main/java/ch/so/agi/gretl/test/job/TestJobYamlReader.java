@@ -26,7 +26,7 @@ public final class TestJobYamlReader {
     private static final Set<String> TOP_LEVEL_FIELDS = Set.of(
             "schemaVersion", "id", "description", "category", "builds", "entryTasks",
             "expectedTasks", "executionTargets", "capabilities", "fixtures", "assertions", "timeoutSeconds");
-    private static final Set<String> BUILD_FIELDS = Set.of("id", "file", "language", "executionTargets");
+    private static final Set<String> BUILD_FIELDS = Set.of("id", "file", "executionTargets");
     private static final Set<String> DECLARATION_FIELDS = Set.of("requirement", "reason");
     private static final Set<String> FIXTURE_FIELDS = Set.of("id", "type", "bindings");
     private static final Set<String> BINDING_FIELDS = Set.of("source", "target", "name");
@@ -53,16 +53,9 @@ public final class TestJobYamlReader {
             for (int i = 0; i < buildsNode.size(); i++) {
                 JsonNode node = buildsNode.get(i);
                 rejectUnknown(node, BUILD_FIELDS, file, "builds[" + i + "]");
-                String languageValue = text(node, "language", file, "builds[" + i + "]");
-                TestJobBuildLanguage language;
-                try {
-                    language = TestJobBuildLanguage.valueOf(languageValue.toUpperCase(java.util.Locale.ROOT));
-                } catch (IllegalArgumentException e) {
-                    throw error(file, "builds[" + i + "].language", "must be GROOVY or KOTLIN");
-                }
                 builds.add(new TestJobBuildVariant(
                         text(node, "id", file, "builds[" + i + "]"),
-                        text(node, "file", file, "builds[" + i + "]"), language,
+                        text(node, "file", file, "builds[" + i + "]"),
                         declarations(node, "executionTargets", file, "builds[" + i + "]")));
             }
 

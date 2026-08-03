@@ -5,7 +5,6 @@ category: network
 builds:
   - id: groovy
     file: build.gradle
-    language: GROOVY
 entryTasks:
   - verifyFtpRoundtrip
 expectedTasks:

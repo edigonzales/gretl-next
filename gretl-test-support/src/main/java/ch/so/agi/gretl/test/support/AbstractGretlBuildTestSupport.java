@@ -79,10 +79,6 @@ public abstract class AbstractGretlBuildTestSupport {
         Files.writeString(projectDir.resolve("build.gradle"), content, StandardCharsets.UTF_8);
     }
 
-    protected void writeKotlinBuild(String content) throws IOException {
-        Files.writeString(projectDir.resolve("build.gradle.kts"), content, StandardCharsets.UTF_8);
-    }
-
     protected Path copyResource(String source, String target) throws IOException {
         Path resource = Path.of(getClass().getClassLoader().getResource(source).getPath());
         Path destination = projectDir.resolve(target);

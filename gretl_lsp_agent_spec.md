@@ -3985,7 +3985,7 @@ Diese Spezifikation orientiert sich an folgenden öffentlich zugänglichen techn
 
 Der Agent soll aus den gelieferten Tests in `gretl-core` zusätzliche LSP-Fixtures ableiten. Besonders nützlich sind:
 
-- `SqlExecutorFunctionalTest`: `database`, `sqlFiles`, `sqlParameterSets`, `dependsOn`, Rollback-Szenarien und Kotlin-DSL als Nicht-MVP-Hinweis.
+- `SqlExecutorFunctionalTest`: `database`, `sqlFiles`, `sqlParameterSets`, `dependsOn`, Rollback-Szenarien; Kotlin-DSL bleibt ausserhalb des unterstützten MVP-Vertrags.
 - `DuckDbSqlExecutorFunctionalTest`: `inMemoryDatabase`, `database file(...)`, `sources.gpkg`, `sources.csv`, `exports.parquet`, `exports.xlsx`, `exports.gpkg`, `sqlParameterSets`.
 - `DuckDbSqlExecutorPostgisIntegrationTest`: `sources.postgres`, `targets.postgres`, `exports.postgres`, `geometry`, `target`-Aliasprüfung.
 - `FtpFunctionalTest`: geerbte `server`, `user`, `password` plus konkrete Download/Upload/Delete-Methoden.

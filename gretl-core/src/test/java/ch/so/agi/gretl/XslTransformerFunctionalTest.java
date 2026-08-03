@@ -66,34 +66,6 @@ class XslTransformerFunctionalTest extends CoreFunctionalTestSupport {
     }
 
     @Test
-    void supportsKotlinDslWithXslFile() throws Exception {
-        writeSettings();
-        Files.writeString(projectDir.resolve("input.xml"), "<root><name>Kotlin</name></root>", StandardCharsets.UTF_8);
-        Files.writeString(projectDir.resolve("transform.xsl"), """
-                <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-                  <xsl:output method="text"/>
-                  <xsl:template match="/">Hello <xsl:value-of select="/root/name"/></xsl:template>
-                </xsl:stylesheet>
-                """, StandardCharsets.UTF_8);
-        writeKotlinBuild("""
-                import ch.so.agi.gretl.tasks.XslTransformer
-
-                plugins { id("ch.so.agi.gretl") }
-
-                tasks.register<XslTransformer>("transformXml") {
-                    xslFile("transform.xsl")
-                    xmlFiles("input.xml")
-                    outDirectory(layout.buildDirectory.dir("xsl"))
-                    fileExtension("txt")
-                }
-                """);
-
-        run("transformXml");
-
-        assertEquals("Hello Kotlin", Files.readString(projectDir.resolve("build/xsl/input.txt"), StandardCharsets.UTF_8));
-    }
-
-    @Test
     void transformsBuildingReportXmlWithResourceXslFixture() throws Exception {
         writeSettings();
         copyResource("fixtures/xsl/MeldungAnGeometer_G-0098981_20230214_104054_Koordinaten.xml",

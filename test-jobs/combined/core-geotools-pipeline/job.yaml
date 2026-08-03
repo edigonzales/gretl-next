@@ -5,10 +5,6 @@ category: combined
 builds:
   - id: groovy
     file: build.gradle
-    language: GROOVY
-  - id: kotlin
-    file: build.gradle.kts
-    language: KOTLIN
 entryTasks:
   - packageRaster
 expectedTasks:

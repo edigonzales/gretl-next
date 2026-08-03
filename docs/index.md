@@ -4,6 +4,9 @@ This documentation describes the new modular GRETL DSL. It does not document
 the old public Step, Connector or TransferSet APIs as supported extension
 points.
 
+GRETL supports and tests Groovy Gradle builds. Kotlin DSL builds may still work
+through Gradle, but are not tested or supported as a GRETL contract.
+
 ## Start Here
 
 - Writing jobs: use the compact examples in the [README](../README.md) and the
@@ -11,7 +14,6 @@ points.
 - Federated DuckDB SQL jobs: read
   [DuckDbSqlExecutor](duckdb-sql-executor.md).
 - Migrating old jobs: read [Migration from original GRETL](migration-from-gretl.md).
-- Writing Kotlin builds: use the complete examples in [Kotlin DSL examples](kotlin-dsl.md).
 - Understanding the plugin split: read [Architecture](architecture.md).
 - Testing local changes: run `./gradlew clean check` first; run
   `./gradlew :gretl-core:integrationTest` when PostgreSQL/PostGIS behavior is

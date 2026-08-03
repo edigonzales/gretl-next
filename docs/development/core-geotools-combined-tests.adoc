@@ -39,7 +39,7 @@ GZIP payload.
 
 == Lifecycle coverage
 
-The suite covers Groovy and Kotlin DSLs, both plugin application orders,
+The suite covers the Groovy DSL, both plugin application orders,
 up-to-date invalidation, configuration-cache reuse, repeated builds, failure
 propagation and a mixed core-only/GeoTools-only/mixed multi-project consumer.
 Each test task uses one bounded TestKit user home, clears it before execution,

@@ -105,7 +105,6 @@ classes happen to be visible on a classpath.
 Public job syntax and migration guidance are documented separately:
 
 - [Migration from original GRETL](migration-from-gretl.md)
-- [Kotlin DSL examples](kotlin-dsl.md)
 - [Task reference](reference/reference.adoc)
 
 GeoTools worker code cannot depend on Gradle logging APIs because the worker

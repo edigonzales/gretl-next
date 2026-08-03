@@ -457,4 +457,3 @@ Die Extension kann über VS Code Settings (`gretl.*`) konfiguriert werden:
 - [GRETL-Job-Beispiele](../examples/) -- weitere lauffähige Jobs
 - [Task-Referenz](../reference/reference.adoc) -- alle GRETL-Tasks und Properties
 - [Migration von GRETL Classic](../migration-from-gretl.md)
-- [Kotlin-DSL-Beispiele](../kotlin-dsl.md)

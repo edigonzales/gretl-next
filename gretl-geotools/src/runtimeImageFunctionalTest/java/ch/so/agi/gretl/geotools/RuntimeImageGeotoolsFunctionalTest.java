@@ -86,26 +86,6 @@ class RuntimeImageGeotoolsFunctionalTest {
         assertTrue(Files.size(project.resolve("build/vectorized/output.gpkg")) > 0);
     }
 
-    @Test
-    void supportsKotlinDslWithBothModernPluginIds() throws Exception {
-        copyResourceTree("fixtures/shapefile", project.resolve("data"));
-        Files.writeString(project.resolve("settings.gradle.kts"), "rootProject.name = \"runtime-geotools-kotlin\"\n");
-        Files.writeString(project.resolve("build.gradle.kts"), """
-                import ch.so.agi.gretl.geotools.tasks.ReadShapefile
-                plugins {
-                    id("ch.so.agi.gretl")
-                    id("ch.so.agi.gretl.geotools")
-                }
-                tasks.named<ReadShapefile>("readShapefile") {
-                    shapefile("data/data.shp")
-                    crsCode("EPSG:4326")
-                }
-                """);
-        GretlBuildResult result = run("readShapefile");
-        assertTrue(result.successful(), result.output());
-        assertTrue(result.output().contains("Feature count:"), result.output());
-    }
-
     private GretlBuildResult run(String... arguments) {
         RuntimeImageBuildExecutor executor = new RuntimeImageBuildExecutor(
                 RuntimeImageDescriptor.fromSystemProperties(), new DockerCli(), new ContainerUserResolver(),

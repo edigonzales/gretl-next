@@ -5,7 +5,6 @@ category: core
 builds:
   - id: groovy
     file: build.gradle
-    language: GROOVY
 entryTasks:
   - executeSpatialSql
 expectedTasks:

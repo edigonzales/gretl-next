@@ -26,16 +26,8 @@ public final class GradleTestProject {
         return file("settings.gradle", content);
     }
 
-    public GradleTestProject settingsKotlin(String content) {
-        return file("settings.gradle.kts", content);
-    }
-
     public GradleTestProject buildGroovy(String content) {
         return file("build.gradle", content);
-    }
-
-    public GradleTestProject buildKotlin(String content) {
-        return file("build.gradle.kts", content);
     }
 
     public GradleTestProject file(String path, String content) {
