@@ -171,7 +171,7 @@ body.landing-page main.content {
   position: relative;
   max-width: var(--gretl-layout-max);
   margin: 0 auto;
-  padding: clamp(2rem, 3.5vw, 3.8rem) 0 4rem;
+  padding: clamp(2rem, 3.5vw, 3.8rem) 0 2rem;
 }
 
 .hero {
@@ -297,15 +297,15 @@ body.landing-page main.content {
   overflow-y: hidden;
   margin: 0;
   border: 1px solid var(--gretl-line);
-  border-radius: 1.15rem;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 64px rgba(32, 58, 78, 0.08);
+  border-radius: 0.8rem;
+  background: #fbfcfd;
+  box-shadow: 0 10px 30px rgba(32, 58, 78, 0.05);
 }
 
 .hero-code pre.sourceCode {
   min-height: 0;
   margin: 0;
-  padding: clamp(1.65rem, 3vw, 2.75rem);
+  padding: clamp(1.35rem, 2vw, 2rem);
   background: transparent;
   font-size: clamp(0.88rem, 1.1vw, 1.06rem);
   line-height: 1.55;
@@ -422,13 +422,6 @@ pre {
   background: radial-gradient(circle, rgba(22, 170, 156, 0.28), rgba(22, 170, 156, 0));
 }
 
-@media (min-width: 1400px) {
-  .hero-code-wrap {
-    width: calc(100% + clamp(6rem, 8vw, 12rem));
-    max-width: none;
-  }
-}
-
 /* Feature strip --------------------------------------------------------- */
 
 .benefit-strip {
@@ -440,7 +433,7 @@ pre {
       var(--gretl-navbar-gutter-total)
   );
   margin-left: 50%;
-  margin-top: clamp(3.2rem, 6vw, 6.5rem);
+  margin-top: clamp(2.2rem, 4vw, 4rem);
   transform: translateX(-50%);
   border: 1px solid var(--gretl-line);
   border-radius: 1.35rem;
@@ -514,7 +507,7 @@ pre {
 
 .nav-footer {
   align-items: center;
-  margin-top: 4rem;
+  margin-top: 2.5rem;
   border-top: 1px solid #e5ebf0;
   background: #fbfcfd;
 }
