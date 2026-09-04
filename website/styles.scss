@@ -180,7 +180,7 @@ body.landing-page main.content {
   grid-template-columns: minmax(0, 0.95fr) minmax(440px, 1.05fr);
   align-items: start;
   gap: clamp(3rem, 6vw, 7rem);
-  min-height: 31rem;
+  min-height: 24rem;
 }
 
 .hero > * {
@@ -296,19 +296,19 @@ body.landing-page main.content {
   overflow-x: auto;
   overflow-y: hidden;
   margin: 0;
-  border: 1px solid var(--gretl-line);
-  border-radius: 1.15rem;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 64px rgba(32, 58, 78, 0.08);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .hero-code pre.sourceCode {
   min-height: 0;
   margin: 0;
-  padding: clamp(1.65rem, 3vw, 2.75rem);
+  padding: 0 clamp(1.65rem, 3vw, 2.75rem);
   background: transparent;
   font-size: clamp(0.88rem, 1.1vw, 1.06rem);
   line-height: 1.55;
+  opacity: 0.72;
 }
 
 .hero-code pre.sourceCode > code.sourceCode,
@@ -380,16 +380,7 @@ pre {
 }
 
 .hero-code .code-copy-button {
-  top: 0.8rem;
-  right: 0.8rem;
-  border: 0;
-  color: #667085;
-}
-
-/* Quarto's generated hover icons use a fixed colored data URI. */
-.hero-code .code-copy-button:hover > .bi::before,
-.hero-code .code-copy-button.code-copy-button-checked:hover > .bi::before {
-  filter: grayscale(100%);
+  display: none;
 }
 
 .hero-glow {
@@ -440,7 +431,7 @@ pre {
       var(--gretl-navbar-gutter-total)
   );
   margin-left: 50%;
-  margin-top: clamp(3.2rem, 6vw, 6.5rem);
+  margin-top: clamp(2rem, 4vw, 4rem);
   transform: translateX(-50%);
   border: 1px solid var(--gretl-line);
   border-radius: 1.35rem;
@@ -584,7 +575,7 @@ pre {
   }
 
   .hero-code pre.sourceCode {
-    padding: 1.35rem 1.35rem 1.35rem 2rem;
+    padding: 0 1.35rem 0 2rem;
     font-size: 0.79rem;
     line-height: 1.45;
   }
