@@ -64,6 +64,18 @@ jobs:
       - name: Render Quarto website
         run: quarto render website
 
+      - name: Prepare Biblios config for tested checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git branch --force thoth-pages-source HEAD
+          mkdir -p build
+          sed \
+            -e "s#url: https://github.com/edigonzales/gretl-next.git#url: file://${GITHUB_WORKSPACE}#" \
+            -e 's/default_version: main/default_version: thoth-pages-source/g' \
+            -e 's/- name: main/- name: thoth-pages-source/' \
+            docs/reference/biblios.yml > build/biblios-pages.yml
+
       - name: Render Biblios reference into Quarto output
         shell: bash
         run: |
@@ -72,7 +84,7 @@ jobs:
           test -n "$THOTH_JAR"
 
           java -jar "$THOTH_JAR" build \
-            --config docs/reference/biblios.yml \
+            --config build/biblios-pages.yml \
             --output website/_site/reference \
             --clean
 
