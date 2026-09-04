@@ -21,7 +21,7 @@ content:
   sources:
     - id: gretl-next
       display_name: GRETL next
-      url: https://codeberg.org/edigonzales/gretl.git
+      url: https://github.com/edigonzales/gretl-next.git
       branches:
         - name: main
           display_version: Aktuell
