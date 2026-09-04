@@ -24,7 +24,23 @@ Die öffentliche Site wird mit `.github/workflows/website.yml` gebaut. Der Workf
 
 - Quarto rendert die Hauptseite nach `website/_site/`.
 - Thoth Biblios rendert die technische Referenz nach `website/_site/reference/`.
-- Nur Pushes auf `main` werden nach GitHub Pages deployt. Pull Requests bauen und prüfen dieselbe Site, deployen sie aber nicht.
+- Nur Pushes auf `main` werden nach GitHub Pages deployt. Pull Requests bauen dieselbe Site, deployen sie aber nicht.
+
+Der Website-Workflow wird nur ausgelöst, wenn sich publizierbarer Dokumentationsinhalt oder der Workflow selbst ändert:
+
+- `website/**` für die Quarto-Seiten,
+- `docs/reference/**` für die Biblios-Referenz,
+- `.github/workflows/website.yml` für Änderungen am Publikationsprozess.
+
+Die inhaltliche Korrektheit der generierten Referenz gehört dagegen zur normalen CI in `.github/workflows/ci.yml`. `./gradlew check` führt dort unter anderem `verifyTaskDocs` und `verifyReferenceStyle` aus. Dadurch gilt für Änderungen an dokumentierten GRETL-Tasks der folgende Ablauf:
+
+1. Java-Code ändern.
+2. `./gradlew generateTaskDocs` ausführen.
+3. Änderungen unter `docs/reference/generated/` zusammen mit dem Code committen.
+4. Die normale CI prüft, dass die generierten Referenzdateien aktuell und stilistisch gültig sind.
+5. Weil sich `docs/reference/**` geändert hat, baut der Website-Workflow Quarto und Biblios neu und publiziert nach dem Merge auf `main` die gemeinsame Site.
+
+Eine reine Java-Änderung ohne aktualisierte generierte Referenz löst damit keinen unnötigen Website-Build aus; sie scheitert stattdessen in der normalen CI an `verifyTaskDocs`.
 
 Thoth Biblios ist im Workflow auf einen konkreten Thoth-Commit gepinnt, damit Änderungen auf dem Thoth-`main` den GRETL-Website-Build nicht unerwartet verändern. Die Referenz wird im CI aus genau dem getesteten GRETL-Checkout erzeugt und nicht nochmals aus dem entfernten `main` geladen.
 
