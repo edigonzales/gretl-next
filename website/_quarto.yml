@@ -6,7 +6,7 @@ website:
   search: false
   title: "next.gretl.app"
   site-url: "https://next.gretl.app"
-  favicon: assets/gretl-mark.svg
+  # favicon: assets/gretl-mark.svg
   navbar:
     pinned: true
     collapse-below: lg
