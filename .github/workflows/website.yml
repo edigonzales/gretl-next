@@ -2,20 +2,104 @@ name: Website
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
     paths:
       - 'website/**'
+      - 'docs/reference/**'
+      - '.github/workflows/website.yml'
   pull_request:
-    branches: [main, master]
+    branches: [main]
     paths:
       - 'website/**'
+      - 'docs/reference/**'
+      - '.github/workflows/website.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  THOTH_COMMIT: 938a54d23829a53a94c2767d924a675f5005ec17
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Dummy
-        run: echo "Website workflow placeholder"
+    steps:
+      - name: Checkout GRETL next
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Checkout pinned Thoth
+        uses: actions/checkout@v7
+        with:
+          repository: edigonzales/thoth
+          ref: ${{ env.THOTH_COMMIT }}
+          path: .thoth-src
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Verify generated reference sources
+        run: ./gradlew verifyTaskDocs verifyReferenceStyle
+
+      - name: Build Thoth Biblios
+        working-directory: .thoth-src
+        run: ./gradlew :thoth-biblios:build
+
+      - name: Render Quarto website
+        run: quarto render website
+
+      - name: Render Biblios reference into Quarto output
+        shell: bash
+        run: |
+          set -euo pipefail
+          THOTH_JAR="$(find .thoth-src/thoth-biblios/build/libs -maxdepth 1 -name 'thoth-biblios-*-all.jar' -print -quit)"
+          test -n "$THOTH_JAR"
+
+          java -jar "$THOTH_JAR" build \
+            --config docs/reference/biblios.yml \
+            --output website/_site/reference \
+            --clean
+
+      - name: Verify assembled site
+        run: |
+          test -f website/_site/index.html
+          test -f website/_site/reference/index.html
+
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
+
+      - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/_site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
