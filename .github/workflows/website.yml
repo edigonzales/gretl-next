@@ -25,7 +25,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  THOTH_COMMIT: 938a54d23829a53a94c2767d924a675f5005ec17
+  THOTH_BIBLIOS_VERSION: 0.0.1-SNAPSHOT
+  THOTH_BIBLIOS_REPOSITORY: https://jars.interlis.guru/snapshots
 
 jobs:
   build:
@@ -37,14 +38,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pinned Thoth
-        uses: actions/checkout@v7
-        with:
-          repository: edigonzales/thoth
-          ref: ${{ env.THOTH_COMMIT }}
-          path: .thoth-src
-          persist-credentials: false
-
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
@@ -54,9 +47,54 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Build Thoth Biblios
-        working-directory: .thoth-src
-        run: ./gradlew :thoth-biblios:build
+      - name: Download latest Thoth Biblios snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_URL="${THOTH_BIBLIOS_REPOSITORY}/guru/interlis/thoth-biblios/${THOTH_BIBLIOS_VERSION}"
+          mkdir -p build
+
+          curl --fail --silent --show-error --location \
+            "${BASE_URL}/maven-metadata.xml" \
+            --output build/thoth-biblios-maven-metadata.xml
+
+          SNAPSHOT_VALUE="$(python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          metadata = ET.parse('build/thoth-biblios-maven-metadata.xml').getroot()
+
+          candidates = []
+          for snapshot in metadata.findall('./versioning/snapshotVersions/snapshotVersion'):
+              extension = (snapshot.findtext('extension') or '').strip()
+              classifier = (snapshot.findtext('classifier') or '').strip()
+              value = (snapshot.findtext('value') or '').strip()
+              updated = (snapshot.findtext('updated') or '').strip()
+              if extension == 'jar' and classifier == 'all' and value:
+                  candidates.append((updated, value))
+
+          if candidates:
+              print(max(candidates)[1])
+              raise SystemExit(0)
+
+          version = os.environ['THOTH_BIBLIOS_VERSION']
+          timestamp = (metadata.findtext('./versioning/snapshot/timestamp') or '').strip()
+          build_number = (metadata.findtext('./versioning/snapshot/buildNumber') or '').strip()
+          if not timestamp or not build_number or not version.endswith('-SNAPSHOT'):
+              raise SystemExit('Could not resolve latest Thoth Biblios all-JAR snapshot from Maven metadata')
+
+          print(f"{version[:-len('-SNAPSHOT')]}-{timestamp}-{build_number}")
+          PY
+          )"
+
+          echo "Resolved Thoth Biblios snapshot: ${SNAPSHOT_VALUE}"
+
+          curl --fail --silent --show-error --location \
+            "${BASE_URL}/thoth-biblios-${SNAPSHOT_VALUE}-all.jar" \
+            --output build/thoth-biblios.jar
+
+          test -s build/thoth-biblios.jar
 
       - name: Render Quarto website
         run: quarto render website
@@ -65,22 +103,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git branch --force thoth-pages-source HEAD
+
+          # Pull request checkouts are detached. Point a local main branch at the
+          # exact checkout so Biblios renders the commit being tested while the
+          # published version remains named "main".
+          if [ "$(git branch --show-current)" != "main" ]; then
+            git branch --force main HEAD
+          fi
+
           mkdir -p build
           sed \
             -e "s#url: https://github.com/edigonzales/gretl-next.git#url: file://${GITHUB_WORKSPACE}#" \
-            -e 's/default_version: main/default_version: thoth-pages-source/g' \
-            -e 's/- name: main/- name: thoth-pages-source/' \
             docs/reference/biblios.yml > build/biblios-pages.yml
 
       - name: Render Biblios reference into Quarto output
         shell: bash
         run: |
           set -euo pipefail
-          THOTH_JAR="$(find .thoth-src/thoth-biblios/build/libs -maxdepth 1 -name 'thoth-biblios-*-all.jar' -print -quit)"
-          test -n "$THOTH_JAR"
 
-          java -jar "$THOTH_JAR" build \
+          java -jar build/thoth-biblios.jar build \
             --config build/biblios-pages.yml \
             --output website/_site/reference \
             --clean
