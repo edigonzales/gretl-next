@@ -42,7 +42,13 @@ Die inhaltliche Korrektheit der generierten Referenz gehört dagegen zur normale
 
 Eine reine Java-Änderung ohne aktualisierte generierte Referenz löst damit keinen unnötigen Website-Build aus; sie scheitert stattdessen in der normalen CI an `verifyTaskDocs`.
 
-Thoth Biblios ist im Workflow auf einen konkreten Thoth-Commit gepinnt, damit Änderungen auf dem Thoth-`main` den GRETL-Website-Build nicht unerwartet verändern. Die Referenz wird im CI aus genau dem getesteten GRETL-Checkout erzeugt und nicht nochmals aus dem entfernten `main` geladen.
+## Thoth Biblios
+
+Der Website-Workflow baut Thoth Biblios nicht selbst. Er verwendet den veröffentlichten Maven-Snapshot `guru.interlis:thoth-biblios:0.0.1-SNAPSHOT` aus `https://jars.interlis.guru/snapshots`.
+
+Da Maven Snapshots mit timestamped Dateinamen publiziert werden, lädt der Workflow zuerst `maven-metadata.xml`, ermittelt daraus den aktuellsten ausführbaren JAR-Snapshot mit Classifier `all` und lädt genau dieses Artefakt herunter. Damit verwendet jeder neue Website-Build automatisch den neuesten publizierten Biblios-Snapshot, ohne das Thoth-Repository auszuchecken oder Thoth selbst zu kompilieren.
+
+Die Referenz wird anschliessend aus genau dem GRETL-Checkout erzeugt, der im Workflow getestet wird. Bei Pull Requests zeigt dafür ein lokaler Branch `main` auf den getesteten Checkout; so bleibt die publizierte Biblios-Version weiterhin `main` und erhält keinen CI-spezifischen Versionsnamen.
 
 Für GitHub Pages muss im Repository unter **Settings → Pages** als Source **GitHub Actions** gewählt sein. Die Custom Domain für die Site ist `next.gretl.app`.
 
