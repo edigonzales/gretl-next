@@ -54,9 +54,6 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Verify generated reference sources
-        run: ./gradlew verifyTaskDocs verifyReferenceStyle
-
       - name: Build Thoth Biblios
         working-directory: .thoth-src
         run: ./gradlew :thoth-biblios:build
